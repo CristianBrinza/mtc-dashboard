@@ -1,11 +1,11 @@
-import "../styles/smm.css"
+import "../styles/smm.css";
 import React, { useEffect, useState } from "react";
-import { config } from 'dotenv';
+import { config } from "dotenv";
 import Popup from "../components/Popup";
 
 interface SsmData {
     id: string;
-    img:string;
+    img: string;
     source: string;
     sponsor: boolean;
     date: string;
@@ -17,13 +17,21 @@ interface SsmData {
     subject: string;
     type: string;
     link: string;
+    description: string;
+    comment: string;
 }
 
 export default function SMM() {
     const [isPopupVisible, setIsPopupVisible] = useState(false);
+    const [isEditPopupVisible, setIsEditPopupVisible] = useState(false);
+    const [selectedItem, setSelectedItem] = useState<SsmData | null>(null);
 
     const togglePopup = () => {
         setIsPopupVisible(!isPopupVisible);
+    };
+
+    const toggleEditPopup = () => {
+        setIsEditPopupVisible(!isEditPopupVisible);
     };
 
     const [ssmData, setSsmData] = useState<SsmData[]>([]);
@@ -32,7 +40,7 @@ export default function SMM() {
         const loadMenuButtons = async () => {
             try {
                 const response = await fetch("http://127.0.0.1:5000/json/smm", {
-                    method: 'GET',
+                    method: "GET",
                 });
                 if (!response.ok) {
                     throw new Error("Network response was not ok");
@@ -47,89 +55,87 @@ export default function SMM() {
         loadMenuButtons();
     }, []);
 
-    const [isExportVisible, setisExportVisible] = useState(false);
-    const [isAddVisible, setIsAddVisible] = useState(false);
     const [visibleSection, setVisibleSection] = useState<string | null>(null);
 
     const toggleExportSettings = () => {
-        setVisibleSection(visibleSection === 'export' ? null : 'export');
+        setVisibleSection(visibleSection === "export" ? null : "export");
     };
 
     const toggleAddNew = () => {
-        setVisibleSection(visibleSection === 'add' ? null : 'add');
+        setVisibleSection(visibleSection === "add" ? null : "add");
     };
 
     const exportToExcel = () => {
         const csvData = convertToCSV(ssmData);
         downloadCSV(csvData);
     };
+
     const exportToExcelScreen = () => {
         const csvData = convertToCSV(ssmData);
         downloadCSV(csvData);
     };
 
-
-
-
     const convertToCSV = (objArray) => {
-        const array = typeof objArray !== 'object' ? JSON.parse(objArray) : objArray;
-        let str = '';
-        let row = '';
+        const array = typeof objArray !== "object" ? JSON.parse(objArray) : objArray;
+        let str = "";
+        let row = "";
 
         // Create header row
         for (const index in array[0]) {
-            if (row !== '') row += ',';
+            if (row !== "") row += ",";
             row += index;
         }
-        str += row + '\r\n';
+        str += row + "\r\n";
 
         // Create data rows
         for (let i = 0; i < array.length; i++) {
-            let line = '';
+            let line = "";
             for (const index in array[i]) {
-                if (line !== '') line += ',';
+                if (line !== "") line += ",";
                 line += array[i][index];
             }
-            str += line + '\r\n';
+            str += line + "\r\n";
         }
 
         return str;
     };
 
     const downloadCSV = (csvData) => {
-        const blob = new Blob([csvData], { type: 'text/csv' });
+        const blob = new Blob([csvData], { type: "text/csv" });
         const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.setAttribute('href', url);
-        a.setAttribute('download', 'data.csv');
+        const a = document.createElement("a");
+        a.setAttribute("href", url);
+        a.setAttribute("download", "data.csv");
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
     };
 
     const downloadFile = (url, filename) => {
-        fetch(url, { headers: { 'Content-Type': 'application/json' } })
-            .then(response => {
+        fetch(url, { headers: { "Content-Type": "application/json" } })
+            .then((response) => {
                 if (!response.ok) {
-                    throw new Error('Network response was not ok');
+                    throw new Error("Network response was not ok");
                 }
                 return response.json(); // Expecting a JSON response
             })
-            .then(data => {
-                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            .then((data) => {
+                const blob = new Blob([JSON.stringify(data, null, 2)], {
+                    type: "application/json",
+                });
                 const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.style.display = 'none';
+                const a = document.createElement("a");
+                a.style.display = "none";
                 a.href = url;
                 a.download = filename;
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);
             })
-            .catch(error => console.error('There was a problem with the fetch operation:', error));
+            .catch((error) =>
+                console.error("There was a problem with the fetch operation:", error)
+            );
     };
-
-
 
     // Helper function to generate a unique numeric ID
     const generateUniqueNumericId = (existingIds) => {
@@ -143,46 +149,52 @@ export default function SMM() {
     };
 
     const getDayOfWeek = (dateString) => {
-        const [day, month, year] = dateString.split('.').map(Number);
+        const [day, month, year] = dateString.split(".").map(Number);
         const date = new Date(year, month - 1, day);
         if (isNaN(date.getTime())) {
-            return 'Invalid Date';
+            return "Invalid Date";
         }
-        const options = { weekday: 'long' };
-        return new Intl.DateTimeFormat('en-US', options).format(date);
+        const options = { weekday: "long" };
+        return new Intl.DateTimeFormat("en-US", options).format(date);
     };
 
     const AddNewLink = async () => {
-        const linkInput = (document.querySelector('#smm_main_add_left input') as HTMLInputElement).value;
-        if (linkInput.includes('www.instagram.com')) {
+        const linkInput = (document.querySelector(
+            "#smm_main_add_left input"
+        ) as HTMLInputElement).value;
+        if (linkInput.includes("www.instagram.com")) {
             try {
                 const baseUrl = import.meta.env.VITE_BACKEND_SOCIAL_URL;
-                const response = await fetch(`${baseUrl}/get_post?url=${encodeURIComponent(linkInput)}`);
+                const response = await fetch(
+                    `${baseUrl}/get_post?url=${encodeURIComponent(linkInput)}`
+                );
                 if (!response.ok) {
                     throw new Error(`Network response was not ok: ${response.statusText}`);
                 }
                 const data = await response.json();
 
                 // Structuring the data
-                const newId = generateUniqueNumericId(ssmData.map(item => item.id));
+                const newId = generateUniqueNumericId(ssmData.map((item) => item.id));
                 const social_instagram_post = {
                     id: newId,
                     img: data.Cover_Image_URL,
                     sponsor: false,
-                    source: 'instagram',
+                    source: "instagram",
                     date: data.Date,
                     day: getDayOfWeek(data.Date),
-                    operator: '',
+                    operator: "",
                     likes: data.Likes,
                     comments: data.Comments,
                     shares: data.Shares,
-                    subject: '',
-                    type: '',
-                    link: linkInput
+                    subject: "",
+                    type: "",
+                    link: linkInput,
+                    description:"" ,
+                    comment:""
                 };
 
                 // Check if link already exists
-                const linkExists = ssmData.some(item => item.link === linkInput);
+                const linkExists = ssmData.some((item) => item.link === linkInput);
                 if (linkExists) {
                     console.log("Error, link already exists");
                     return;
@@ -194,24 +206,134 @@ export default function SMM() {
 
                 // Update JSON file on server
                 const jsonResponse = await fetch(`http://127.0.0.1:5000/json/smm`, {
-                    method: 'POST',
+                    method: "POST",
                     headers: {
-                        'Content-Type': 'application/json'
+                        "Content-Type": "application/json",
                     },
-                    body: JSON.stringify(social_instagram_post)  // Send the new post data
+                    body: JSON.stringify(social_instagram_post), // Send the new post data
                 });
 
                 if (!jsonResponse.ok) {
-                    throw new Error(`Failed to update JSON file on server: ${jsonResponse.statusText}`);
+                    throw new Error(
+                        `Failed to update JSON file on server: ${jsonResponse.statusText}`
+                    );
                 }
-
             } catch (error) {
-                console.error('Error fetching the post data:', error.message);
+                console.error("Error fetching the post data:", error.message);
             }
         }
     };
 
-// ... (rest of your component code)
+    const [formInputs, setFormInputs] = useState({ operator: '', subject: '', sponsor: false, type: '', comment: '' });
+    const showEditPopup = (id: string) => {
+        const item = ssmData.find((data) => data.id === id);
+        if (item) {
+            setSelectedItem(item);
+            setFormInputs({
+                operator: item.operator || '',
+                subject: item.subject || '',
+                sponsor: item.sponsor,
+                type: item.type || '',
+                comment: item.comment || ''
+            });
+            toggleEditPopup();
+        }
+    };
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        setFormInputs({
+            ...formInputs,
+            [name]: value,
+        });
+    };
+
+    const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setFormInputs({
+            ...formInputs,
+            sponsor: e.target.checked,
+        });
+    };
+
+    const handleUpdate = async () => {
+        if (selectedItem) {
+            const updatedItem = { ...selectedItem, ...formInputs };
+            const updatedData = ssmData.map((item) =>
+                item.id === selectedItem.id ? updatedItem : item
+            );
+            setSsmData(updatedData);
+
+            try {
+                const response = await fetch(`http://127.0.0.1:5000/json/smm`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(updatedData),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to update JSON file on server: ${response.statusText}`);
+                }
+
+                toggleEditPopup();
+            } catch (error) {
+                console.error("Error updating the JSON data:", error.message);
+            }
+        }
+    };
+
+    const handleDelete = async () => {
+        if (selectedItem) {
+            const updatedData = ssmData.filter((item) => item.id !== selectedItem.id);
+            setSsmData(updatedData);
+
+            try {
+                const response = await fetch(`http://127.0.0.1:5000/json/smm`, {
+                    method: "DELETE",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ id: selectedItem.id }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to delete item on server: ${response.statusText}`);
+                }
+
+                toggleEditPopup();
+            } catch (error) {
+                console.error("Error deleting the item:", error.message);
+            }
+        }
+    };
+
+    const [isConfirmPopupVisible, setIsConfirmPopupVisible] = useState(false);
+    const handleConfirmDelete = async () => {
+        if (selectedItem) {
+            const updatedData = ssmData.filter((item) => item.id !== selectedItem.id);
+            setSsmData(updatedData);
+
+            try {
+                const response = await fetch(`http://127.0.0.1:5000/json/smm`, {
+                    method: "DELETE",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ id: selectedItem.id }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to delete item on server: ${response.statusText}`);
+                }
+
+                toggleEditPopup();
+                setIsConfirmPopupVisible(false);
+            } catch (error) {
+                console.error("Error deleting the item:", error.message);
+            }
+        }
+    };
 
     return (
         <>
@@ -285,7 +407,7 @@ export default function SMM() {
                             Add
                         </div>
                     </div>
-                    <div className="smm_main_btn" id="add_new" onClick="smm_popoup('manual_add')">
+                    <div className="smm_main_btn" id="add_new" onClick={togglePopup}>
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M12.0002 5.5L12.0002 18.5" stroke="#9DAEFF" strokeWidth="1.8"
                                   strokeLinecap="round"></path>
@@ -474,13 +596,110 @@ export default function SMM() {
             >
                 Manual Add Form or Content Here
             </Popup>
-            <div className="smm_main_btn" id="add_new" onClick={togglePopup}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12.0002 5.5L12.0002 18.5" stroke="#9DAEFF" strokeWidth="1.8" strokeLinecap="round"></path>
-                    <path d="M5.5 11.9996H18.5" stroke="#9DAEFF" strokeWidth="1.8" strokeLinecap="round"></path>
-                </svg>
-                Add
-            </div>
+
+            {isEditPopupVisible && selectedItem && (
+                <Popup
+                    id="edit_popup"
+                    title="Edit Item"
+                    isVisible={isEditPopupVisible}
+                    onClose={toggleEditPopup}
+                >
+                    <form>
+                        <div className={"smm_popup_row"}>
+                            <div className="smm_main_add_label">
+                                Operator:
+                            </div>
+                            <select name="operator" value={formInputs.operator} onChange={handleInputChange}>
+                                <option value="">Select Operator</option>
+                                <option value="MTC">MTC</option>
+                                <option value="Orange">Orange</option>
+                                <option value="Moldcell">Moldcell</option>
+                            </select>
+
+                        </div>
+                        <div className={"smm_popup_row"}>
+                            <div className="smm_main_add_label">
+                                Subject:
+                            </div>
+                            <select name="subject" value={formInputs.subject} onChange={handleInputChange}>
+                                <option value="">Select Subject</option>
+                                <option value="Event">Event</option>
+                                <option value="Promotion">Promotion</option>
+                                <option value="News">News</option>
+                            </select>
+
+                        </div>
+                        <div className={"smm_popup_row"}>
+                            <div className="smm_main_add_label">
+                                Type:
+                            </div>
+
+                            <select name="type" value={formInputs.type} onChange={handleInputChange}>
+                                <option value="">Select Type</option>
+                                <option value="Carousel">Carousel</option>
+                                <option value="Reel">Reel</option>
+                                <option value="Solo">Solo</option>
+                            </select>
+
+                        </div>
+                        <div className={"smm_popup_row"}>
+                            <div className="smm_main_add_label">
+                                Sponsor:
+                            </div>
+                            <label className="toggle-switch">
+                                <input
+                                    type="checkbox"
+                                    name="sponsor"
+                                    checked={formInputs.sponsor}
+                                    onChange={handleCheckboxChange}
+                                />
+                                <span className="slider"></span>
+                            </label>
+
+                        </div>
+                        <div className={"smm_popup_row"}>
+                            <div className="smm_main_add_label">
+                                Comment:
+                            </div>
+                            <textarea
+                                name="comment"
+                                value={formInputs.comment}
+                                onChange={handleInputChange}
+                                rows={2}
+                                cols={50}
+                                className="textarea-comment"
+                            />
+                        </div>
+                        <div className={"smm_popup_row"}>
+                            <button className={"smm_main_btn"} id="smm_popup_edit_button" type="button"
+                                    onClick={handleUpdate}>
+                                Update
+                            </button>
+                            <button className={"smm_main_btn"} id="smm_popup_delete_button" type="button"
+                                    onClick={() => setIsConfirmPopupVisible(true)}>
+                                Delete
+                            </button>
+                        </div>
+                    </form>
+                </Popup>
+            )}
+            {isConfirmPopupVisible && (
+                <Popup
+                    id="confirm_delete_popup"
+                    title="Confirm Delete"
+                    isVisible={isConfirmPopupVisible}
+                    onClose={() => setIsConfirmPopupVisible(false)}
+                >
+                    <div>
+                        <p>Are you sure you want to delete this item?</p>
+                        <div className={"smm_popup_row"}>
+                            <button className="smm_main_btn" onClick={handleConfirmDelete}>Yes</button>
+                            <button className="smm_main_btn" onClick={() => setIsConfirmPopupVisible(false)}>No</button>
+
+                        </div>
+                    </div>
+                </Popup>
+            )}
         </>
     );
 }
@@ -489,7 +708,3 @@ const showInfoPopup = (id: string) => {
     console.log("Show info popup for", id);
 };
 
-const showEditPopup = (id: string) => {
-    // Implement the popup logic here
-    console.log("Show edit popup for", id);
-};

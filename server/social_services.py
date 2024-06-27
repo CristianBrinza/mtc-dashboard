@@ -164,6 +164,20 @@ def delete_json(file_name):
         logging.error(f'Error deleting JSON file {file_name}: {e}')
         return jsonify({'error': str(e)}), 500
 
+@app.route('/json/smm', methods=['DELETE'])
+def delete_smm_item():
+    try:
+        item_id = request.json.get('id')
+        if not item_id:
+            return jsonify({'error': 'Item ID is required'}), 400
+
+        data = read_json('smm')
+        data = [item for item in data if item['id'] != item_id]
+        write_json('smm', data)
+        return jsonify({'message': 'Item deleted successfully'})
+    except Exception as e:
+        logging.error(f'Error deleting item: {e}')
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/proxy_image')
 def proxy_image():
