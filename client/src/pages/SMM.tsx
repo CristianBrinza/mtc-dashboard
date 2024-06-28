@@ -58,8 +58,12 @@ export default function SMM() {
 
     const [visibleSection, setVisibleSection] = useState<string | null>(null);
     const [visibleSort, setVisibleSort] = useState<string | null>(null);
+    const [visibleFilter, setVisibleFilter] = useState<string | null>(null);
     const toggleSorting = () => {
         setVisibleSort(visibleSort === "sorting" ? null : "sorting");
+    };
+    const toggleFiltering = () => {
+        setVisibleFilter(visibleFilter === "filter" ? null : "filter");
     };
 
     const toggleExportSettings = () => {
@@ -356,6 +360,65 @@ export default function SMM() {
         }
     };
 
+
+
+    const [sortCriteria, setSortCriteria] = useState("none");
+    const [sortOrder, setSortOrder] = useState("ascending");
+
+    const handleSortChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSortCriteria(e.target.value);
+    };
+
+    const handleOrderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setSortOrder(e.target.value);
+    };
+
+    const sortData = (data: SsmData[]) => {
+        if (sortCriteria === "none") {
+            return data;
+        }
+
+        const sortedData = [...data];
+        sortedData.sort((a, b) => {
+            let comparison = 0;
+            switch (sortCriteria) {
+                case "date":
+                    comparison = new Date(a.date).getTime() - new Date(b.date).getTime();
+                    break;
+                case "likes":
+                    comparison = a.likes - b.likes;
+                    break;
+                case "comments":
+                    comparison = a.comments - b.comments;
+                    break;
+                case "shares":
+                    comparison = a.shares - b.shares;
+                    break;
+                default:
+                    break;
+            }
+            return sortOrder === "ascending" ? comparison : -comparison;
+        });
+        return sortedData;
+    };
+
+    useEffect(() => {
+        const savedSortCriteria = localStorage.getItem("sortCriteria");
+        const savedSortOrder = localStorage.getItem("sortOrder");
+        if (savedSortCriteria) {
+            setSortCriteria(savedSortCriteria);
+        }
+        if (savedSortOrder) {
+            setSortOrder(savedSortOrder);
+        }
+    }, []);
+
+    useEffect(() => {
+        localStorage.setItem("sortCriteria", sortCriteria);
+        localStorage.setItem("sortOrder", sortOrder);
+    }, [sortCriteria, sortOrder]);
+
+
     return (
         <>
 
@@ -477,8 +540,9 @@ export default function SMM() {
                 </div>
 
                 <div id="smm_main_table_options">
-                    <div  id="show_sort"
-                         className={`smm_main_btn ${visibleSection === 'sorting' ? 'smm_main_btn_pressed' : ''}`}
+                    <div id="show_sort"
+
+                         className={`smm_main_btn ${visibleSort === 'sorting' ? 'smm_main_btn_pressed' : ''}`}
                          onClick={toggleSorting}>
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path
@@ -500,7 +564,9 @@ export default function SMM() {
 
                         Sort by
                     </div>
-                    <div className="smm_main_btn" id="show_filter" onClick="show_filter()">
+                    <div id="show_filter"
+                         className={`smm_main_btn ${visibleFilter === 'filter' ? 'smm_main_btn_pressed' : ''}`}
+                         onClick={toggleFiltering}>
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path
                                 d="M18.7952 4H5.20325C5.01101 3.99984 4.82279 4.05509 4.66114 4.15914C4.49949 4.26319 4.37126 4.41164 4.2918 4.58669C4.21235 4.76175 4.18503 4.956 4.21313 5.14618C4.24124 5.33636 4.32356 5.51441 4.45025 5.659L9.75225 11.717C9.91171 11.8995 9.99949 12.1337 9.99925 12.376V17.25C9.99925 17.3276 10.0173 17.4042 10.052 17.4736C10.0868 17.543 10.1372 17.6034 10.1993 17.65L13.1993 19.9C13.2735 19.9557 13.3619 19.9896 13.4543 19.998C13.5468 20.0063 13.6398 19.9887 13.7229 19.9472C13.8059 19.9057 13.8758 19.8419 13.9246 19.7629C13.9734 19.6839 13.9993 19.5929 13.9993 19.5V12.376C13.999 12.1337 14.0868 11.8995 14.2463 11.717L19.5483 5.658C20.1143 5.012 19.6542 4 18.7952 4Z"
@@ -513,19 +579,42 @@ export default function SMM() {
                 </div>
 
                 <div id="smm_main_sorting" style={{display: visibleSort === 'sorting' ? 'flex' : 'none'}}>
-                  <div>
-                      Sorting
-                      <br/>
-                      <span>
-                         //put here checkboxes like so <input/><span>by date</span> <input/><span>by likes</span><input/><span>by comments</span><input/><span>by shares</span>  and <select/><span>ascending/descending</span>
-                     </span>
-                  </div>
+
+                       <span>
+                    <input type="radio" name="sortCriteria" value="none" onChange={handleSortChange}
+                           checked={sortCriteria === "none"}/>
+                    <span>no sorting</span>&nbsp;&nbsp;&nbsp;&nbsp;
+                           <input type="radio" name="sortCriteria" value="date" onChange={handleSortChange}
+                                  checked={sortCriteria === "date"}/>
+                    <span>by date</span>&nbsp;&nbsp;&nbsp;&nbsp;
+                           <input type="radio" name="sortCriteria" value="likes" onChange={handleSortChange}
+                                  checked={sortCriteria === "likes"}/>
+                    <span>by likes</span>&nbsp;&nbsp;&nbsp;&nbsp;
+                           <input type="radio" name="sortCriteria" value="comments" onChange={handleSortChange}
+                                  checked={sortCriteria === "comments"}/>
+                    <span>by comments</span>&nbsp;&nbsp;&nbsp;&nbsp;
+                           <input type="radio" name="sortCriteria" value="shares" onChange={handleSortChange}
+                                  checked={sortCriteria === "shares"}/>
+                    <span>by shares</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+                </span>
+                    <select onChange={handleOrderChange} value={sortOrder}>
+                        <option value="ascending">ascending</option>
+                        <option value="descending">descending</option>
+                    </select>
+
+
+                </div>
+
+                <div id="smm_main_filtering" style={{display: visibleFilter === 'filter' ? 'flex' : 'none'}}>
+add filter functionality here
+
 
                 </div>
 
 
                 <div id="smm_main_table">
-                    {ssmData.map((item) => (
+                    {sortData(ssmData).map((item) => (
                         <div className="smm_main_table_cell" id={item.id} key={item.id}>
                             <img
                                 className="smm_main_table_social"
@@ -567,7 +656,7 @@ export default function SMM() {
             {item.operator}
           </span>
                             <div className="smm_main_table_social_count">
-                                <span style={{width: "35px"}}>{item.likes}</span>
+                                <span style={{width: "30px"}}>{item.likes}</span>
                                 <img
                                     className="smm_main_table_social_svg"
                                     src="../images/general/like.png"
@@ -575,7 +664,7 @@ export default function SMM() {
                                 />
                             </div>
                             <div className="smm_main_table_social_count">
-                                <span style={{width: "35px"}}>{item.comments}</span>
+                                <span style={{width: "30px"}}>{item.comments}</span>
                                 <img
                                     className="smm_main_table_social_svg"
                                     src="../images/general/comment.png"
@@ -583,7 +672,7 @@ export default function SMM() {
                                 />
                             </div>
                             <div className="smm_main_table_social_count">
-                                <span style={{width: "35px"}}>{item.shares}</span>
+                                <span style={{width: "30px"}}>{item.shares}</span>
                                 <img
                                     className="smm_main_table_social_svg"
                                     src="../images/general/share.png"
