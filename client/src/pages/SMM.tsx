@@ -33,13 +33,14 @@ export default function SMM() {
     const toggleEditPopup = () => {
         setIsEditPopupVisible(!isEditPopupVisible);
     };
-
+    const baseUrl = import.meta.env.VITE_BACKEND_SOCIAL_URL;
     const [ssmData, setSsmData] = useState<SsmData[]>([]);
 
     useEffect(() => {
         const loadMenuButtons = async () => {
             try {
-                const response = await fetch("http://127.0.0.1:5000/json/smm", {
+                const baseUrl_load_buttons = import.meta.env.VITE_BACKEND_SOCIAL_URL;
+                const response = await fetch(`${baseUrl_load_buttons}/json/smm`, {
                     method: "GET",
                 });
                 if (!response.ok) {
@@ -164,9 +165,9 @@ export default function SMM() {
         ) as HTMLInputElement).value;
         if (linkInput.includes("www.instagram.com")) {
             try {
-                const baseUrl = import.meta.env.VITE_BACKEND_SOCIAL_URL;
+                const baseUrladdnewlink = import.meta.env.VITE_BACKEND_SOCIAL_URL;
                 const response = await fetch(
-                    `${baseUrl}/get_post?url=${encodeURIComponent(linkInput)}`
+                    `${baseUrladdnewlink}/get_post?url=${encodeURIComponent(linkInput)}`
                 );
                 if (!response.ok) {
                     throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -205,7 +206,8 @@ export default function SMM() {
                 setSsmData(updatedData);
 
                 // Update JSON file on server
-                const jsonResponse = await fetch(`http://127.0.0.1:5000/json/smm`, {
+                 const baseUrl_new_record = import.meta.env.VITE_BACKEND_SOCIAL_URL;
+                const jsonResponse = await fetch(`${baseUrl_new_record}/json/smm`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -264,7 +266,8 @@ export default function SMM() {
             setSsmData(updatedData);
 
             try {
-                const response = await fetch(`http://127.0.0.1:5000/json/smm`, {
+                const baseUrl_handle_update = import.meta.env.VITE_BACKEND_SOCIAL_URL;
+                const response = await fetch(`${baseUrl_handle_update}/json/smm`, {
                     method: "PUT",
                     headers: {
                         "Content-Type": "application/json",
@@ -289,7 +292,8 @@ export default function SMM() {
             setSsmData(updatedData);
 
             try {
-                const response = await fetch(`http://127.0.0.1:5000/json/smm`, {
+                const baseUrl_handle_delete = import.meta.env.VITE_BACKEND_SOCIAL_URL;
+                const response = await fetch(`${baseUrl_handle_delete}/json/smm`, {
                     method: "DELETE",
                     headers: {
                         "Content-Type": "application/json",
@@ -315,7 +319,8 @@ export default function SMM() {
             setSsmData(updatedData);
 
             try {
-                const response = await fetch(`http://127.0.0.1:5000/json/smm`, {
+                const baseUrl_confirm_delete = import.meta.env.VITE_BACKEND_SOCIAL_URL;
+                const response = await fetch(`${baseUrl_confirm_delete}/json/smm`, {
                     method: "DELETE",
                     headers: {
                         "Content-Type": "application/json",

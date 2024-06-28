@@ -8,7 +8,7 @@ const Navbar: React.FC = () => {
     useEffect(() => {
         const fetchMenuData = async () => {
             try {
-                const response = await axios.get('http://127.0.0.1:5000/json/system');
+                const response = await axios.get(`${import.meta.env.VITE_BACKEND_SOCIAL_URL}/json/system`);
                 setMenuData(response.data);
             } catch (error) {
                 console.error('Error fetching menu data:', error);
