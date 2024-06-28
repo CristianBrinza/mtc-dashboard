@@ -57,6 +57,10 @@ export default function SMM() {
     }, []);
 
     const [visibleSection, setVisibleSection] = useState<string | null>(null);
+    const [visibleSort, setVisibleSort] = useState<string | null>(null);
+    const toggleSorting = () => {
+        setVisibleSort(visibleSort === "sorting" ? null : "sorting");
+    };
 
     const toggleExportSettings = () => {
         setVisibleSection(visibleSection === "export" ? null : "export");
@@ -190,8 +194,8 @@ export default function SMM() {
                     subject: "",
                     type: "",
                     link: linkInput,
-                    description:"" ,
-                    comment:""
+                    description: "",
+                    comment: ""
                 };
 
                 // Check if link already exists
@@ -201,18 +205,30 @@ export default function SMM() {
                     return;
                 }
 
-                // Add new record to ssmData
-                const updatedData = [...ssmData, social_instagram_post];
+                // Add new record to ssmData at the beginning
+                const updatedData = [social_instagram_post, ...ssmData];
                 setSsmData(updatedData);
 
-                // Update JSON file on server
-                 const baseUrl_new_record = import.meta.env.VITE_BACKEND_SOCIAL_URL;
+                // Fetch the existing data
+                const fetchResponse = await fetch(`${baseUrladdnewlink}/json/smm`, {
+                    method: "GET",
+                });
+                if (!fetchResponse.ok) {
+                    throw new Error(`Network response was not ok: ${fetchResponse.statusText}`);
+                }
+                const existingData = await fetchResponse.json();
+
+                // Add the new record to the beginning of the existing data
+                const newUpdatedData = [social_instagram_post, ...existingData];
+
+                // Update JSON file on server with the new data order
+                const baseUrl_new_record = import.meta.env.VITE_BACKEND_SOCIAL_URL;
                 const jsonResponse = await fetch(`${baseUrl_new_record}/json/smm`, {
-                    method: "POST",
+                    method: "PUT",
                     headers: {
                         "Content-Type": "application/json",
                     },
-                    body: JSON.stringify(social_instagram_post), // Send the new post data
+                    body: JSON.stringify(newUpdatedData), // Send the new ordered data
                 });
 
                 if (!jsonResponse.ok) {
@@ -461,7 +477,9 @@ export default function SMM() {
                 </div>
 
                 <div id="smm_main_table_options">
-                    <div className="smm_main_btn" id="show_sort" onClick="show_sort()">
+                    <div  id="show_sort"
+                         className={`smm_main_btn ${visibleSection === 'sorting' ? 'smm_main_btn_pressed' : ''}`}
+                         onClick={toggleSorting}>
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path
                                 d="M15.6466 5.64663L15.6466 5.64657L12.6466 8.64652C12.6466 8.64654 12.6466 8.64656 12.6466 8.64657C12.5529 8.74033 12.5002 8.86746 12.5002 9.00002C12.5002 9.13255 12.5529 9.25966 12.6465 9.35341C12.6466 9.35345 12.6466 9.35348 12.6466 9.35352M15.6466 5.64663L12.6466 9.35352M15.6466 5.64663L15.6527 5.64038C15.6988 5.59262 15.754 5.55453 15.815 5.52833C15.876 5.50212 15.9416 5.48833 16.008 5.48775C16.0744 5.48717 16.1402 5.49982 16.2017 5.52497C16.2631 5.55011 16.3189 5.58723 16.3659 5.63418C16.4128 5.68113 16.4499 5.73695 16.4751 5.7984C16.5002 5.85985 16.5129 5.92569 16.5123 5.99208C16.5117 6.05847 16.4979 6.12408 16.4717 6.18508C16.4455 6.24608 16.4074 6.30125 16.3597 6.34738L16.3596 6.34732L16.3535 6.35347L13.3535 9.35341M15.6466 5.64663L13.3535 9.35341M12.6466 9.35352C12.7404 9.44719 12.8675 9.49981 13 9.49981C13.1326 9.49981 13.2597 9.44717 13.3535 9.35347M12.6466 9.35352L13.3535 9.35347M13.3535 9.35347C13.3535 9.35345 13.3535 9.35343 13.3535 9.35341M13.3535 9.35347L13.3535 9.35341"
@@ -492,6 +510,17 @@ export default function SMM() {
 
                         Filter
                     </div>
+                </div>
+
+                <div id="smm_main_sorting" style={{display: visibleSort === 'sorting' ? 'flex' : 'none'}}>
+                  <div>
+                      Sorting
+                      <br/>
+                      <span>
+                         //put here checkboxes like so <input/><span>by date</span> <input/><span>by likes</span><input/><span>by comments</span><input/><span>by shares</span>  and <select/><span>ascending/descending</span>
+                     </span>
+                  </div>
+
                 </div>
 
 
