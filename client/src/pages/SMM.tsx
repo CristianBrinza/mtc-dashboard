@@ -17,7 +17,7 @@ interface SsmData {
     subject: string;
     type: string;
     link: string;
-    description: string;
+
     comment: string;
 }
 
@@ -221,7 +221,6 @@ export default function SMM() {
                     subject: subject || "", // Set the subject
                     type: type || "", // Set the type
                     link: linkInput,
-                    description: "",
                     comment: ""
                 };
 
@@ -553,6 +552,75 @@ export default function SMM() {
     };
 
 
+    const [isUpdatePopupVisible, setIsUpdatePopupVisible] = useState(false);
+    const [isUpdating, setIsUpdating] = useState(false);
+    const [updateStatusMessage, setUpdateStatusMessage] = useState("");
+    const [isUpdateComplete, setIsUpdateComplete] = useState(false);
+
+    const handleUpdateAll = async () => {
+        setIsUpdatePopupVisible(true);
+        setIsUpdating(true);
+        setUpdateStatusMessage("Updating records...");
+
+        try {
+            const baseUrl = import.meta.env.VITE_BACKEND_SOCIAL_URL;
+            const updatedData = [];
+
+            for (const item of ssmData) {
+                const response = await fetch(`${baseUrl}/get_insta_post?url=${encodeURIComponent(item.link)}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    const updatedItem = {
+                        ...item,
+                        likes: data.Likes || 0,
+                        comments: data.Comments || 0,
+                        shares: data.Shares || 0
+                    };
+                    updatedData.push(updatedItem);
+                } else {
+                    console.error(`Failed to update item with ID ${item.id}`);
+                }
+            }
+
+            setSsmData(updatedData);
+
+            const response = await fetch(`${baseUrl}/json/smm`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(updatedData),
+            });
+
+            if (response.ok) {
+                setUpdateStatusMessage("Update complete!");
+                setIsUpdateComplete(true);
+            } else {
+                throw new Error("Failed to update the server.");
+            }
+        } catch (error) {
+            console.error("Error updating records:", error.message);
+            setUpdateStatusMessage("An error occurred during the update.");
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
+
+    useEffect(() => {
+        const handleBeforeUnload = (e) => {
+            if (isUpdating) {
+                e.preventDefault();
+                e.returnValue = "The data is still updating. Are you sure you want to leave?";
+            }
+        };
+        window.addEventListener("beforeunload", handleBeforeUnload);
+
+        return () => {
+            window.removeEventListener("beforeunload", handleBeforeUnload);
+        };
+    }, [isUpdating]);
+
 
 
     return (
@@ -661,10 +729,12 @@ export default function SMM() {
                                 <option value="Interactiv">Interactiv</option>
                             </select>
                             <select name="type">
-                            <option value="">Select Type</option>
+                                <option value="">Select Type</option>
                                 <option value="Carousel">Carousel</option>
                                 <option value="Reel">Reel</option>
+                                <option value="Video">Video</option>
                                 <option value="Solo">Solo</option>
+                                <option value="Solo_Animated">Solo Animated</option>
                             </select>
                             <div className="smm_main_add_label">Sponsor:</div>
                             <label className="toggle-switch">
@@ -732,7 +802,7 @@ export default function SMM() {
                     style={{display: visibleSection === 'options' ? 'flex' : 'none'}}
                 >
 
-                    <div className="smm_main_btn">
+                    <div className="smm_main_btn" onClick={handleUpdateAll}>
 
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path
@@ -871,7 +941,9 @@ export default function SMM() {
                         <div className={"smm_main_filtering_bold"}>Type:</div>
                         <input type="checkbox" name="type" value="Carousel" onChange={handleFilterChange}/> Carousel
                         <input type="checkbox" name="type" value="Reel" onChange={handleFilterChange}/> Reel
+                        <input type="checkbox" name="type" value="Video" onChange={handleFilterChange}/> Video
                         <input type="checkbox" name="type" value="Solo" onChange={handleFilterChange}/> Solo
+                        <input type="checkbox" name="type" value="Solo_Animated" onChange={handleFilterChange}/> Solo Animated
                     </div>
                     <div className={"smm_main_filtering_block"}>
                         <div className={"smm_main_filtering_bold"}>Sponsor:</div>
@@ -1065,15 +1137,17 @@ export default function SMM() {
                                 Type:
                             </div>
 
-                            <select name="type" value={formInputs.type} onChange={handleInputChange}>
-                                <option value="">Select Type</option>
-                                <option value="Carousel">Carousel</option>
-                                <option value="Reel">Reel</option>
-                                <option value="Solo">Solo</option>
-                            </select>
+                        <select name="type" value={formInputs.type} onChange={handleInputChange}>
+                            <option value="">Select Type</option>
+                            <option value="Carousel">Carousel</option>
+                            <option value="Reel">Reel</option>
+                            <option value="Video">Video</option>
+                            <option value="Solo">Solo</option>
+                            <option value="Solo_Animated">Solo Animated</option>
+                        </select>
 
-                        </div>
-                        <div className={"smm_popup_row"}>
+                    </div>
+                    <div className={"smm_popup_row"}>
                             <div className="smm_main_add_label">
                                 Sponsor:
                             </div>
@@ -1165,10 +1239,7 @@ export default function SMM() {
                                 {selectedItemInfo.link}
                             </a>
                         </div>
-                        <div className={"smm_popup_row"}>
-                            <div className="smm_main_add_label">Description:</div>
-                            <div>{selectedItemInfo.description}</div>
-                        </div>
+
                         <div className={"smm_popup_row"}>
                             <div className="smm_main_add_label">Comment:</div>
                             <div>{selectedItemInfo.comment}</div>
@@ -1179,6 +1250,24 @@ export default function SMM() {
                         src={`http://127.0.0.1:5000/proxy_image?url=${encodeURIComponent(selectedItemInfo.img)}`}
                         alt="post"
                     />
+                    </div>
+                </Popup>
+            )}
+            {isUpdatePopupVisible && (
+                <Popup
+                    id="update_popup"
+                    title="Updating Records"
+                    isVisible={isUpdatePopupVisible}
+                    onClose={() => { if (!isUpdating) setIsUpdatePopupVisible(false); }}
+                >
+                    <div>
+                        <p>{updateStatusMessage}</p>
+                        {isUpdating && <div className="loading-animation"></div>}
+                        {isUpdateComplete && (
+                            <button className="smm_main_btn" onClick={() => setIsUpdatePopupVisible(false)}>
+                                Close
+                            </button>
+                        )}
                     </div>
                 </Popup>
             )}
