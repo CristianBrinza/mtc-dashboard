@@ -1,6 +1,5 @@
 import "../styles/smm.css";
 import React, { useEffect, useState } from "react";
-import { config } from "dotenv";
 import Popup from "../components/Popup";
 import Button from "../components/Button";
 import Icon from "../components/Icon";
@@ -19,69 +18,67 @@ interface SsmData {
     subject: string;
     type: string;
     link: string;
-
     comment: string;
 }
 
 export default function SMM() {
     const [isPopupVisible, setIsPopupVisible] = useState(false);
     const [isEditPopupVisible, setIsEditPopupVisible] = useState(false);
+    const [isConfirmPopupVisible, setIsConfirmPopupVisible] = useState(false);
     const [selectedItem, setSelectedItem] = useState<SsmData | null>(null);
-
-    const togglePopup = () => {
-        setIsPopupVisible(!isPopupVisible);
-    };
-
-    const toggleEditPopup = () => {
-        setIsEditPopupVisible(!isEditPopupVisible);
-    };
-    const baseUrl = import.meta.env.VITE_BACKEND_SOCIAL_URL;
     const [ssmData, setSsmData] = useState<SsmData[]>([]);
+    const [visibleSection, setVisibleSection] = useState<string | null>(null);
+    const [visibleSort, setVisibleSort] = useState<string | null>(null);
+    const [visibleFilter, setVisibleFilter] = useState<string | null>(null);
+    const [visibleNewAdvanced, setVisibleNewAdvanced] = useState<string | null>(null);
+    const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+    const [statusMessage, setStatusMessage] = useState(" ");
+    const [formInputs, setFormInputs] = useState({ operator: '', subject: '', sponsor: false, type: '', comment: '' });
+    const [sortCriteria, setSortCriteria] = useState("none");
+    const [sortOrder, setSortOrder] = useState("ascending");
+    const [filterCriteria, setFilterCriteria] = useState({
+        operator: [],
+        subject: [],
+        type: [],
+        sponsor: null,
+        dateRange: { from: "", to: "" },
+        day: [],
+        source: [],
+    });
+    const [searchQuery, setSearchQuery] = useState('');
+    const [isInfoPopupVisible, setIsInfoPopupVisible] = useState(false);
+    const [selectedItemInfo, setSelectedItemInfo] = useState<SsmData | null>(null);
+    const [isUpdatePopupVisible, setIsUpdatePopupVisible] = useState(false);
+    const [isUpdating, setIsUpdating] = useState(false);
+    const [updateStatusMessage, setUpdateStatusMessage] = useState("");
+    const [isUpdateComplete, setIsUpdateComplete] = useState(false);
+
+    const baseUrl = import.meta.env.VITE_BACKEND_SOCIAL_URL;
 
     useEffect(() => {
         const loadMenuButtons = async () => {
             try {
-                const baseUrl_load_buttons = import.meta.env.VITE_BACKEND_SOCIAL_URL;
-                const response = await fetch(`${baseUrl_load_buttons}/json/smm`, {
-                    method: "GET",
-                });
-                if (!response.ok) {
-                    throw new Error("Network response was not ok");
-                }
+                const response = await fetch(`${baseUrl}/json/smm`, { method: "GET" });
+                if (!response.ok) throw new Error("Network response was not ok");
                 const data: SsmData[] = await response.json();
                 setSsmData(data);
             } catch (error) {
                 console.error("Error fetching the JSON data:", error);
             }
         };
-
         loadMenuButtons();
-    }, []);
+    }, [baseUrl]);
 
-    const [visibleSection, setVisibleSection] = useState<string | null>(null);
-    const [visibleSort, setVisibleSort] = useState<string | null>(null);
-    const [visibleFilter, setVisibleFilter] = useState<string | null>(null);
-    const [visibleNewAdvanced, setVisibleNewAdvanced] = useState<string | null>(null);
+    const togglePopup = () => setIsPopupVisible(!isPopupVisible);
+    const toggleEditPopup = () => setIsEditPopupVisible(!isEditPopupVisible);
+    const toggleConfirmPopup = () => setIsConfirmPopupVisible(!isConfirmPopupVisible);
 
-    const toggleSorting = () => {
-        setVisibleSort(visibleSort === "sorting" ? null : "sorting");
+    const toggleSection = (section: string) => {
+        setVisibleSection(visibleSection === section ? null : section);
     };
-    const toggleFiltering = () => {
-        setVisibleFilter(visibleFilter === "filter" ? null : "filter");
-    };
+
     const toggleNewAdvanced = () => {
         setVisibleNewAdvanced(visibleNewAdvanced === "advenced" ? null : "advenced");
-    };
-
-    const toggleExportSettings = () => {
-        setVisibleSection(visibleSection === "export" ? null : "export");
-    };
-
-    const toggleAddNew = () => {
-        setVisibleSection(visibleSection === "add" ? null : "add");
-    };
-    const toggleOptions = () => {
-        setVisibleSection(visibleSection === "options" ? null : "options");
     };
 
     const exportToExcel = () => {
@@ -98,12 +95,8 @@ export default function SMM() {
     const convertToCSV = (objArray) => {
         const array = typeof objArray !== "object" ? JSON.parse(objArray) : objArray;
         let str = "";
-
-        // Define the order of columns
         const headers = ["id", "img", "source", "sponsor", "date", "day", "operator", "likes", "comments", "shares", "subject", "type", "link", "comment"];
         str += headers.join(",") + "\r\n";
-
-        // Create data rows
         for (let i = 0; i < array.length; i++) {
             let line = "";
             for (const header of headers) {
@@ -112,10 +105,8 @@ export default function SMM() {
             }
             str += line + "\r\n";
         }
-
         return str;
     };
-
 
     const downloadCSV = (csvData) => {
         const blob = new Blob([csvData], { type: "text/csv" });
@@ -131,15 +122,11 @@ export default function SMM() {
     const downloadFile = (url, filename) => {
         fetch(url, { headers: { "Content-Type": "application/json" } })
             .then((response) => {
-                if (!response.ok) {
-                    throw new Error("Network response was not ok");
-                }
-                return response.json(); // Expecting a JSON response
+                if (!response.ok) throw new Error("Network response was not ok");
+                return response.json();
             })
             .then((data) => {
-                const blob = new Blob([JSON.stringify(data, null, 2)], {
-                    type: "application/json",
-                });
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement("a");
                 a.style.display = "none";
@@ -149,16 +136,13 @@ export default function SMM() {
                 a.click();
                 window.URL.revokeObjectURL(url);
             })
-            .catch((error) =>
-                console.error("There was a problem with the fetch operation:", error)
-            );
+            .catch((error) => console.error("There was a problem with the fetch operation:", error));
     };
 
-    // Helper function to generate a unique numeric ID
     const generateUniqueNumericId = (existingIds) => {
         let newId;
         const baseId = 1000000;
-        const increment = 100; // Adjust as needed to ensure uniqueness
+        const increment = 100;
         do {
             newId = baseId + Math.floor(Math.random() * increment) * increment;
         } while (existingIds.includes(newId.toString()));
@@ -168,20 +152,14 @@ export default function SMM() {
     const getDayOfWeek = (dateString) => {
         const [day, month, year] = dateString.split(".").map(Number);
         const date = new Date(year, month - 1, day);
-        if (isNaN(date.getTime())) {
-            return "Invalid Date";
-        }
+        if (isNaN(date.getTime())) return "Invalid Date";
         const options = { weekday: "long" };
         return new Intl.DateTimeFormat("en-US", options).format(date);
     };
 
-    const [isButtonDisabled, setIsButtonDisabled] = useState(false);
-    const [statusMessage, setStatusMessage] = useState(" ");
-
     const AddNewLink = async () => {
         const linkInputElement = document.querySelector("#smm_main_add_left input") as HTMLInputElement;
         const linkInput = linkInputElement.value;
-
         const operatorSelectElement = document.querySelector("#smm_main_add_left_advenced_block select[name='operator']") as HTMLSelectElement;
         const subjectSelectElement = document.querySelector("#smm_main_add_left_advenced_block select[name='subject']") as HTMLSelectElement;
         const typeSelectElement = document.querySelector("#smm_main_add_left_advenced_block select[name='type']") as HTMLSelectElement;
@@ -197,37 +175,29 @@ export default function SMM() {
 
         if (linkInput.includes("www.instagram.com")) {
             try {
-                const baseUrladdnewlink = import.meta.env.VITE_BACKEND_SOCIAL_URL;
-                const response = await fetch(
-                    `${baseUrladdnewlink}/get_insta_post?url=${encodeURIComponent(linkInput)}`
-                );
-                if (!response.ok) {
-                    throw new Error(`Network response was not ok: ${response.statusText}`);
-                }
+                const response = await fetch(`${baseUrl}/get_insta_post?url=${encodeURIComponent(linkInput)}`);
+                if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
                 const data = await response.json();
 
                 const newId = generateUniqueNumericId(ssmData.map((item) => item.id));
                 const social_instagram_post = {
                     id: newId,
                     img: data.Cover_Image_URL,
-                    sponsor: sponsor, // Set the sponsor
+                    sponsor,
                     source: "instagram",
                     date: data.Date,
                     day: getDayOfWeek(data.Date),
-                    operator: operator || "", // Set the operator
-                    likes: data.Likes || 0, // Default to 0 if empty
-                    comments: data.Comments || 0, // Default to 0 if empty
-                    shares: data.Shares || 0, // Default to 0 if empty
-                    subject: subject || "", // Set the subject
-                    type: type || "", // Set the type
+                    operator: operator || "",
+                    likes: data.Likes || 0,
+                    comments: data.Comments || 0,
+                    shares: data.Shares || 0,
+                    subject: subject || "",
+                    type: type || "",
                     link: linkInput,
                     comment: ""
                 };
 
-
-
-                const linkExists = ssmData.some((item) => item.link === linkInput);
-                if (linkExists) {
+                if (ssmData.some((item) => item.link === linkInput)) {
                     setStatusMessage("Error, link already exists");
                     setIsButtonDisabled(false);
                     return;
@@ -236,29 +206,18 @@ export default function SMM() {
                 const updatedData = [social_instagram_post, ...ssmData];
                 setSsmData(updatedData);
 
-                const fetchResponse = await fetch(`${baseUrladdnewlink}/json/smm`, {
-                    method: "GET",
-                });
-                if (!fetchResponse.ok) {
-                    throw new Error(`Network response was not ok: ${fetchResponse.statusText}`);
-                }
+                const fetchResponse = await fetch(`${baseUrl}/json/smm`, { method: "GET" });
+                if (!fetchResponse.ok) throw new Error(`Network response was not ok: ${fetchResponse.statusText}`);
                 const existingData = await fetchResponse.json();
                 const newUpdatedData = [social_instagram_post, ...existingData];
 
-                const baseUrl_new_record = import.meta.env.VITE_BACKEND_SOCIAL_URL;
-                const jsonResponse = await fetch(`${baseUrl_new_record}/json/smm`, {
+                const jsonResponse = await fetch(`${baseUrl}/json/smm`, {
                     method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(newUpdatedData),
                 });
 
-                if (!jsonResponse.ok) {
-                    throw new Error(
-                        `Failed to update JSON file on server: ${jsonResponse.statusText}`
-                    );
-                }
+                if (!jsonResponse.ok) throw new Error(`Failed to update JSON file on server: ${jsonResponse.statusText}`);
 
                 setStatusMessage("Done");
                 linkInputElement.value = "";
@@ -274,8 +233,6 @@ export default function SMM() {
         }
     };
 
-
-    const [formInputs, setFormInputs] = useState({ operator: '', subject: '', sponsor: false, type: '', comment: '' });
     const showEditPopup = (id: string) => {
         const item = ssmData.find((data) => data.id === id);
         if (item) {
@@ -293,41 +250,27 @@ export default function SMM() {
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        setFormInputs({
-            ...formInputs,
-            [name]: value,
-        });
+        setFormInputs({ ...formInputs, [name]: value });
     };
 
     const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFormInputs({
-            ...formInputs,
-            sponsor: e.target.checked,
-        });
+        setFormInputs({ ...formInputs, sponsor: e.target.checked });
     };
 
     const handleUpdate = async () => {
         if (selectedItem) {
             const updatedItem = { ...selectedItem, ...formInputs };
-            const updatedData = ssmData.map((item) =>
-                item.id === selectedItem.id ? updatedItem : item
-            );
+            const updatedData = ssmData.map((item) => item.id === selectedItem.id ? updatedItem : item);
             setSsmData(updatedData);
 
             try {
-                const baseUrl_handle_update = import.meta.env.VITE_BACKEND_SOCIAL_URL;
-                const response = await fetch(`${baseUrl_handle_update}/json/smm`, {
+                const response = await fetch(`${baseUrl}/json/smm`, {
                     method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(updatedData),
                 });
 
-                if (!response.ok) {
-                    throw new Error(`Failed to update JSON file on server: ${response.statusText}`);
-                }
-
+                if (!response.ok) throw new Error(`Failed to update JSON file on server: ${response.statusText}`);
                 toggleEditPopup();
             } catch (error) {
                 console.error("Error updating the JSON data:", error.message);
@@ -341,19 +284,13 @@ export default function SMM() {
             setSsmData(updatedData);
 
             try {
-                const baseUrl_handle_delete = import.meta.env.VITE_BACKEND_SOCIAL_URL;
-                const response = await fetch(`${baseUrl_handle_delete}/json/smm`, {
+                const response = await fetch(`${baseUrl}/json/smm`, {
                     method: "DELETE",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ id: selectedItem.id }),
                 });
 
-                if (!response.ok) {
-                    throw new Error(`Failed to delete item on server: ${response.statusText}`);
-                }
-
+                if (!response.ok) throw new Error(`Failed to delete item on server: ${response.statusText}`);
                 toggleEditPopup();
             } catch (error) {
                 console.error("Error deleting the item:", error.message);
@@ -361,26 +298,19 @@ export default function SMM() {
         }
     };
 
-    const [isConfirmPopupVisible, setIsConfirmPopupVisible] = useState(false);
     const handleConfirmDelete = async () => {
         if (selectedItem) {
             const updatedData = ssmData.filter((item) => item.id !== selectedItem.id);
             setSsmData(updatedData);
 
             try {
-                const baseUrl_confirm_delete = import.meta.env.VITE_BACKEND_SOCIAL_URL;
-                const response = await fetch(`${baseUrl_confirm_delete}/json/smm`, {
+                const response = await fetch(`${baseUrl}/json/smm`, {
                     method: "DELETE",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ id: selectedItem.id }),
                 });
 
-                if (!response.ok) {
-                    throw new Error(`Failed to delete item on server: ${response.statusText}`);
-                }
-
+                if (!response.ok) throw new Error(`Failed to delete item on server: ${response.statusText}`);
                 toggleEditPopup();
                 setIsConfirmPopupVisible(false);
             } catch (error) {
@@ -389,24 +319,11 @@ export default function SMM() {
         }
     };
 
-
-
-    const [sortCriteria, setSortCriteria] = useState("none");
-    const [sortOrder, setSortOrder] = useState("ascending");
-
-    const handleSortChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSortCriteria(e.target.value);
-    };
-
-    const handleOrderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        setSortOrder(e.target.value);
-    };
+    const handleSortChange = (e: React.ChangeEvent<HTMLInputElement>) => setSortCriteria(e.target.value);
+    const handleOrderChange = (e: React.ChangeEvent<HTMLSelectElement>) => setSortOrder(e.target.value);
 
     const sortData = (data: SsmData[]) => {
-        if (sortCriteria === "none") {
-            return data;
-        }
-
+        if (sortCriteria === "none") return data;
         const sortedData = [...data];
         sortedData.sort((a, b) => {
             let comparison = 0;
@@ -434,12 +351,8 @@ export default function SMM() {
     useEffect(() => {
         const savedSortCriteria = localStorage.getItem("sortCriteria");
         const savedSortOrder = localStorage.getItem("sortOrder");
-        if (savedSortCriteria) {
-            setSortCriteria(savedSortCriteria);
-        }
-        if (savedSortOrder) {
-            setSortOrder(savedSortOrder);
-        }
+        if (savedSortCriteria) setSortCriteria(savedSortCriteria);
+        if (savedSortOrder) setSortOrder(savedSortOrder);
     }, []);
 
     useEffect(() => {
@@ -447,79 +360,36 @@ export default function SMM() {
         localStorage.setItem("sortOrder", sortOrder);
     }, [sortCriteria, sortOrder]);
 
-
-
-    const [filterCriteria, setFilterCriteria] = useState({
-        operator: [],
-        subject: [],
-        type: [],
-        sponsor: null, // updated to null
-        dateRange: { from: "", to: "" },
-        day: [],
-        source: [],
-    });
-
-
     const handleFilterChange = (e) => {
         const { name, value, type, checked } = e.target;
-        setSearchQuery(''); // Reset search query when filters change
+        setSearchQuery('');
         setFilterCriteria((prev) => {
             if (name === "withSponsor" || name === "withoutSponsor") {
                 let sponsor = null;
                 if (name === "withSponsor" && checked) sponsor = true;
                 if (name === "withoutSponsor" && checked) sponsor = false;
                 if (!checked) sponsor = null;
-                return {
-                    ...prev,
-                    sponsor,
-                };
+                return { ...prev, sponsor };
             } else if (type === "checkbox") {
-                if (checked) {
-                    return {
-                        ...prev,
-                        [name]: [...prev[name], value],
-                    };
-                } else {
-                    return {
-                        ...prev,
-                        [name]: prev[name].filter((item) => item !== value),
-                    };
-                }
+                return { ...prev, [name]: checked ? [...prev[name], value] : prev[name].filter((item) => item !== value) };
             } else if (type === "date") {
-                return {
-                    ...prev,
-                    dateRange: {
-                        ...prev.dateRange,
-                        [name]: value,
-                    },
-                };
+                return { ...prev, dateRange: { ...prev.dateRange, [name]: value } };
             } else {
-                return {
-                    ...prev,
-                    [name]: value,
-                };
+                return { ...prev, [name]: value };
             }
         });
     };
 
-
-
-    const handleSearchChange = (e) => {
-        setSearchQuery(e.target.value);
-    };
+    const handleSearchChange = (e) => setSearchQuery(e.target.value);
 
     const searchFilter = (data) => {
         if (!searchQuery) return data;
-        return data.filter((item) =>
-            item.link.includes(searchQuery) || item.id.includes(searchQuery)
-        );
+        return data.filter((item) => item.link.includes(searchQuery) || item.id.includes(searchQuery));
     };
-
-
 
     const parseDateString = (dateString: string): Date => {
         const [day, month, year] = dateString.split('.').map(Number);
-        return new Date(year, month - 1, day); // month is 0-based in Date
+        return new Date(year, month - 1, day);
     };
 
     const filterData = (data) => {
@@ -532,16 +402,10 @@ export default function SMM() {
                 (!filterCriteria.dateRange.to || parseDateString(item.date) <= new Date(filterCriteria.dateRange.to));
             const dayMatch = filterCriteria.day.length === 0 || filterCriteria.day.includes(item.day);
             const sourceMatch = filterCriteria.source.length === 0 || filterCriteria.source.includes(item.source);
-
             return operatorMatch && subjectMatch && typeMatch && sponsorMatch && dateMatch && dayMatch && sourceMatch;
         });
     };
 
-    const [searchQuery, setSearchQuery] = useState('');
-
-
-    const [isInfoPopupVisible, setIsInfoPopupVisible] = useState(false);
-    const [selectedItemInfo, setSelectedItemInfo] = useState<SsmData | null>(null);
     const showInfoPopup = (id: string) => {
         const item = ssmData.find((data) => data.id === id);
         if (item) {
@@ -550,19 +414,12 @@ export default function SMM() {
         }
     };
 
-
-    const [isUpdatePopupVisible, setIsUpdatePopupVisible] = useState(false);
-    const [isUpdating, setIsUpdating] = useState(false);
-    const [updateStatusMessage, setUpdateStatusMessage] = useState("");
-    const [isUpdateComplete, setIsUpdateComplete] = useState(false);
-
     const handleUpdateAll = async () => {
         setIsUpdatePopupVisible(true);
         setIsUpdating(true);
         setUpdateStatusMessage("Updating records...");
 
         try {
-            const baseUrl = import.meta.env.VITE_BACKEND_SOCIAL_URL;
             const filteredData = searchFilter(filterData(ssmData));
             const updatedData = [];
 
@@ -570,29 +427,19 @@ export default function SMM() {
                 const response = await fetch(`${baseUrl}/get_insta_post?url=${encodeURIComponent(item.link)}`);
                 if (response.ok) {
                     const data = await response.json();
-                    const updatedItem = {
-                        ...item,
-                        likes: data.Likes || 0,
-                        comments: data.Comments || 0,
-                        shares: data.Shares || 0
-                    };
+                    const updatedItem = { ...item, likes: data.Likes || 0, comments: data.Comments || 0, shares: data.Shares || 0 };
                     updatedData.push(updatedItem);
                 } else {
                     console.error(`Failed to update item with ID ${item.id}`);
                 }
             }
 
-            const finalData = ssmData.map(item =>
-                updatedData.find(updatedItem => updatedItem.id === item.id) || item
-            );
-
+            const finalData = ssmData.map(item => updatedData.find(updatedItem => updatedItem.id === item.id) || item);
             setSsmData(finalData);
 
             const response = await fetch(`${baseUrl}/json/smm`, {
                 method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(finalData),
             });
 
@@ -610,8 +457,6 @@ export default function SMM() {
         }
     };
 
-
-
     useEffect(() => {
         const handleBeforeUnload = (e) => {
             if (isUpdating) {
@@ -620,33 +465,25 @@ export default function SMM() {
             }
         };
         window.addEventListener("beforeunload", handleBeforeUnload);
-
         return () => {
             window.removeEventListener("beforeunload", handleBeforeUnload);
         };
     }, [isUpdating]);
 
-
-
-
     return (
         <>
-
             <div className="smm_main">
-                <div id="smm_main_title">
-                    Moldtelecom SMM | Marketing Dashboard
-                </div>
-
+                <div id="smm_main_title">Moldtelecom SMM | Marketing Dashboard</div>
                 <div id="smm_main_options">
-                    <Button id="add_new" className={`smm_main_btn ${visibleSection === 'add' ? 'smm_main_btn_pressed' : ''}`} onClick={toggleAddNew}>
+                    <Button id="add_new" className={`smm_main_btn ${visibleSection === 'add' ? 'smm_main_btn_pressed' : ''}`} onClick={() => toggleSection('add')}>
                         <Icon type="add" />
                         Add
                     </Button>
-                    <Button id="show_export_setting" className={`smm_main_btn ${visibleSection === 'export' ? 'smm_main_btn_pressed' : ''}`} onClick={toggleExportSettings}>
+                    <Button id="show_export_setting" className={`smm_main_btn ${visibleSection === 'export' ? 'smm_main_btn_pressed' : ''}`} onClick={() => toggleSection('export')}>
                         <Icon type="export" />
                         Export
                     </Button>
-                    <Button className={`smm_main_btn ${visibleSection === 'options' ? 'smm_main_btn_pressed' : ''}`} onClick={toggleOptions}>
+                    <Button className={`smm_main_btn ${visibleSection === 'options' ? 'smm_main_btn_pressed' : ''}`} onClick={() => toggleSection('options')}>
                         <Icon type="options" />
                         Options
                     </Button>
@@ -655,7 +492,6 @@ export default function SMM() {
                         Settings
                     </Button>
                 </div>
-
 
                 <div id="smm_main_add" style={{ display: visibleSection === 'add' ? 'flex' : 'none' }}>
                     <div>
@@ -668,7 +504,6 @@ export default function SMM() {
                             <Button id="smm_main_add_left_advenced" className={visibleNewAdvanced === 'advenced' ? 'smm_main_btn_pressed' : ''} onClick={toggleNewAdvanced}>
                                 Advanced
                             </Button>
-
                             <div>{statusMessage}</div>
                         </div>
                         <div id="smm_main_add_left_advenced_block" style={{ display: visibleNewAdvanced === 'advenced' ? 'flex' : 'none' }}>
@@ -705,16 +540,10 @@ export default function SMM() {
                             </select>
                             <div className="smm_main_add_label">Sponsor:</div>
                             <label className="toggle-switch">
-                                <input
-                                    type="checkbox"
-                                    name="sponsor"
-                                    onChange={handleInputChange}
-                                    checked={formInputs.sponsor}
-                                />
+                                <input type="checkbox" name="sponsor" onChange={handleInputChange} checked={formInputs.sponsor} />
                                 <span className="slider"></span>
                             </label>
                         </div>
-
                     </div>
                     <div id="smm_main_add_option_plus">
                         <Button id="add_new">
@@ -727,11 +556,8 @@ export default function SMM() {
                         </Button>
                     </div>
                 </div>
-                <div
-                    id="smm_main_export_options"
-                    style={{ display: visibleSection === 'export' ? 'flex' : 'none' }}
-                >
 
+                <div id="smm_main_export_options" style={{ display: visibleSection === 'export' ? 'flex' : 'none' }}>
                     <Button id="export_to_excel" onClick={exportToExcel}>
                         <Icon type="export" />
                         excel (full)
@@ -745,50 +571,39 @@ export default function SMM() {
                         json
                     </Button>
                 </div>
-                <div
-                    id="smm_main_export_options_block"
-                    style={{ display: visibleSection === 'options' ? 'flex' : 'none' }}
-                >
 
+                <div id="smm_main_export_options_block" style={{ display: visibleSection === 'options' ? 'flex' : 'none' }}>
                     <Button onClick={handleUpdateAll}>
                         <Icon type="update" />
                         Update
                     </Button>
-
                 </div>
 
                 <div id="smm_main_table_options">
-
-
-                    <input
-                        type="text"
-                        placeholder="Search by link or ID"
-                        value={searchQuery}
-                        onChange={handleSearchChange}
-                    />
-                    <Button id="show_sort" className={visibleSort === 'sorting' ? 'smm_main_btn_pressed' : ''} onClick={toggleSorting}>
+                    <input type="text" placeholder="Search by link or ID" value={searchQuery} onChange={handleSearchChange} />
+                    <Button id="show_sort" className={visibleSort === 'sorting' ? 'smm_main_btn_pressed' : ''} onClick={() => setVisibleSort(visibleSort === "sorting" ? null : "sorting")}>
                         <Icon type="sort" />
                         Sort by
                     </Button>
-                    <Button id="show_filter" className={visibleFilter === 'filter' ? 'smm_main_btn_pressed' : ''} onClick={toggleFiltering}>
+                    <Button id="show_filter" className={visibleFilter === 'filter' ? 'smm_main_btn_pressed' : ''} onClick={() => setVisibleFilter(visibleFilter === "filter" ? null : "filter")}>
                         <Icon type="filter" />
                         Filter
                     </Button>
                 </div>
 
                 <div id="smm_main_sorting" style={{ display: visibleSort === 'sorting' ? 'flex' : 'none' }}>
-                    <span>
-                        <input type="radio" name="sortCriteria" value="none" onChange={handleSortChange} checked={sortCriteria === "none"} />
-                        <span>no sorting</span>&nbsp;&nbsp;&nbsp;&nbsp;
-                        <input type="radio" name="sortCriteria" value="date" onChange={handleSortChange} checked={sortCriteria === "date"} />
-                        <span>by date</span>&nbsp;&nbsp;&nbsp;&nbsp;
-                        <input type="radio" name="sortCriteria" value="likes" onChange={handleSortChange} checked={sortCriteria === "likes"} />
-                        <span>by likes</span>&nbsp;&nbsp;&nbsp;&nbsp;
-                        <input type="radio" name="sortCriteria" value="comments" onChange={handleSortChange} checked={sortCriteria === "comments"} />
-                        <span>by comments</span>&nbsp;&nbsp;&nbsp;&nbsp;
-                        <input type="radio" name="sortCriteria" value="shares" onChange={handleSortChange} checked={sortCriteria === "shares"} />
-                        <span>by shares</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                    </span>
+          <span>
+            <input type="radio" name="sortCriteria" value="none" onChange={handleSortChange} checked={sortCriteria === "none"} />
+            <span>no sorting</span>&nbsp;&nbsp;&nbsp;&nbsp;
+              <input type="radio" name="sortCriteria" value="date" onChange={handleSortChange} checked={sortCriteria === "date"} />
+            <span>by date</span>&nbsp;&nbsp;&nbsp;&nbsp;
+              <input type="radio" name="sortCriteria" value="likes" onChange={handleSortChange} checked={sortCriteria === "likes"} />
+            <span>by likes</span>&nbsp;&nbsp;&nbsp;&nbsp;
+              <input type="radio" name="sortCriteria" value="comments" onChange={handleSortChange} checked={sortCriteria === "comments"} />
+            <span>by comments</span>&nbsp;&nbsp;&nbsp;&nbsp;
+              <input type="radio" name="sortCriteria" value="shares" onChange={handleSortChange} checked={sortCriteria === "shares"} />
+            <span>by shares</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          </span>
                     <select onChange={handleOrderChange} value={sortOrder}>
                         <option value="ascending">ascending</option>
                         <option value="descending">descending</option>
@@ -806,7 +621,6 @@ export default function SMM() {
                             </div>
                             <input type="checkbox" name="operator" value="Moldcell" onChange={handleFilterChange} /> Moldcell
                             <input type="checkbox" name="operator" value="Starnet" onChange={handleFilterChange} /> Starnet
-
                             <input type="checkbox" name="operator" value="Arax" onChange={handleFilterChange} /> Arax
                             <div className={"smm_main_filtering_block_category"}>
                                 RU |
@@ -822,18 +636,15 @@ export default function SMM() {
                     </div>
                     <div className={"smm_main_filtering_block"}>
                         <div className={"smm_main_filtering_bold"}>Subject:</div>
-
                         <div className={"smm_main_filtering_block_category"}>
                             Branding |
                             <input type="checkbox" name="subject" value="Event" onChange={handleFilterChange} /> Event
-                            <input type="checkbox" name="subject" value="PR" onChange={handleFilterChange} />PR
-                            <input type="checkbox" name="subject" value="Promoted" onChange={handleFilterChange} />Promoted
-
+                            <input type="checkbox" name="subject" value="PR" onChange={handleFilterChange} /> PR
+                            <input type="checkbox" name="subject" value="Promoted" onChange={handleFilterChange} /> Promoted
                         </div>
                         <input type="checkbox" name="subject" value="Comercial" onChange={handleFilterChange} /> Comercial
                         <input type="checkbox" name="subject" value="Informativ" onChange={handleFilterChange} /> Informativ
                         <input type="checkbox" name="subject" value="Interactiv" onChange={handleFilterChange} /> Interactiv
-
                     </div>
                     <div className={"smm_main_filtering_block"}>
                         <div className={"smm_main_filtering_bold"}>Type:</div>
@@ -846,27 +657,14 @@ export default function SMM() {
                     <div className={"smm_main_filtering_block"}>
                         <div className={"smm_main_filtering_bold"}>Sponsor:</div>
                         <label>
-                            <input
-                                type="checkbox"
-                                name="withSponsor"
-                                value="withSponsor"
-                                checked={filterCriteria.sponsor === true}
-                                onChange={handleFilterChange}
-                            />
+                            <input type="checkbox" name="withSponsor" value="withSponsor" checked={filterCriteria.sponsor === true} onChange={handleFilterChange} />
                             Yes
                         </label>
                         <label>
-                            <input
-                                type="checkbox"
-                                name="withoutSponsor"
-                                value="withoutSponsor"
-                                checked={filterCriteria.sponsor === false}
-                                onChange={handleFilterChange}
-                            />
+                            <input type="checkbox" name="withoutSponsor" value="withoutSponsor" checked={filterCriteria.sponsor === false} onChange={handleFilterChange} />
                             No
                         </label>
                     </div>
-
                     <div className={"smm_main_filtering_block"}>
                         <div className={"smm_main_filtering_bold"}>Date Range:</div>
                         <input type="date" name="from" onChange={handleFilterChange} />&nbsp; to &nbsp;
@@ -889,49 +687,19 @@ export default function SMM() {
                     </div>
                 </div>
 
-
                 <div id="smm_main_table">
                     {searchFilter(filterData(sortData(ssmData))).map((item) => (
                         <div className="smm_main_table_cell" id={item.id} key={item.id}>
-                            <img
-                                className="smm_main_table_social"
-                                src={`../images/general/${item.source}.png`}
-                                alt=""
-                            />
-                            <span className="smm_main_table_id" style={{ width: "60px" }}>
-                                {item.id}
-                            </span>
+                            <img className="smm_main_table_social" src={`../images/general/${item.source}.png`} alt="" />
+                            <span className="smm_main_table_id" style={{ width: "60px" }}>{item.id}</span>
                             <span className={"smm_main_table_post_img"}>
-                                <img
-                                    className="smm_main_table_post"
-                                    src={`http://127.0.0.1:5000/proxy_image?url=${encodeURIComponent(item.img)}`}
-                                    alt="post"
-                                />
-                                <img
-                                    className="smm_main_table_post_big"
-                                    src={`http://127.0.0.1:5000/proxy_image?url=${encodeURIComponent(item.img)}`}
-                                    alt="post"
-                                />
-                            </span>
-
-                            <img
-                                className="smm_main_table_money"
-                                src={
-                                    item.sponsor
-                                        ? "../images/general/money.png"
-                                        : "../images/general/no_money.png"
-                                }
-                                alt=""
-                            />
-                            <span className="smm_main_table_text_info" style={{ width: "85px" }}>
-                                {item.date}
-                            </span>
-                            <span className="smm_main_table_text_info" style={{ width: "85px" }}>
-                                {item.day}
-                            </span>
-                            <span className="smm_main_table_text_info" style={{ width: "105px" }}>
-                                {item.operator}
-                            </span>
+                <img className="smm_main_table_post" src={`http://127.0.0.1:5000/proxy_image?url=${encodeURIComponent(item.img)}`} alt="post" />
+                <img className="smm_main_table_post_big" src={`http://127.0.0.1:5000/proxy_image?url=${encodeURIComponent(item.img)}`} alt="post" />
+              </span>
+                            <img className="smm_main_table_money" src={item.sponsor ? "../images/general/money.png" : "../images/general/no_money.png"} alt="" />
+                            <span className="smm_main_table_text_info" style={{ width: "85px" }}>{item.date}</span>
+                            <span className="smm_main_table_text_info" style={{ width: "85px" }}>{item.day}</span>
+                            <span className="smm_main_table_text_info" style={{ width: "105px" }}>{item.operator}</span>
                             <div className="smm_main_table_social_count">
                                 <span style={{ width: "30px" }}>{item.likes}</span>
                                 <img className="smm_main_table_social_svg" src="../images/general/like.png" alt="" />
@@ -944,61 +712,25 @@ export default function SMM() {
                                 <span style={{ width: "30px" }}>{item.shares}</span>
                                 <img className="smm_main_table_social_svg" src="../images/general/share.png" alt="" />
                             </div>
-
-                            <span
-                                className="smm_main_table_text_info_type"
-                                style={{ width: "100px" }}
-                            >
-                                {item.subject}
-                            </span>
-                            <span
-                                className="smm_main_table_text_info_type"
-                                style={{ width: "100px" }}
-                            >
-                                {item.type}
-                            </span>
-                            <a className="smm_main_table_text_info" href={item.link}>
-                                link
-                            </a>
-                            <img
-                                className="smm_main_table_control smm_main_table_control_more"
-                                onClick={() => showInfoPopup(item.id)}
-                                src="../images/general/more.png"
-                                alt=""
-                            />
-
-                            <img
-                                className="smm_main_table_control smm_main_table_control_edit"
-                                onClick={() => showEditPopup(item.id)}
-                                src="../images/general/edit.png"
-                                alt=""
-                            />
+                            <span className="smm_main_table_text_info_type" style={{ width: "100px" }}>{item.subject}</span>
+                            <span className="smm_main_table_text_info_type" style={{ width: "100px" }}>{item.type}</span>
+                            <a className="smm_main_table_text_info" href={item.link}>link</a>
+                            <img className="smm_main_table_control smm_main_table_control_more" onClick={() => showInfoPopup(item.id)} src="../images/general/more.png" alt="" />
+                            <img className="smm_main_table_control smm_main_table_control_edit" onClick={() => showEditPopup(item.id)} src="../images/general/edit.png" alt="" />
                         </div>
                     ))}
                 </div>
             </div>
 
-            <Popup
-                id="manual_add"
-                title="Manual Add"
-                isVisible={isPopupVisible}
-                onClose={togglePopup}
-            >
+            <Popup id="manual_add" title="Manual Add" isVisible={isPopupVisible} onClose={togglePopup}>
                 Manual Add Form or Content Here
             </Popup>
 
             {isEditPopupVisible && selectedItem && (
-                <Popup
-                    id="edit_popup"
-                    title="Edit Item"
-                    isVisible={isEditPopupVisible}
-                    onClose={toggleEditPopup}
-                >
+                <Popup id="edit_popup" title="Edit Item" isVisible={isEditPopupVisible} onClose={toggleEditPopup}>
                     <form>
                         <div className={"smm_popup_row"}>
-                            <div className="smm_main_add_label">
-                                Operator:
-                            </div>
+                            <div className="smm_main_add_label">Operator:</div>
                             <select name="operator" value={formInputs.operator} onChange={handleInputChange}>
                                 <option value="">Select Operator</option>
                                 <option value="Moldtelecom">Moldtelecom</option>
@@ -1013,12 +745,9 @@ export default function SMM() {
                                 <option value="Megafon">RU | Megafon</option>
                                 <option value="Beeline">RU | Beeline</option>
                             </select>
-
                         </div>
                         <div className={"smm_popup_row"}>
-                            <div className="smm_main_add_label">
-                                Subject:
-                            </div>
+                            <div className="smm_main_add_label">Subject:</div>
                             <select name="subject" value={formInputs.subject} onChange={handleInputChange}>
                                 <option value="">Select Subject</option>
                                 <option value="Comercial">Comercial</option>
@@ -1028,13 +757,9 @@ export default function SMM() {
                                 <option value="Informativ">Informativ</option>
                                 <option value="Interactiv">Interactiv</option>
                             </select>
-
                         </div>
                         <div className={"smm_popup_row"}>
-                            <div className="smm_main_add_label">
-                                Type:
-                            </div>
-
+                            <div className="smm_main_add_label">Type:</div>
                             <select name="type" value={formInputs.type} onChange={handleInputChange}>
                                 <option value="">Select Type</option>
                                 <option value="Carousel">Carousel</option>
@@ -1043,54 +768,28 @@ export default function SMM() {
                                 <option value="Solo">Solo</option>
                                 <option value="Animated">Animated</option>
                             </select>
-
                         </div>
                         <div className={"smm_popup_row"}>
-                            <div className="smm_main_add_label">
-                                Sponsor:
-                            </div>
+                            <div className="smm_main_add_label">Sponsor:</div>
                             <label className="toggle-switch">
-                                <input
-                                    type="checkbox"
-                                    name="sponsor"
-                                    checked={formInputs.sponsor}
-                                    onChange={handleCheckboxChange}
-                                />
+                                <input type="checkbox" name="sponsor" checked={formInputs.sponsor} onChange={handleCheckboxChange} />
                                 <span className="slider"></span>
                             </label>
-
                         </div>
                         <div className={"smm_popup_row"}>
-                            <div className="smm_main_add_label">
-                                Comment:
-                            </div>
-                            <textarea
-                                name="comment"
-                                value={formInputs.comment}
-                                onChange={handleInputChange}
-                                rows={2}
-                                cols={50}
-                                className="textarea-comment"
-                            />
+                            <div className="smm_main_add_label">Comment:</div>
+                            <textarea name="comment" value={formInputs.comment} onChange={handleInputChange} rows={2} cols={50} className="textarea-comment" />
                         </div>
                         <div className={"smm_popup_row smm_popup_row_btns"}>
-                            <Button id="smm_popup_edit_button" type="button" onClick={handleUpdate}>
-                                Update
-                            </Button>
-                            <Button style={{  borderColor: '#ffb4b4',color: '#ffb4b4'}} id="smm_popup_delete_button" type="button" onClick={() => setIsConfirmPopupVisible(true)}>
-                                Delete
-                            </Button>
+                            <Button id="smm_popup_edit_button" type="button" onClick={handleUpdate}>Update</Button>
+                            <Button id="smm_popup_delete_button" type="button" style={{ borderColor: '#ffb4b4', color: '#ffb4b4' }} onClick={() => setIsConfirmPopupVisible(true)}>Delete</Button>
                         </div>
                     </form>
                 </Popup>
             )}
+
             {isInfoPopupVisible && selectedItemInfo && (
-                <Popup
-                    id="info_popup"
-                    title="Item Details"
-                    isVisible={isInfoPopupVisible}
-                    onClose={() => setIsInfoPopupVisible(false)}
-                >
+                <Popup id="info_popup" title="Item Details" isVisible={isInfoPopupVisible} onClose={() => setIsInfoPopupVisible(false)}>
                     <div id="info_popup_inside">
                         <div id="info_popup_inside_left">
                             <div className={"smm_popup_row"}>
@@ -1131,57 +830,37 @@ export default function SMM() {
                             </div>
                             <div className={"smm_popup_row"}>
                                 <div className="smm_main_add_label">Link:</div>
-                                <a href={selectedItemInfo.link} target="_blank" rel="noopener noreferrer">
-                                    {selectedItemInfo.link}
-                                </a>
+                                <a href={selectedItemInfo.link} target="_blank" rel="noopener noreferrer">{selectedItemInfo.link}</a>
                             </div>
-
                             <div className={"smm_popup_row"}>
                                 <div className="smm_main_add_label">Comment:</div>
                                 <div>{selectedItemInfo.comment}</div>
                             </div>
                         </div>
-                        <img
-                            className="smm_popup_row_post"
-                            src={`http://127.0.0.1:5000/proxy_image?url=${encodeURIComponent(selectedItemInfo.img)}`}
-                            alt="post"
-                        />
+                        <img className="smm_popup_row_post" src={`http://127.0.0.1:5000/proxy_image?url=${encodeURIComponent(selectedItemInfo.img)}`} alt="post" />
                     </div>
                 </Popup>
             )}
+
             {isUpdatePopupVisible && (
-                <Popup
-                    id="update_popup"
-                    title="Updating Records"
-                    isVisible={isUpdatePopupVisible}
-                    onClose={() => { if (!isUpdating) setIsUpdatePopupVisible(false); }}
-                >
+                <Popup id="update_popup" title="Updating Records" isVisible={isUpdatePopupVisible} onClose={() => { if (!isUpdating) setIsUpdatePopupVisible(false); }}>
                     <div>
                         <p>{updateStatusMessage}</p>
                         {isUpdating && <div className="loading-animation"></div>}
                         {isUpdateComplete && (
-                            <Button className="smm_main_btn" onClick={() => setIsUpdatePopupVisible(false)}>
-                                Close
-                            </Button>
+                            <Button className="smm_main_btn" onClick={() => setIsUpdatePopupVisible(false)}>Close</Button>
                         )}
                     </div>
                 </Popup>
             )}
 
-
             {isConfirmPopupVisible && (
-                <Popup
-                    id="confirm_delete_popup"
-                    title="Confirm Delete"
-                    isVisible={isConfirmPopupVisible}
-                    onClose={() => setIsConfirmPopupVisible(false)}
-                >
+                <Popup id="confirm_delete_popup" title="Confirm Delete" isVisible={isConfirmPopupVisible} onClose={() => setIsConfirmPopupVisible(false)}>
                     <div>
                         <p>Are you sure you want to delete this item?</p>
                         <div className={"smm_popup_row"}>
-                            <Button onClick={handleConfirmDelete} style={{  borderColor: '#ffb4b4',color: '#ffb4b4'}}>Yes</Button>
+                            <Button onClick={handleConfirmDelete} style={{ borderColor: '#ffb4b4', color: '#ffb4b4' }}>Yes</Button>
                             <Button onClick={() => setIsConfirmPopupVisible(false)}>No</Button>
-
                         </div>
                     </div>
                 </Popup>
