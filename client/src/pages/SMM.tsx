@@ -199,7 +199,7 @@ export default function SMM() {
             try {
                 const baseUrladdnewlink = import.meta.env.VITE_BACKEND_SOCIAL_URL;
                 const response = await fetch(
-                    `${baseUrladdnewlink}/get_post?url=${encodeURIComponent(linkInput)}`
+                    `${baseUrladdnewlink}/get_insta_post?url=${encodeURIComponent(linkInput)}`
                 );
                 if (!response.ok) {
                     throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -540,6 +540,18 @@ export default function SMM() {
 
 
     const [searchQuery, setSearchQuery] = useState('');
+
+
+    const [isInfoPopupVisible, setIsInfoPopupVisible] = useState(false);
+    const [selectedItemInfo, setSelectedItemInfo] = useState<SsmData | null>(null);
+    const showInfoPopup = (id: string) => {
+        const item = ssmData.find((data) => data.id === id);
+        if (item) {
+            setSelectedItemInfo(item);
+            setIsInfoPopupVisible(true);
+        }
+    };
+
 
 
 
@@ -984,6 +996,7 @@ export default function SMM() {
                                 src="../images/general/more.png"
                                 alt=""
                             />
+
                             <img
                                 className="smm_main_table_control smm_main_table_control_edit"
                                 onClick={() => showEditPopup(item.id)}
@@ -1101,6 +1114,76 @@ export default function SMM() {
                     </form>
                 </Popup>
             )}
+            {isInfoPopupVisible && selectedItemInfo && (
+                <Popup
+                    id="info_popup"
+                    title="Item Details"
+                    isVisible={isInfoPopupVisible}
+                    onClose={() => setIsInfoPopupVisible(false)}
+                >
+                    <div id="info_popup_inside">
+                    <div id="info_popup_inside_left">
+                        <div className={"smm_popup_row"}>
+                            <div className="smm_main_add_label">Operator:</div>
+                            <div>{selectedItemInfo.operator}</div>
+                        </div>
+                        <div className={"smm_popup_row"}>
+                            <div className="smm_main_add_label">Subject:</div>
+                            <div>{selectedItemInfo.subject}</div>
+                        </div>
+                        <div className={"smm_popup_row"}>
+                            <div className="smm_main_add_label">Type:</div>
+                            <div>{selectedItemInfo.type}</div>
+                        </div>
+                        <div className={"smm_popup_row"}>
+                            <div className="smm_main_add_label">Sponsor:</div>
+                            <div>{selectedItemInfo.sponsor ? "Yes" : "No"}</div>
+                        </div>
+                        <div className={"smm_popup_row"}>
+                            <div className="smm_main_add_label">Date:</div>
+                            <div>{selectedItemInfo.date}</div>
+                        </div>
+                        <div className={"smm_popup_row"}>
+                            <div className="smm_main_add_label">Day:</div>
+                            <div>{selectedItemInfo.day}</div>
+                        </div>
+                        <div className={"smm_popup_row"}>
+                            <div className="smm_main_add_label">Likes:</div>
+                            <div>{selectedItemInfo.likes}</div>
+                        </div>
+                        <div className={"smm_popup_row"}>
+                            <div className="smm_main_add_label">Comments:</div>
+                            <div>{selectedItemInfo.comments}</div>
+                        </div>
+                        <div className={"smm_popup_row"}>
+                            <div className="smm_main_add_label">Shares:</div>
+                            <div>{selectedItemInfo.shares}</div>
+                        </div>
+                        <div className={"smm_popup_row"}>
+                            <div className="smm_main_add_label">Link:</div>
+                            <a href={selectedItemInfo.link} target="_blank" rel="noopener noreferrer">
+                                {selectedItemInfo.link}
+                            </a>
+                        </div>
+                        <div className={"smm_popup_row"}>
+                            <div className="smm_main_add_label">Description:</div>
+                            <div>{selectedItemInfo.description}</div>
+                        </div>
+                        <div className={"smm_popup_row"}>
+                            <div className="smm_main_add_label">Comment:</div>
+                            <div>{selectedItemInfo.comment}</div>
+                        </div>
+                    </div>
+                    <img
+                        className="smm_popup_row_post"
+                        src={`http://127.0.0.1:5000/proxy_image?url=${encodeURIComponent(selectedItemInfo.img)}`}
+                        alt="post"
+                    />
+                    </div>
+                </Popup>
+            )}
+
+
             {isConfirmPopupVisible && (
                 <Popup
                     id="confirm_delete_popup"
@@ -1121,8 +1204,3 @@ export default function SMM() {
         </>
     );
 }
-const showInfoPopup = (id: string) => {
-    // Implement the popup logic here
-    console.log("Show info popup for", id);
-};
-

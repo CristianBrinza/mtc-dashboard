@@ -746,3 +746,20 @@ input:checked + .slider:before {
     line-height: 16px;
     letter-spacing: 0.16px;
 }
+
+
+.smm_popup_row_post{
+    width: 48%;
+    border-radius: 12px;
+}
+
+#info_popup_inside{
+    width: 100%;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+#info_popup_inside_left{
+    width: 48%;
+}
+

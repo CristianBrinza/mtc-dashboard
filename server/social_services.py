@@ -71,8 +71,8 @@ def get_profile():
         return jsonify({'error': str(e)}), 500
 
 
-@app.route('/get_post', methods=['GET'])
-def get_post():
+@app.route('/get_insta_post', methods=['GET'])
+def get_insta_post():
     post_url = request.args.get('url')
     img_index = request.args.get('img_index', default=1, type=int)
 
