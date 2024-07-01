@@ -137,7 +137,7 @@
     display: inline-flex;
     justify-content: flex-end;
     align-items: center;
-    gap: 20px;
+    gap: 10px;
 
 }
 #smm_main_table_options input {
@@ -778,4 +778,10 @@ input:checked + .slider:before {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+
+#smm_main_add_option_plus{
+    display: flex;
+    gap: 10px;
 }
