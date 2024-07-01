@@ -530,10 +530,6 @@
 #smm_popup_edit_button, #smm_popup_delete_button{
     margin-top: 10px;
 }
-#smm_popup_delete_button{
-    border-color: #ffb4b4;
-    color: #ffb4b4;
-}
 .smm_popup_row{
     display: flex;
     flex-direction: row;
@@ -785,3 +781,8 @@ input:checked + .slider:before {
     display: flex;
     gap: 10px;
 }
+
+.smm_popup_row_btns{
+    margin-top: 10px;
+}
+
