@@ -88,34 +88,32 @@ export default function SMM() {
     };
 
     const exportToExcelScreen = () => {
-        const csvData = convertToCSV(ssmData);
+        const filteredAndSortedData = searchFilter(filterData(sortData(ssmData)));
+        const csvData = convertToCSV(filteredAndSortedData);
         downloadCSV(csvData);
     };
 
     const convertToCSV = (objArray) => {
         const array = typeof objArray !== "object" ? JSON.parse(objArray) : objArray;
         let str = "";
-        let row = "";
 
-        // Create header row
-        for (const index in array[0]) {
-            if (row !== "") row += ",";
-            row += index;
-        }
-        str += row + "\r\n";
+        // Define the order of columns
+        const headers = ["id", "img", "source", "sponsor", "date", "day", "operator", "likes", "comments", "shares", "subject", "type", "link", "comment"];
+        str += headers.join(",") + "\r\n";
 
         // Create data rows
         for (let i = 0; i < array.length; i++) {
             let line = "";
-            for (const index in array[i]) {
+            for (const header of headers) {
                 if (line !== "") line += ",";
-                line += array[i][index];
+                line += array[i][header] !== undefined ? `"${array[i][header]}"` : "";
             }
             str += line + "\r\n";
         }
 
         return str;
     };
+
 
     const downloadCSV = (csvData) => {
         const blob = new Blob([csvData], { type: "text/csv" });
@@ -537,7 +535,6 @@ export default function SMM() {
         });
     };
 
-
     const [searchQuery, setSearchQuery] = useState('');
 
 
@@ -564,9 +561,10 @@ export default function SMM() {
 
         try {
             const baseUrl = import.meta.env.VITE_BACKEND_SOCIAL_URL;
+            const filteredData = searchFilter(filterData(ssmData));
             const updatedData = [];
 
-            for (const item of ssmData) {
+            for (const item of filteredData) {
                 const response = await fetch(`${baseUrl}/get_insta_post?url=${encodeURIComponent(item.link)}`);
                 if (response.ok) {
                     const data = await response.json();
@@ -582,14 +580,18 @@ export default function SMM() {
                 }
             }
 
-            setSsmData(updatedData);
+            const finalData = ssmData.map(item =>
+                updatedData.find(updatedItem => updatedItem.id === item.id) || item
+            );
+
+            setSsmData(finalData);
 
             const response = await fetch(`${baseUrl}/json/smm`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify(updatedData),
+                body: JSON.stringify(finalData),
             });
 
             if (response.ok) {
@@ -607,6 +609,7 @@ export default function SMM() {
     };
 
 
+
     useEffect(() => {
         const handleBeforeUnload = (e) => {
             if (isUpdating) {
@@ -620,6 +623,7 @@ export default function SMM() {
             window.removeEventListener("beforeunload", handleBeforeUnload);
         };
     }, [isUpdating]);
+
 
 
 
@@ -707,7 +711,7 @@ export default function SMM() {
                              style={{display: visibleNewAdvanced === 'advenced' ? 'flex' : 'none'}}>
                             <select name="operator">
                                 <option value="">Select Operator</option>
-                                <option value="MTC">MTC</option>
+                                <option value="Moldtelecom">Moldtelecom</option>
                                 <option value="Orange MD">Orange MD</option>
                                 <option value="Orange RO">Orange RO</option>
                                 <option value="Moldcell">Moldcell</option>
@@ -722,9 +726,9 @@ export default function SMM() {
                             <select name="subject">
                                 <option value="">Select Subject</option>
                                 <option value="Comercial">Comercial</option>
-                                <option value="Branding | PR">Branding | PR</option>
-                                <option value="Branding | Event">Branding | Event</option>
-                                <option value="Branding | Promoted">Branding | Promoted</option>
+                                <option value="PR">Branding | PR</option>
+                                <option value="Event">Branding | Event</option>
+                                <option value="Promoted">Branding | Promoted</option>
                                 <option value="Informativ">Informativ</option>
                                 <option value="Interactiv">Interactiv</option>
                             </select>
@@ -734,7 +738,7 @@ export default function SMM() {
                                 <option value="Reel">Reel</option>
                                 <option value="Video">Video</option>
                                 <option value="Solo">Solo</option>
-                                <option value="Solo_Animated">Solo Animated</option>
+                                <option value="Animated">Animated</option>
                             </select>
                             <div className="smm_main_add_label">Sponsor:</div>
                             <label className="toggle-switch">
@@ -891,7 +895,7 @@ export default function SMM() {
                     <div className={"smm_main_filtering_block"}>
                         <div className={"smm_main_filtering_bold"}>Operator:</div>
                         <div className={"smm_main_filtering_muiltiple_choice"}>
-                            <input type="checkbox" name="operator" value="MTC" onChange={handleFilterChange}/> MTC
+                            <input type="checkbox" name="operator" value="Moldtelecom" onChange={handleFilterChange}/> Moldtelecom
                             <div className={"smm_main_filtering_block_category"}>
                                 <input type="checkbox" name="operator" value="Orange MD"
                                        onChange={handleFilterChange}/> Orange MD
@@ -926,10 +930,10 @@ export default function SMM() {
 
                         <div className={"smm_main_filtering_block_category"}>
                             Branding |
-                            <input type="checkbox" name="subject" value="Branding | Event"
+                            <input type="checkbox" name="subject" value="Event"
                                    onChange={handleFilterChange}/> Event
-                            <input type="checkbox" name="subject" value="Branding | PR" onChange={handleFilterChange}/>PR
-                            <input type="checkbox" name="subject" value="Branding | Promoted" onChange={handleFilterChange}/>Promoted
+                            <input type="checkbox" name="subject" value="PR" onChange={handleFilterChange}/>PR
+                            <input type="checkbox" name="subject" value="Promoted" onChange={handleFilterChange}/>Promoted
 
                         </div>
                         <input type="checkbox" name="subject" value="Comercial" onChange={handleFilterChange}/> Comercial
@@ -943,7 +947,7 @@ export default function SMM() {
                         <input type="checkbox" name="type" value="Reel" onChange={handleFilterChange}/> Reel
                         <input type="checkbox" name="type" value="Video" onChange={handleFilterChange}/> Video
                         <input type="checkbox" name="type" value="Solo" onChange={handleFilterChange}/> Solo
-                        <input type="checkbox" name="type" value="Solo_Animated" onChange={handleFilterChange}/> Solo Animated
+                        <input type="checkbox" name="type" value="Animated" onChange={handleFilterChange}/> Animated
                     </div>
                     <div className={"smm_main_filtering_block"}>
                         <div className={"smm_main_filtering_bold"}>Sponsor:</div>
@@ -1031,7 +1035,7 @@ export default function SMM() {
                             <span className="smm_main_table_text_info" style={{width: "85px"}}>
             {item.day}
           </span>
-                            <span className="smm_main_table_text_info" style={{width: "70px"}}>
+                            <span className="smm_main_table_text_info" style={{width: "105px"}}>
             {item.operator}
           </span>
                             <div className="smm_main_table_social_count">
@@ -1103,7 +1107,7 @@ export default function SMM() {
                             </div>
                             <select name="operator" value={formInputs.operator} onChange={handleInputChange}>
                                 <option value="">Select Operator</option>
-                                <option value="MTC">MTC</option>
+                                <option value="Moldtelecom">Moldtelecom</option>
                                 <option value="Orange MD">Orange MD</option>
                                 <option value="Orange RO">Orange RO</option>
                                 <option value="Moldcell">Moldcell</option>
@@ -1124,9 +1128,9 @@ export default function SMM() {
                             <select name="subject" value={formInputs.subject} onChange={handleInputChange}>
                                 <option value="">Select Subject</option>
                                 <option value="Comercial">Comercial</option>
-                                <option value="Branding | Event">Branding | Event</option>
-                                <option value="Branding | PR">Branding | PR</option>
-                                <option value="Branding | Promoted">Branding | Promoted</option>
+                                <option value="Event">Branding | Event</option>
+                                <option value="PR">Branding | PR</option>
+                                <option value="Promoted">Branding | Promoted</option>
                                 <option value="Informativ">Informativ</option>
                                 <option value="Interactiv">Interactiv</option>
                             </select>
@@ -1143,7 +1147,7 @@ export default function SMM() {
                             <option value="Reel">Reel</option>
                             <option value="Video">Video</option>
                             <option value="Solo">Solo</option>
-                            <option value="Solo_Animated">Solo Animated</option>
+                            <option value="Animated">Animated</option>
                         </select>
 
                     </div>
