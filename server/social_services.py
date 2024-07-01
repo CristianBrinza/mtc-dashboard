@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_file,make_response
+from flask import Flask, request, jsonify, send_file, make_response
 import requests
 from io import BytesIO
 import instaloader
@@ -70,33 +70,57 @@ def get_profile():
         logging.error(f'Error retrieving profile data: {e}')
         return jsonify({'error': str(e)}), 500
 
+
 @app.route('/get_post', methods=['GET'])
 def get_post():
     post_url = request.args.get('url')
+    img_index = request.args.get('img_index', default=1, type=int)
+
     if not post_url:
         logging.error('URL parameter is required')
         return jsonify({'error': 'URL parameter is required'}), 400
 
     try:
+        # Extract shortcode from the URL
         shortcode = post_url.split('/')[-2]
+        logging.debug(f'Extracted shortcode: {shortcode}')
+
         post = Post.from_shortcode(bot.context, shortcode)
+        logging.debug(f'Retrieved post object: {post}')
+
+        # Handle carousel images
+        if post.typename == 'GraphSidecar':
+            nodes = list(post.get_sidecar_nodes())  # Convert generator to list
+            logging.debug(f'Found {len(nodes)} sidecar nodes')
+            if img_index <= len(nodes):
+                node = nodes[img_index - 1]  # Convert img_index to 0-based index
+                image_url = node.display_url
+            else:
+                logging.error(f'Image index {img_index} out of range for post')
+                return jsonify({'error': 'Image index out of range'}), 400
+        else:
+            image_url = post.url
 
         post_data = {
             "Likes": post.likes,
             "Comments": post.comments,
             "Shares": post.video_view_count if post.is_video else None,
-            "Cover_Image_URL": post.url,
+            "Cover_Image_URL": image_url,
             "Date": post.date_utc.strftime('%d.%m.%Y')
         }
         logging.info(f'Successfully retrieved post data for URL: {post_url}')
         return jsonify(post_data)
 
+    except instaloader.exceptions.ProfileNotExistsException as e:
+        logging.error(f'Profile not exists: {e}')
+        return jsonify({'error': 'Profile not exists'}), 404
     except instaloader.exceptions.InstaloaderException as e:
         logging.error(f'Error loading post: {e}')
         return jsonify({'error': 'Error loading post'}), 500
     except Exception as e:
         logging.error(f'Error retrieving post data: {e}')
         return jsonify({'error': str(e)}), 500
+
 
 @app.route('/json/<file_name>', methods=['GET'])
 def get_json(file_name):
