@@ -23,6 +23,7 @@ interface SsmData {
 
 export default function SMM() {
     const [isPopupVisible, setIsPopupVisible] = useState(false);
+    const [isOperatorPopupPopupVisible, setUpdateOperatorPopupVisible] = useState(false);
     const [isEditPopupVisible, setIsEditPopupVisible] = useState(false);
     const [isConfirmPopupVisible, setIsConfirmPopupVisible] = useState(false);
     const [selectedItem, setSelectedItem] = useState<SsmData | null>(null);
@@ -70,6 +71,8 @@ export default function SMM() {
     }, [baseUrl]);
 
     const togglePopup = () => setIsPopupVisible(!isPopupVisible);
+    const toggleUpdateOperatorPopup = () => setUpdateOperatorPopupVisible(!isOperatorPopupPopupVisible);
+
     const toggleEditPopup = () => setIsEditPopupVisible(!isEditPopupVisible);
     const toggleConfirmPopup = () => setIsConfirmPopupVisible(!isConfirmPopupVisible);
 
@@ -470,6 +473,32 @@ export default function SMM() {
         };
     }, [isUpdating]);
 
+    const handleUpdateOperators = async () => {
+        const operatorSelectElement = document.querySelector(".update_operators_select") as HTMLSelectElement;
+        const nrInputElement = document.querySelector(".update_operators_input") as HTMLInputElement;
+
+        const operator = operatorSelectElement.value;
+        const nr = nrInputElement.value;
+
+        if (!operator || !nr) {
+            console.error("Operator and number of posts are required");
+            return;
+        }
+
+        try {
+            const response = await fetch(`${baseUrl}/get_insta_post_links?nr=${nr}&operator=${encodeURIComponent(operator)}`);
+            if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
+
+            const data = await response.json();
+            console.log(data);
+        } catch (error) {
+            console.error("Error fetching post links:", error);
+        }
+    };
+
+
+
+
     return (
         <>
             <div className="smm_main">
@@ -520,6 +549,9 @@ export default function SMM() {
                                 <option value="Megafon">RU | Megafon</option>
                                 <option value="MTS">RU | MTS</option>
                                 <option value="Beeline">RU | Beeline</option>
+                                <option value="Darwin">Others | Darwin</option>
+                                <option value="Enter">Others | Enter</option>
+                                <option value="MAIB">Others | MAIB</option>
                             </select>
                             <select name="subject">
                                 <option value="">Select Subject</option>
@@ -546,10 +578,11 @@ export default function SMM() {
                         </div>
                     </div>
                     <div id="smm_main_add_option_plus">
-                        <Button id="add_new">
+                        <Button id="add_new" onClick={toggleUpdateOperatorPopup}>
                             <Icon type="update" />
                             Update operators
                         </Button>
+
                         <Button id="add_new" onClick={togglePopup}>
                             <Icon type="add" />
                             Manual Add
@@ -611,27 +644,49 @@ export default function SMM() {
                 </div>
 
                 <div id="smm_main_filtering" style={{ display: visibleFilter === 'filter' ? 'flex' : 'none' }}>
+
                     <div className={"smm_main_filtering_block"}>
                         <div className={"smm_main_filtering_bold"}>Operator:</div>
+                        <div>
                         <div className={"smm_main_filtering_muiltiple_choice"}>
-                            <input type="checkbox" name="operator" value="Moldtelecom" onChange={handleFilterChange} /> Moldtelecom
+                            <input type="checkbox" name="operator" value="Moldtelecom"
+                                   onChange={handleFilterChange}/> Moldtelecom
                             <div className={"smm_main_filtering_block_category"}>
-                                <input type="checkbox" name="operator" value="Orange MD" onChange={handleFilterChange} /> Orange MD
-                                <input type="checkbox" name="operator" value="Orange RO" onChange={handleFilterChange} /> Orange RO
+                                <input type="checkbox" name="operator" value="Orange MD"
+                                       onChange={handleFilterChange}/> Orange MD
+                                <input type="checkbox" name="operator" value="Orange RO"
+                                       onChange={handleFilterChange}/> Orange RO
                             </div>
-                            <input type="checkbox" name="operator" value="Moldcell" onChange={handleFilterChange} /> Moldcell
-                            <input type="checkbox" name="operator" value="Starnet" onChange={handleFilterChange} /> Starnet
-                            <input type="checkbox" name="operator" value="Arax" onChange={handleFilterChange} /> Arax
+                            <input type="checkbox" name="operator" value="Moldcell"
+                                   onChange={handleFilterChange}/> Moldcell
+                            <input type="checkbox" name="operator" value="Starnet"
+                                   onChange={handleFilterChange}/> Starnet
+                            <input type="checkbox" name="operator" value="Arax" onChange={handleFilterChange}/> Arax
                             <div className={"smm_main_filtering_block_category"}>
                                 RU |
-                                <input type="checkbox" name="operator" value="Megafon" onChange={handleFilterChange} /> Megafon
-                                <input type="checkbox" name="operator" value="MTS" onChange={handleFilterChange} /> MTS
-                                <input type="checkbox" name="operator" value="Beeline" onChange={handleFilterChange} /> Beeline
+                                <input type="checkbox" name="operator" value="Megafon"
+                                       onChange={handleFilterChange}/> Megafon
+                                <input type="checkbox" name="operator" value="MTS" onChange={handleFilterChange}/> MTS
+                                <input type="checkbox" name="operator" value="Beeline"
+                                       onChange={handleFilterChange}/> Beeline
                             </div>
                             <div className={"smm_main_filtering_block_category"}>
-                                <input type="checkbox" name="operator" value="Vodaphone RO" onChange={handleFilterChange} /> Vodaphone RO
-                                <input type="checkbox" name="operator" value="Vodaphone IT" onChange={handleFilterChange} /> Vodaphone IT
+                                <input type="checkbox" name="operator" value="Vodaphone RO"
+                                       onChange={handleFilterChange}/> Vodaphone RO
+                                <input type="checkbox" name="operator" value="Vodaphone IT"
+                                       onChange={handleFilterChange}/> Vodaphone IT
                             </div>
+                        </div>
+
+                        <div className={"smm_main_filtering_muiltiple_choice"}>
+                            Others :
+                            <input type="checkbox" name="operator" value="Darwin"
+                                   onChange={handleFilterChange}/> Darwin
+                            <input type="checkbox" name="operator" value="Enter"
+                                   onChange={handleFilterChange}/> Enter
+                            <input type="checkbox" name="operator" value="MAIB"
+                                   onChange={handleFilterChange}/> MAIB
+                        </div>
                         </div>
                     </div>
                     <div className={"smm_main_filtering_block"}>
@@ -725,6 +780,32 @@ export default function SMM() {
             <Popup id="manual_add" title="Manual Add" isVisible={isPopupVisible} onClose={togglePopup}>
                 Manual Add Form or Content Here
             </Popup>
+            <Popup id="update_operators" title="Update operators" isVisible={isOperatorPopupPopupVisible} onClose={toggleUpdateOperatorPopup}>
+                <div className={"update_operators_block"}>
+                    <select name="operator" className={"update_operators_select"}>
+                        <option value="">Select Operator</option>
+                        <option value="https://www.instagram.com/moldtelecom.md/">Moldtelecom</option>
+                        <option value="Orange MD">Orange MD</option>
+                        <option value="Orange RO">Orange RO</option>
+                        <option value="Moldcell">Moldcell</option>
+                        <option value="Starnet">Starnet</option>
+                        <option value="Vodaphone RO">Vodaphone RO</option>
+                        <option value="Vodaphone IT">Vodaphone IT</option>
+                        <option value="Arax">Arax</option>
+                        <option value="MTS">RU | MTS</option>
+                        <option value="Megafon">RU | Megafon</option>
+                        <option value="Beeline">RU | Beeline</option>
+                        <option value="Darwin">Others | Darwin</option>
+                        <option value="Enter">Others | Enter</option>
+                        <option value="MAIB">Others | MAIB</option>
+                    </select>
+                    <input className={"update_operators_input"} type="number" name="nr" />
+                    <Button id="update_operators_btn" type="button" onClick={handleUpdateOperators}>Update</Button>
+                    <div>{update_operators_input_feedback_message}</div>
+                </div>
+            </Popup>
+
+
 
             {isEditPopupVisible && selectedItem && (
                 <Popup id="edit_popup" title="Edit Item" isVisible={isEditPopupVisible} onClose={toggleEditPopup}>
@@ -744,6 +825,9 @@ export default function SMM() {
                                 <option value="MTS">RU | MTS</option>
                                 <option value="Megafon">RU | Megafon</option>
                                 <option value="Beeline">RU | Beeline</option>
+                                <option value="Darwin">Others | Darwin</option>
+                                <option value="Enter">Others | Enter</option>
+                                <option value="MAIB">Others | MAIB</option>
                             </select>
                         </div>
                         <div className={"smm_popup_row"}>

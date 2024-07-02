@@ -3,6 +3,7 @@ import requests
 from io import BytesIO
 import instaloader
 from instaloader import Post
+from instaloader import Profile
 import logging
 import json
 import os
@@ -210,6 +211,39 @@ def proxy_image():
     response_obj = make_response(send_file(BytesIO(response.content), mimetype='image/jpeg'))
     response_obj.headers['Cache-Control'] = 'public, max-age=31536000'  # Cache for 1 year
     return response_obj
+
+
+@app.route('/get_insta_post_links', methods=['GET'])
+def get_insta_post_links():
+    nr = request.args.get('nr', default=5, type=int)
+    operator = request.args.get('operator')
+
+    if not operator:
+        logging.error('Operator parameter is required')
+        return jsonify({'error': 'Operator parameter is required'}), 400
+
+    try:
+        profile = Profile.from_username(bot.context, operator.split('/')[-2])
+        posts = profile.get_posts()
+
+        links = []
+        count = 0
+
+        for post in posts:
+            if count >= nr:
+                break
+            links.append(f"https://www.instagram.com/p/{post.shortcode}/")
+            count += 1
+
+        logging.info(f'Successfully retrieved {nr} post links for {operator}')
+        return jsonify(links)
+
+    except Exception as e:
+        logging.error(f'Error retrieving post links: {e}')
+        return jsonify({'error': str(e)}), 500
+
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
