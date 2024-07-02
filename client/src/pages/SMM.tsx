@@ -180,55 +180,16 @@ export default function SMM() {
 
         if (linkInput.includes("www.instagram.com")) {
             try {
-                const response = await fetch(`${baseUrl}/get_insta_post?url=${encodeURIComponent(linkInput)}`);
-                if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
-                const data = await response.json();
+                const newRecord = await addNewLinkToDatabase(linkInput, operator, subject, type, sponsor);
 
-                const newId = generateUniqueNumericId(ssmData.map((item) => item.id));
-                const social_instagram_post = {
-                    id: newId,
-                    img: data.Cover_Image_URL,
-                    sponsor,
-                    source: "instagram",
-                    date: data.Date,
-                    day: getDayOfWeek(data.Date),
-                    operator: operator || "",
-                    likes: data.Likes || 0,
-                    comments: data.Comments || 0,
-                    shares: data.Shares || 0,
-                    subject: subject || "",
-                    type: type || "",
-                    link: linkInput,
-                    comment: ""
-                };
-
-                if (ssmData.some((item) => item.link === linkInput)) {
-                    setStatusMessage("Error, link already exists");
-                    setIsButtonDisabled(false);
-                    return;
+                if (newRecord) {
+                    setSsmData(prevData => [newRecord, ...prevData]);
+                    setStatusMessage("Done");
+                    linkInputElement.value = "";
                 }
-
-                const updatedData = [social_instagram_post, ...ssmData];
-                setSsmData(updatedData);
-
-                const fetchResponse = await fetch(`${baseUrl}/json/smm`, { method: "GET" });
-                if (!fetchResponse.ok) throw new Error(`Network response was not ok: ${fetchResponse.statusText}`);
-                const existingData = await fetchResponse.json();
-                const newUpdatedData = [social_instagram_post, ...existingData];
-
-                const jsonResponse = await fetch(`${baseUrl}/json/smm`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(newUpdatedData),
-                });
-
-                if (!jsonResponse.ok) throw new Error(`Failed to update JSON file on server: ${jsonResponse.statusText}`);
-
-                setStatusMessage("Done");
-                linkInputElement.value = "";
             } catch (error) {
                 console.error("Error fetching the post data:", error.message);
-                setStatusMessage("Error occurred");
+                setStatusMessage(`Error: ${error.message}`);
             } finally {
                 setIsButtonDisabled(false);
             }
@@ -237,6 +198,9 @@ export default function SMM() {
             setIsButtonDisabled(false);
         }
     };
+
+
+
 
     const showEditPopup = (id: string) => {
         const item = ssmData.find((data) => data.id === id);
@@ -499,16 +463,17 @@ export default function SMM() {
             if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
 
             const data = await response.json();
-            const newLinks = data.filter(link => {
-                const linkExists = ssmData.some(item => item.link === link);
-                if (linkExists) {
-                    console.log("Link already exists:", link);
-                }
-                return !linkExists;
-            });
+            const newLinks = data.filter(link => !ssmData.some(item => item.link === link));
 
+            const newRecords = [];
             for (const link of newLinks) {
-                await addNewLinkToDatabase(link, operatorName);
+                const newRecord = await addNewLinkToDatabase(link, operatorName, '', '', false);
+                if (newRecord) newRecords.push(newRecord);
+            }
+
+            // Update state with all new records
+            if (newRecords.length > 0) {
+                setSsmData(prevData => [...newRecords, ...prevData]);
             }
 
             setUpdateOperatorsFeedbackMessage("Done");
@@ -522,7 +487,8 @@ export default function SMM() {
 
 
 
-    const addNewLinkToDatabase = async (link, operator) => {
+
+    const addNewLinkToDatabase = async (link, operator, subject, type, sponsor) => {
         try {
             const response = await fetch(`${baseUrl}/get_insta_post?url=${encodeURIComponent(link)}`);
             if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -532,7 +498,7 @@ export default function SMM() {
             const social_instagram_post = {
                 id: newId,
                 img: data.Cover_Image_URL,
-                sponsor: false,
+                sponsor,
                 source: "instagram",
                 date: data.Date,
                 day: getDayOfWeek(data.Date),
@@ -540,12 +506,17 @@ export default function SMM() {
                 likes: data.Likes || 0,
                 comments: data.Comments || 0,
                 shares: data.Shares || 0,
-                subject: "",
-                type: "",
+                subject: subject || "",
+                type: type || "",
                 link,
                 comment: ""
             };
 
+            if (ssmData.some((item) => item.link === link)) {
+                throw new Error("Error, link already exists");
+            }
+
+            // Optimistically update state
             const updatedData = [social_instagram_post, ...ssmData];
             setSsmData(updatedData);
 
@@ -561,8 +532,11 @@ export default function SMM() {
             });
 
             if (!jsonResponse.ok) throw new Error(`Failed to update JSON file on server: ${jsonResponse.statusText}`);
+
+            return social_instagram_post;
         } catch (error) {
             console.error("Error adding new link to database:", error.message);
+            throw error;
         }
     };
 
