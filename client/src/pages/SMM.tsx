@@ -36,6 +36,8 @@ export default function SMM() {
     const [statusMessage, setStatusMessage] = useState(" ");
     const [formInputs, setFormInputs] = useState({ operator: '', subject: '', sponsor: false, type: '', comment: '' });
     const [sortCriteria, setSortCriteria] = useState("none");
+    const [updateOperatorsFeedbackMessage, setUpdateOperatorsFeedbackMessage] = useState("");
+    const [visibleUpdateBlock, setVisibleUpdateBlock] = useState<string | null>(null);
     const [sortOrder, setSortOrder] = useState("ascending");
     const [filterCriteria, setFilterCriteria] = useState({
         operator: [],
@@ -477,24 +479,108 @@ export default function SMM() {
         const operatorSelectElement = document.querySelector(".update_operators_select") as HTMLSelectElement;
         const nrInputElement = document.querySelector(".update_operators_input") as HTMLInputElement;
 
-        const operator = operatorSelectElement.value;
+        const operatorValue = operatorSelectElement.value;
+        const operatorArray = JSON.parse(operatorValue);
+        const operatorURL = operatorArray[0];
+        const operatorName = operatorArray[1];
         const nr = nrInputElement.value;
 
-        if (!operator || !nr) {
+        if (!operatorURL || !nr) {
             console.error("Operator and number of posts are required");
+            setUpdateOperatorsFeedbackMessage("Error: Operator and number of posts are required");
             return;
         }
 
+        setUpdateOperatorsFeedbackMessage("Processing...");
+        setIsUpdating(true);
+
         try {
-            const response = await fetch(`${baseUrl}/get_insta_post_links?nr=${nr}&operator=${encodeURIComponent(operator)}`);
+            const response = await fetch(`${baseUrl}/get_insta_post_links?nr=${nr}&operator=${encodeURIComponent(operatorURL)}`);
             if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
 
             const data = await response.json();
-            console.log(data);
+            const newLinks = data.filter(link => {
+                const linkExists = ssmData.some(item => item.link === link);
+                if (linkExists) {
+                    console.log("Link already exists:", link);
+                }
+                return !linkExists;
+            });
+
+            for (const link of newLinks) {
+                await addNewLinkToDatabase(link, operatorName);
+            }
+
+            setUpdateOperatorsFeedbackMessage("Done");
         } catch (error) {
             console.error("Error fetching post links:", error);
+            setUpdateOperatorsFeedbackMessage("Error occurred");
+        } finally {
+            setIsUpdating(false);
         }
     };
+
+
+
+    const addNewLinkToDatabase = async (link, operator) => {
+        try {
+            const response = await fetch(`${baseUrl}/get_insta_post?url=${encodeURIComponent(link)}`);
+            if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
+            const data = await response.json();
+
+            const newId = generateUniqueNumericId(ssmData.map((item) => item.id));
+            const social_instagram_post = {
+                id: newId,
+                img: data.Cover_Image_URL,
+                sponsor: false,
+                source: "instagram",
+                date: data.Date,
+                day: getDayOfWeek(data.Date),
+                operator: operator || "",
+                likes: data.Likes || 0,
+                comments: data.Comments || 0,
+                shares: data.Shares || 0,
+                subject: "",
+                type: "",
+                link,
+                comment: ""
+            };
+
+            const updatedData = [social_instagram_post, ...ssmData];
+            setSsmData(updatedData);
+
+            const fetchResponse = await fetch(`${baseUrl}/json/smm`, { method: "GET" });
+            if (!fetchResponse.ok) throw new Error(`Network response was not ok: ${fetchResponse.statusText}`);
+            const existingData = await fetchResponse.json();
+            const newUpdatedData = [social_instagram_post, ...existingData];
+
+            const jsonResponse = await fetch(`${baseUrl}/json/smm`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(newUpdatedData),
+            });
+
+            if (!jsonResponse.ok) throw new Error(`Failed to update JSON file on server: ${jsonResponse.statusText}`);
+        } catch (error) {
+            console.error("Error adding new link to database:", error.message);
+        }
+    };
+
+
+
+
+    useEffect(() => {
+        const handleBeforeUnload = (e) => {
+            if (isUpdating) {
+                e.preventDefault();
+                e.returnValue = "The data is still updating. Are you sure you want to leave?";
+            }
+        };
+        window.addEventListener("beforeunload", handleBeforeUnload);
+        return () => {
+            window.removeEventListener("beforeunload", handleBeforeUnload);
+        };
+    }, [isUpdating]);
 
 
 
@@ -780,31 +866,54 @@ export default function SMM() {
             <Popup id="manual_add" title="Manual Add" isVisible={isPopupVisible} onClose={togglePopup}>
                 Manual Add Form or Content Here
             </Popup>
-            <Popup id="update_operators" title="Update operators" isVisible={isOperatorPopupPopupVisible} onClose={toggleUpdateOperatorPopup}>
-                <div className={"update_operators_block"}>
+            <Popup
+                id="update_operators"
+                title="Update operators"
+                isVisible={isOperatorPopupPopupVisible}
+                onClose={isUpdating ? () => {
+                } : toggleUpdateOperatorPopup}
+            >
+                <div className={"update_operators_block_top"}>
+                    <Button id="update_operators_btn" type="button"
+                            onClick={() => setVisibleUpdateBlock('instagram')}>Instagram</Button>
+                    <Button id="update_operators_btn" type="button"
+                            onClick={() => setVisibleUpdateBlock('facebook')}>Facebook</Button>
+                    <Button id="update_operators_btn" type="button"
+                            onClick={() => setVisibleUpdateBlock('tiktok')}>TikTok</Button>
+                </div>
+                <div className={"update_operators_block"} id="update_operators_block_instagram"
+                     style={{display: visibleUpdateBlock === 'instagram' ? 'flex' : 'none'}}>
                     <select name="operator" className={"update_operators_select"}>
                         <option value="">Select Operator</option>
-                        <option value="https://www.instagram.com/moldtelecom.md/">Moldtelecom</option>
-                        <option value="Orange MD">Orange MD</option>
-                        <option value="Orange RO">Orange RO</option>
-                        <option value="Moldcell">Moldcell</option>
-                        <option value="Starnet">Starnet</option>
-                        <option value="Vodaphone RO">Vodaphone RO</option>
-                        <option value="Vodaphone IT">Vodaphone IT</option>
-                        <option value="Arax">Arax</option>
-                        <option value="MTS">RU | MTS</option>
-                        <option value="Megafon">RU | Megafon</option>
-                        <option value="Beeline">RU | Beeline</option>
-                        <option value="Darwin">Others | Darwin</option>
-                        <option value="Enter">Others | Enter</option>
-                        <option value="MAIB">Others | MAIB</option>
+                        <option value='["https://www.instagram.com/moldtelecom.md/","Moldtelecom"]'>Moldtelecom</option>
+                        <option value='["https://www.instagram.com/orange.md/","Orange MD"]'>Orange MD</option>
+                        <option value='["https://www.instagram.com/orange.ro/","Orange RO"]'>Orange RO</option>
+                        <option value='["https://www.instagram.com/moldcell/","Moldcell"]'>Moldcell</option>
+                        <option value='["https://www.instagram.com/starnet/","Starnet"]'>Starnet</option>
+                        <option value='["https://www.instagram.com/vodafone.ro/","Vodaphone RO"]'>Vodaphone RO</option>
+                        <option value='["https://www.instagram.com/vodafone.it/","Vodaphone IT"]'>Vodaphone IT</option>
+                        <option value='["https://www.instagram.com/arax/","Arax"]'>Arax</option>
+                        <option value='["https://www.instagram.com/mts.ru/","MTS"]'>RU | MTS</option>
+                        <option value='["https://www.instagram.com/megafon/","Megafon"]'>RU | Megafon</option>
+                        <option value='["https://www.instagram.com/beeline/","Beeline"]'>RU | Beeline</option>
+                        <option value='["https://www.instagram.com/darwin/","Darwin"]'>Others | Darwin</option>
+                        <option value='["https://www.instagram.com/enter/","Enter"]'>Others | Enter</option>
+                        <option value='["https://www.instagram.com/maib/","MAIB"]'>Others | MAIB</option>
                     </select>
-                    <input className={"update_operators_input"} type="number" name="nr" />
+                    <input className={"update_operators_input"} type="number" name="nr"/>
                     <Button id="update_operators_btn" type="button" onClick={handleUpdateOperators}>Update</Button>
-                    <div>{update_operators_input_feedback_message}</div>
+                    <div>{updateOperatorsFeedbackMessage}</div>
                 </div>
-            </Popup>
+                <div className={"update_operators_block"} id="update_operators_block_facebook"
+                     style={{display: visibleUpdateBlock === 'facebook' ? 'flex' : 'none'}}>
+                    {/* Facebook update block content */}
+                </div>
+                <div className={"update_operators_block"} id="update_operators_block_tiktok"
+                     style={{display: visibleUpdateBlock === 'tiktok' ? 'flex' : 'none'}}>
+                    {/* TikTok update block content */}
+                </div>
 
+            </Popup>
 
 
             {isEditPopupVisible && selectedItem && (
