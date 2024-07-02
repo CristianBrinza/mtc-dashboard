@@ -1,5 +1,5 @@
 import "../styles/smm.css";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Popup from "../components/Popup";
 import Button from "../components/Button";
 import Icon from "../components/Icon";
@@ -22,6 +22,7 @@ interface SsmData {
 }
 
 export default function SMM() {
+    const beepAudioRef = useRef(new Audio('sounds/notification-sound.mp3'));
     const [isPopupVisible, setIsPopupVisible] = useState(false);
     const [isOperatorPopupPopupVisible, setUpdateOperatorPopupVisible] = useState(false);
     const [isEditPopupVisible, setIsEditPopupVisible] = useState(false);
@@ -148,11 +149,20 @@ export default function SMM() {
         let newId;
         const baseId = 1000000;
         const increment = 100;
+        const maxAttempts = 1000; // to avoid infinite loops
+
+        let attempts = 0;
         do {
             newId = baseId + Math.floor(Math.random() * increment) * increment;
+            attempts++;
+            if (attempts > maxAttempts) {
+                throw new Error("Failed to generate a unique ID after several attempts");
+            }
         } while (existingIds.includes(newId.toString()));
+
         return newId.toString();
     };
+
 
     const getDayOfWeek = (dateString) => {
         const [day, month, year] = dateString.split(".").map(Number);
@@ -183,7 +193,11 @@ export default function SMM() {
                 const newRecord = await addNewLinkToDatabase(linkInput, operator, subject, type, sponsor);
 
                 if (newRecord) {
-                    setSsmData(prevData => [newRecord, ...prevData]);
+                    setSsmData(prevData => {
+                        const updatedData = [newRecord, ...prevData];
+                        const uniqueData = filterUniqueItems(updatedData);
+                        return uniqueData;
+                    });
                     setStatusMessage("Done");
                     linkInputElement.value = "";
                 }
@@ -198,6 +212,7 @@ export default function SMM() {
             setIsButtonDisabled(false);
         }
     };
+
 
 
 
@@ -317,6 +332,7 @@ export default function SMM() {
         return sortedData;
     };
 
+
     useEffect(() => {
         const savedSortCriteria = localStorage.getItem("sortCriteria");
         const savedSortOrder = localStorage.getItem("sortOrder");
@@ -360,6 +376,7 @@ export default function SMM() {
         const [day, month, year] = dateString.split('.').map(Number);
         return new Date(year, month - 1, day);
     };
+
 
     const filterData = (data) => {
         return data.filter((item) => {
@@ -465,16 +482,19 @@ export default function SMM() {
             const data = await response.json();
             const newLinks = data.filter(link => !ssmData.some(item => item.link === link));
 
-            const newRecords = [];
-            for (const link of newLinks) {
-                const newRecord = await addNewLinkToDatabase(link, operatorName, '', '', false);
-                if (newRecord) newRecords.push(newRecord);
-            }
+            const newRecordsPromises = newLinks.map(link => addNewLinkToDatabase(link, operatorName, '', '', false));
+            const newRecords = await Promise.all(newRecordsPromises);
 
-            // Update state with all new records
-            if (newRecords.length > 0) {
-                setSsmData(prevData => [...newRecords, ...prevData]);
-            }
+            // Filter out null values and avoid duplicates
+            const uniqueNewRecords = newRecords.filter(record => record !== null && !ssmData.some(item => item.id === record.id));
+
+            setSsmData(prevData => {
+                const combinedData = [...uniqueNewRecords, ...prevData];
+                const uniqueData = combinedData.filter((item, index, self) =>
+                    index === self.findIndex((t) => t.id === item.id)
+                );
+                return uniqueData;
+            });
 
             setUpdateOperatorsFeedbackMessage("Done");
         } catch (error) {
@@ -494,7 +514,8 @@ export default function SMM() {
             if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
             const data = await response.json();
 
-            const newId = generateUniqueNumericId(ssmData.map((item) => item.id));
+            const existingIds = ssmData.map((item) => item.id);
+            const newId = generateUniqueNumericId(existingIds);
             const social_instagram_post = {
                 id: newId,
                 img: data.Cover_Image_URL,
@@ -512,13 +533,12 @@ export default function SMM() {
                 comment: ""
             };
 
-            if (ssmData.some((item) => item.link === link)) {
-                throw new Error("Error, link already exists");
-            }
-
-            // Optimistically update state
-            const updatedData = [social_instagram_post, ...ssmData];
-            setSsmData(updatedData);
+            // Optimistically update state without duplicates
+            setSsmData(prevData => {
+                const updatedData = [social_instagram_post, ...prevData];
+                const uniqueData = filterUniqueItems(updatedData);
+                return uniqueData;
+            });
 
             const fetchResponse = await fetch(`${baseUrl}/json/smm`, { method: "GET" });
             if (!fetchResponse.ok) throw new Error(`Network response was not ok: ${fetchResponse.statusText}`);
@@ -555,6 +575,31 @@ export default function SMM() {
             window.removeEventListener("beforeunload", handleBeforeUnload);
         };
     }, [isUpdating]);
+
+    const filterUniqueItems = (items) => {
+        const seen = new Set();
+        return items.filter(item => {
+            const duplicate = seen.has(item.id);
+            seen.add(item.id);
+            return !duplicate;
+        });
+    };
+
+
+    useEffect(() => {
+        if (updateOperatorsFeedbackMessage === "Done") {
+            beepAudioRef.current.play();
+        }
+    }, [updateOperatorsFeedbackMessage]);
+    useEffect(() => {
+        if (statusMessage === "Done") {
+            beepAudioRef.current.play();
+        }
+    }, [statusMessage]);
+
+
+
+
 
 
 
@@ -612,9 +657,10 @@ export default function SMM() {
                                 <option value="Darwin">Others | Darwin</option>
                                 <option value="Enter">Others | Enter</option>
                                 <option value="MAIB">Others | MAIB</option>
+                                <option value="Moldcell Money">Moldcell Money</option>
                             </select>
                             <select name="subject">
-                                <option value="">Select Subject</option>
+                            <option value="">Select Subject</option>
                                 <option value="Comercial">Comercial</option>
                                 <option value="PR">Branding | PR</option>
                                 <option value="Event">Branding | Event</option>
@@ -738,15 +784,18 @@ export default function SMM() {
                             </div>
                         </div>
 
-                        <div className={"smm_main_filtering_muiltiple_choice"}>
-                            Others :
-                            <input type="checkbox" name="operator" value="Darwin"
-                                   onChange={handleFilterChange}/> Darwin
-                            <input type="checkbox" name="operator" value="Enter"
-                                   onChange={handleFilterChange}/> Enter
-                            <input type="checkbox" name="operator" value="MAIB"
-                                   onChange={handleFilterChange}/> MAIB
-                        </div>
+                            <div className={"smm_main_filtering_muiltiple_choice"}>
+                                Others :
+                                <input type="checkbox" name="operator" value="Darwin"
+                                       onChange={handleFilterChange}/> Darwin
+                                <input type="checkbox" name="operator" value="Enter"
+                                       onChange={handleFilterChange}/> Enter
+                                <input type="checkbox" name="operator" value="MAIB"
+                                       onChange={handleFilterChange}/> MAIB
+                                <input type="checkbox" name="operator" value="Moldcell Money"
+                                       onChange={handleFilterChange}/> Moldcell Money
+
+                            </div>
                         </div>
                     </div>
                     <div className={"smm_main_filtering_block"}>
@@ -805,33 +854,33 @@ export default function SMM() {
                 <div id="smm_main_table">
                     {searchFilter(filterData(sortData(ssmData))).map((item) => (
                         <div className="smm_main_table_cell" id={item.id} key={item.id}>
-                            <img className="smm_main_table_social" src={`../images/general/${item.source}.png`} alt="" />
+                            <img className="smm_main_table_social" src={`images/general/${item.source}.png`} alt="" />
                             <span className="smm_main_table_id" style={{ width: "60px" }}>{item.id}</span>
                             <span className={"smm_main_table_post_img"}>
                 <img className="smm_main_table_post" src={`http://127.0.0.1:5000/proxy_image?url=${encodeURIComponent(item.img)}`} alt="post" />
                 <img className="smm_main_table_post_big" src={`http://127.0.0.1:5000/proxy_image?url=${encodeURIComponent(item.img)}`} alt="post" />
               </span>
-                            <img className="smm_main_table_money" src={item.sponsor ? "../images/general/money.png" : "../images/general/no_money.png"} alt="" />
+                            <img className="smm_main_table_money" src={item.sponsor ? "images/general/money.png" : "images/general/no_money.png"} alt="" />
                             <span className="smm_main_table_text_info" style={{ width: "85px" }}>{item.date}</span>
                             <span className="smm_main_table_text_info" style={{ width: "85px" }}>{item.day}</span>
                             <span className="smm_main_table_text_info" style={{ width: "105px" }}>{item.operator}</span>
                             <div className="smm_main_table_social_count">
                                 <span style={{ width: "30px" }}>{item.likes}</span>
-                                <img className="smm_main_table_social_svg" src="../images/general/like.png" alt="" />
+                                <img className="smm_main_table_social_svg" src="images/general/like.png" alt="" />
                             </div>
                             <div className="smm_main_table_social_count">
                                 <span style={{ width: "30px" }}>{item.comments}</span>
-                                <img className="smm_main_table_social_svg" src="../images/general/comment.png" alt="" />
+                                <img className="smm_main_table_social_svg" src="images/general/comment.png" alt="" />
                             </div>
                             <div className="smm_main_table_social_count">
                                 <span style={{ width: "30px" }}>{item.shares}</span>
-                                <img className="smm_main_table_social_svg" src="../images/general/share.png" alt="" />
+                                <img className="smm_main_table_social_svg" src="images/general/share.png" alt="" />
                             </div>
                             <span className="smm_main_table_text_info_type" style={{ width: "100px" }}>{item.subject}</span>
                             <span className="smm_main_table_text_info_type" style={{ width: "100px" }}>{item.type}</span>
                             <a className="smm_main_table_text_info" href={item.link}>link</a>
-                            <img className="smm_main_table_control smm_main_table_control_more" onClick={() => showInfoPopup(item.id)} src="../images/general/more.png" alt="" />
-                            <img className="smm_main_table_control smm_main_table_control_edit" onClick={() => showEditPopup(item.id)} src="../images/general/edit.png" alt="" />
+                            <img className="smm_main_table_control smm_main_table_control_more" onClick={() => showInfoPopup(item.id)} src="images/general/more.png" alt="" />
+                            <img className="smm_main_table_control smm_main_table_control_edit" onClick={() => showEditPopup(item.id)} src="images/general/edit.png" alt="" />
                         </div>
                     ))}
                 </div>
@@ -860,21 +909,24 @@ export default function SMM() {
                     <select name="operator" className={"update_operators_select"}>
                         <option value="">Select Operator</option>
                         <option value='["https://www.instagram.com/moldtelecom.md/","Moldtelecom"]'>Moldtelecom</option>
-                        <option value='["https://www.instagram.com/orange.md/","Orange MD"]'>Orange MD</option>
-                        <option value='["https://www.instagram.com/orange.ro/","Orange RO"]'>Orange RO</option>
+                        <option value='["https://www.instagram.com/orangemoldova/","Orange MD"]'>Orange MD</option>
+                        <option value='["https://www.instagram.com/orangeromania/","Orange RO"]'>Orange RO</option>
                         <option value='["https://www.instagram.com/moldcell/","Moldcell"]'>Moldcell</option>
-                        <option value='["https://www.instagram.com/starnet/","Starnet"]'>Starnet</option>
-                        <option value='["https://www.instagram.com/vodafone.ro/","Vodaphone RO"]'>Vodaphone RO</option>
-                        <option value='["https://www.instagram.com/vodafone.it/","Vodaphone IT"]'>Vodaphone IT</option>
-                        <option value='["https://www.instagram.com/arax/","Arax"]'>Arax</option>
-                        <option value='["https://www.instagram.com/mts.ru/","MTS"]'>RU | MTS</option>
-                        <option value='["https://www.instagram.com/megafon/","Megafon"]'>RU | Megafon</option>
-                        <option value='["https://www.instagram.com/beeline/","Beeline"]'>RU | Beeline</option>
-                        <option value='["https://www.instagram.com/darwin/","Darwin"]'>Others | Darwin</option>
-                        <option value='["https://www.instagram.com/enter/","Enter"]'>Others | Enter</option>
-                        <option value='["https://www.instagram.com/maib/","MAIB"]'>Others | MAIB</option>
+                        <option value='["https://www.instagram.com/starnet.md/","Starnet"]'>Starnet</option>
+                        <option value='["https://www.instagram.com/vodafone.romania/","Vodaphone RO"]'>Vodaphone RO
+                        </option>
+                        <option value='["https://www.instagram.com/vodafoneit/","Vodaphone IT"]'>Vodaphone IT</option>
+                        <option value='["https://www.instagram.com/araxmd","Arax"]'>Arax</option>
+                        <option value='["https://www.instagram.com/mts.official","MTS"]'>RU | MTS</option>
+                        <option value='["https://www.instagram.com/megafon","Megafon"]'>RU | Megafon</option>
+                        <option value='["https://www.instagram.com/beelinerus","Beeline"]'>RU | Beeline</option>
+                        <option value='["https://www.instagram.com/darwinmoldova","Darwin"]'>Others | Darwin</option>
+                        <option value='["https://www.instagram.com/entermoldova","Enter"]'>Others | Enter</option>
+                        <option value='["https://www.instagram.com/maib_md","MAIB"]'>Others | MAIB</option>
+                        <option value='["https://www.instagram.com/moldcellmoney","Moldcell Money"]'>Moldcell Money
+                        </option>
                     </select>
-                    <input className={"update_operators_input"} type="number" name="nr"/>
+                    <input className={"update_operators_input"} type="number" name="nr" min="1" step="1" />
                     <Button id="update_operators_btn" type="button" onClick={handleUpdateOperators}>Update</Button>
                     <div>{updateOperatorsFeedbackMessage}</div>
                 </div>
@@ -911,6 +963,7 @@ export default function SMM() {
                                 <option value="Darwin">Others | Darwin</option>
                                 <option value="Enter">Others | Enter</option>
                                 <option value="MAIB">Others | MAIB</option>
+                                <option value="Moldcell Money">Moldcell Money</option>
                             </select>
                         </div>
                         <div className={"smm_popup_row"}>
@@ -1011,7 +1064,7 @@ export default function SMM() {
 
             {isUpdatePopupVisible && (
                 <Popup id="update_popup" title="Updating Records" isVisible={isUpdatePopupVisible} onClose={() => { if (!isUpdating) setIsUpdatePopupVisible(false); }}>
-                    <div>
+                    <div id="update_popup_inside">
                         <p>{updateStatusMessage}</p>
                         {isUpdating && <div className="loading-animation"></div>}
                         {isUpdateComplete && (
