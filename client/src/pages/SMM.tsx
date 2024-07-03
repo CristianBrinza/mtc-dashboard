@@ -55,7 +55,9 @@ export default function SMM() {
     const [isUpdatePopupVisible, setIsUpdatePopupVisible] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);
     const [updateStatusMessage, setUpdateStatusMessage] = useState("");
+    const [activeFeedButton, setActiveFeedButton] = useState("feed");
     const [isUpdateComplete, setIsUpdateComplete] = useState(false);
+    const [visibleView, setVisibleView] = useState("table"); // "table" or "feed"
 
     const baseUrl = import.meta.env.VITE_BACKEND_SOCIAL_URL;
 
@@ -86,6 +88,14 @@ export default function SMM() {
     const toggleNewAdvanced = () => {
         setVisibleNewAdvanced(visibleNewAdvanced === "advenced" ? null : "advenced");
     };
+    const toggleView = (view) => {
+        if (visibleView === view) {
+            setVisibleView("table");
+        } else {
+            setVisibleView(view);
+        }
+    };
+
 
     const exportToExcel = () => {
         const csvData = convertToCSV(ssmData);
@@ -143,6 +153,25 @@ export default function SMM() {
                 window.URL.revokeObjectURL(url);
             })
             .catch((error) => console.error("There was a problem with the fetch operation:", error));
+    };
+
+    const handleFeedButtonClick = () => {
+        setActiveFeedButton("feed");
+        const feedElement = document.getElementById("smm_main_feed");
+        if (feedElement) {
+            feedElement.classList.add("smm_main_feed_1");
+            feedElement.classList.remove("smm_main_feed_2");
+        }
+    };
+
+// Function to handle the "All" button click
+    const handleAllButtonClick = () => {
+        setActiveFeedButton("all");
+        const feedElement = document.getElementById("smm_main_feed");
+        if (feedElement) {
+            feedElement.classList.add("smm_main_feed_2");
+            feedElement.classList.remove("smm_main_feed_1");
+        }
     };
 
     const generateUniqueNumericId = (existingIds) => {
@@ -598,7 +627,9 @@ export default function SMM() {
     }, [statusMessage]);
 
 
-
+    useEffect(() => {
+        handleFeedButtonClick();
+    }, []);
 
 
 
@@ -609,38 +640,47 @@ export default function SMM() {
             <div className="smm_main">
                 <div id="smm_main_title">Moldtelecom SMM | Marketing Dashboard</div>
                 <div id="smm_main_options">
-                    <Button id="add_new" className={`smm_main_btn ${visibleSection === 'add' ? 'smm_main_btn_pressed' : ''}`} onClick={() => toggleSection('add')}>
-                        <Icon type="add" />
+                    <Button id="add_new"
+                            className={`smm_main_btn ${visibleSection === 'add' ? 'smm_main_btn_pressed' : ''}`}
+                            onClick={() => toggleSection('add')}>
+                        <Icon type="add"/>
                         Add
                     </Button>
-                    <Button id="show_export_setting" className={`smm_main_btn ${visibleSection === 'export' ? 'smm_main_btn_pressed' : ''}`} onClick={() => toggleSection('export')}>
-                        <Icon type="export" />
+                    <Button id="show_export_setting"
+                            className={`smm_main_btn ${visibleSection === 'export' ? 'smm_main_btn_pressed' : ''}`}
+                            onClick={() => toggleSection('export')}>
+                        <Icon type="export"/>
                         Export
                     </Button>
-                    <Button className={`smm_main_btn ${visibleSection === 'options' ? 'smm_main_btn_pressed' : ''}`} onClick={() => toggleSection('options')}>
-                        <Icon type="options" />
+                    <Button className={`smm_main_btn ${visibleSection === 'options' ? 'smm_main_btn_pressed' : ''}`}
+                            onClick={() => toggleSection('options')}>
+                        <Icon type="options"/>
                         Options
                     </Button>
                     <Button className="smm_main_btn">
-                        <Icon type="settings" />
+                        <Icon type="settings"/>
                         Settings
                     </Button>
                 </div>
 
-                <div id="smm_main_add" style={{ display: visibleSection === 'add' ? 'flex' : 'none' }}>
+                <div id="smm_main_add" style={{display: visibleSection === 'add' ? 'flex' : 'none'}}>
                     <div>
                         <div id="smm_main_add_left">
-                            <input type="text" placeholder="link" />
-                            <Button id="add_new" onClick={!isButtonDisabled ? AddNewLink : null} style={{ opacity: isButtonDisabled ? 0.5 : 1 }}>
-                                <Icon type="add" />
+                            <input type="text" placeholder="link"/>
+                            <Button id="add_new" onClick={!isButtonDisabled ? AddNewLink : null}
+                                    style={{opacity: isButtonDisabled ? 0.5 : 1}}>
+                                <Icon type="add"/>
                                 Add
                             </Button>
-                            <Button id="smm_main_add_left_advenced" className={visibleNewAdvanced === 'advenced' ? 'smm_main_btn_pressed' : ''} onClick={toggleNewAdvanced}>
+                            <Button id="smm_main_add_left_advenced"
+                                    className={visibleNewAdvanced === 'advenced' ? 'smm_main_btn_pressed' : ''}
+                                    onClick={toggleNewAdvanced}>
                                 Advanced
                             </Button>
                             <div>{statusMessage}</div>
                         </div>
-                        <div id="smm_main_add_left_advenced_block" style={{ display: visibleNewAdvanced === 'advenced' ? 'flex' : 'none' }}>
+                        <div id="smm_main_add_left_advenced_block"
+                             style={{display: visibleNewAdvanced === 'advenced' ? 'flex' : 'none'}}>
                             <select name="operator">
                                 <option value="">Select Operator</option>
                                 <option value="Moldtelecom">Moldtelecom</option>
@@ -660,7 +700,7 @@ export default function SMM() {
                                 <option value="Moldcell Money">Moldcell Money</option>
                             </select>
                             <select name="subject">
-                            <option value="">Select Subject</option>
+                                <option value="">Select Subject</option>
                                 <option value="Comercial">Comercial</option>
                                 <option value="PR">Branding | PR</option>
                                 <option value="Event">Branding | Event</option>
@@ -678,69 +718,84 @@ export default function SMM() {
                             </select>
                             <div className="smm_main_add_label">Sponsor:</div>
                             <label className="toggle-switch">
-                                <input type="checkbox" name="sponsor" onChange={handleInputChange} checked={formInputs.sponsor} />
+                                <input type="checkbox" name="sponsor" onChange={handleInputChange}
+                                       checked={formInputs.sponsor}/>
                                 <span className="slider"></span>
                             </label>
                         </div>
                     </div>
                     <div id="smm_main_add_option_plus">
                         <Button id="add_new" onClick={toggleUpdateOperatorPopup}>
-                            <Icon type="update" />
+                            <Icon type="update"/>
                             Update operators
                         </Button>
 
                         <Button id="add_new" onClick={togglePopup}>
-                            <Icon type="add" />
+                            <Icon type="add"/>
                             Manual Add
                         </Button>
                     </div>
                 </div>
 
-                <div id="smm_main_export_options" style={{ display: visibleSection === 'export' ? 'flex' : 'none' }}>
+                <div id="smm_main_export_options" style={{display: visibleSection === 'export' ? 'flex' : 'none'}}>
                     <Button id="export_to_excel" onClick={exportToExcel}>
-                        <Icon type="export" />
+                        <Icon type="export"/>
                         excel (full)
                     </Button>
                     <Button id="export_to_excel" onClick={exportToExcelScreen}>
-                        <Icon type="export" />
+                        <Icon type="export"/>
                         excel (view)
                     </Button>
                     <Button id="export_to_excel" onClick={() => downloadFile('json/smm.json', 'data.json')}>
-                        <Icon type="export" />
+                        <Icon type="export"/>
                         json
                     </Button>
                 </div>
 
-                <div id="smm_main_export_options_block" style={{ display: visibleSection === 'options' ? 'flex' : 'none' }}>
+                <div id="smm_main_export_options_block"
+                     style={{display: visibleSection === 'options' ? 'flex' : 'none'}}>
                     <Button onClick={handleUpdateAll}>
-                        <Icon type="update" />
+                        <Icon type="update"/>
                         Update
                     </Button>
                 </div>
 
                 <div id="smm_main_table_options">
-                    <input type="text" placeholder="Search by link or ID" value={searchQuery} onChange={handleSearchChange} />
-                    <Button id="show_sort" className={visibleSort === 'sorting' ? 'smm_main_btn_pressed' : ''} onClick={() => setVisibleSort(visibleSort === "sorting" ? null : "sorting")}>
-                        <Icon type="sort" />
+                    <Button id="show_feed"
+                            className={`smm_main_btn ${visibleView === 'feed' ? 'smm_main_btn_pressed' : ''}`}
+                            onClick={() => toggleView('feed')}>
+                        <Icon type="feed"/>
+                    </Button>
+                    <input type="text" placeholder="Search by link or ID" value={searchQuery}
+                           onChange={handleSearchChange}/>
+                    <Button id="show_sort" className={visibleSort === 'sorting' ? 'smm_main_btn_pressed' : ''}
+                            onClick={() => setVisibleSort(visibleSort === "sorting" ? null : "sorting")}>
+                        <Icon type="sort"/>
                         Sort by
                     </Button>
-                    <Button id="show_filter" className={visibleFilter === 'filter' ? 'smm_main_btn_pressed' : ''} onClick={() => setVisibleFilter(visibleFilter === "filter" ? null : "filter")}>
-                        <Icon type="filter" />
+                    <Button id="show_filter" className={visibleFilter === 'filter' ? 'smm_main_btn_pressed' : ''}
+                            onClick={() => setVisibleFilter(visibleFilter === "filter" ? null : "filter")}>
+                        <Icon type="filter"/>
                         Filter
                     </Button>
                 </div>
 
-                <div id="smm_main_sorting" style={{ display: visibleSort === 'sorting' ? 'flex' : 'none' }}>
+                <div id="smm_main_sorting" style={{display: visibleSort === 'sorting' ? 'flex' : 'none'}}>
           <span>
-            <input type="radio" name="sortCriteria" value="none" onChange={handleSortChange} checked={sortCriteria === "none"} />
+            <input type="radio" name="sortCriteria" value="none" onChange={handleSortChange}
+                   checked={sortCriteria === "none"}/>
             <span>no sorting</span>&nbsp;&nbsp;&nbsp;&nbsp;
-              <input type="radio" name="sortCriteria" value="date" onChange={handleSortChange} checked={sortCriteria === "date"} />
+              <input type="radio" name="sortCriteria" value="date" onChange={handleSortChange}
+                     checked={sortCriteria === "date"}/>
             <span>by date</span>&nbsp;&nbsp;&nbsp;&nbsp;
-              <input type="radio" name="sortCriteria" value="likes" onChange={handleSortChange} checked={sortCriteria === "likes"} />
+              <input type="radio" name="sortCriteria" value="likes" onChange={handleSortChange}
+                     checked={sortCriteria === "likes"}/>
             <span>by likes</span>&nbsp;&nbsp;&nbsp;&nbsp;
-              <input type="radio" name="sortCriteria" value="comments" onChange={handleSortChange} checked={sortCriteria === "comments"} />
+              <input type="radio" name="sortCriteria" value="comments" onChange={handleSortChange}
+                     checked={sortCriteria === "comments"}/>
             <span>by comments</span>&nbsp;&nbsp;&nbsp;&nbsp;
-              <input type="radio" name="sortCriteria" value="shares" onChange={handleSortChange} checked={sortCriteria === "shares"} />
+              <input type="radio" name="sortCriteria" value="shares" onChange={handleSortChange}
+                     checked={sortCriteria === "shares"}/>
             <span>by shares</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
           </span>
                     <select onChange={handleOrderChange} value={sortOrder}>
@@ -749,40 +804,41 @@ export default function SMM() {
                     </select>
                 </div>
 
-                <div id="smm_main_filtering" style={{ display: visibleFilter === 'filter' ? 'flex' : 'none' }}>
+                <div id="smm_main_filtering" style={{display: visibleFilter === 'filter' ? 'flex' : 'none'}}>
 
                     <div className={"smm_main_filtering_block"}>
                         <div className={"smm_main_filtering_bold"}>Operator:</div>
                         <div>
-                        <div className={"smm_main_filtering_muiltiple_choice"}>
-                            <input type="checkbox" name="operator" value="Moldtelecom"
-                                   onChange={handleFilterChange}/> Moldtelecom
-                            <div className={"smm_main_filtering_block_category"}>
-                                <input type="checkbox" name="operator" value="Orange MD"
-                                       onChange={handleFilterChange}/> Orange MD
-                                <input type="checkbox" name="operator" value="Orange RO"
-                                       onChange={handleFilterChange}/> Orange RO
+                            <div className={"smm_main_filtering_muiltiple_choice"}>
+                                <input type="checkbox" name="operator" value="Moldtelecom"
+                                       onChange={handleFilterChange}/> Moldtelecom
+                                <div className={"smm_main_filtering_block_category"}>
+                                    <input type="checkbox" name="operator" value="Orange MD"
+                                           onChange={handleFilterChange}/> Orange MD
+                                    <input type="checkbox" name="operator" value="Orange RO"
+                                           onChange={handleFilterChange}/> Orange RO
+                                </div>
+                                <input type="checkbox" name="operator" value="Moldcell"
+                                       onChange={handleFilterChange}/> Moldcell
+                                <input type="checkbox" name="operator" value="Starnet"
+                                       onChange={handleFilterChange}/> Starnet
+                                <input type="checkbox" name="operator" value="Arax" onChange={handleFilterChange}/> Arax
+                                <div className={"smm_main_filtering_block_category"}>
+                                    RU |
+                                    <input type="checkbox" name="operator" value="Megafon"
+                                           onChange={handleFilterChange}/> Megafon
+                                    <input type="checkbox" name="operator" value="MTS"
+                                           onChange={handleFilterChange}/> MTS
+                                    <input type="checkbox" name="operator" value="Beeline"
+                                           onChange={handleFilterChange}/> Beeline
+                                </div>
+                                <div className={"smm_main_filtering_block_category"}>
+                                    <input type="checkbox" name="operator" value="Vodaphone RO"
+                                           onChange={handleFilterChange}/> Vodaphone RO
+                                    <input type="checkbox" name="operator" value="Vodaphone IT"
+                                           onChange={handleFilterChange}/> Vodaphone IT
+                                </div>
                             </div>
-                            <input type="checkbox" name="operator" value="Moldcell"
-                                   onChange={handleFilterChange}/> Moldcell
-                            <input type="checkbox" name="operator" value="Starnet"
-                                   onChange={handleFilterChange}/> Starnet
-                            <input type="checkbox" name="operator" value="Arax" onChange={handleFilterChange}/> Arax
-                            <div className={"smm_main_filtering_block_category"}>
-                                RU |
-                                <input type="checkbox" name="operator" value="Megafon"
-                                       onChange={handleFilterChange}/> Megafon
-                                <input type="checkbox" name="operator" value="MTS" onChange={handleFilterChange}/> MTS
-                                <input type="checkbox" name="operator" value="Beeline"
-                                       onChange={handleFilterChange}/> Beeline
-                            </div>
-                            <div className={"smm_main_filtering_block_category"}>
-                                <input type="checkbox" name="operator" value="Vodaphone RO"
-                                       onChange={handleFilterChange}/> Vodaphone RO
-                                <input type="checkbox" name="operator" value="Vodaphone IT"
-                                       onChange={handleFilterChange}/> Vodaphone IT
-                            </div>
-                        </div>
 
                             <div className={"smm_main_filtering_muiltiple_choice"}>
                                 Others :
@@ -802,89 +858,154 @@ export default function SMM() {
                         <div className={"smm_main_filtering_bold"}>Subject:</div>
                         <div className={"smm_main_filtering_block_category"}>
                             Branding |
-                            <input type="checkbox" name="subject" value="Event" onChange={handleFilterChange} /> Event
-                            <input type="checkbox" name="subject" value="PR" onChange={handleFilterChange} /> PR
-                            <input type="checkbox" name="subject" value="Promoted" onChange={handleFilterChange} /> Promoted
+                            <input type="checkbox" name="subject" value="Event" onChange={handleFilterChange}/> Event
+                            <input type="checkbox" name="subject" value="PR" onChange={handleFilterChange}/> PR
+                            <input type="checkbox" name="subject" value="Promoted"
+                                   onChange={handleFilterChange}/> Promoted
                         </div>
-                        <input type="checkbox" name="subject" value="Comercial" onChange={handleFilterChange} /> Comercial
-                        <input type="checkbox" name="subject" value="Informativ" onChange={handleFilterChange} /> Informativ
-                        <input type="checkbox" name="subject" value="Interactiv" onChange={handleFilterChange} /> Interactiv
+                        <input type="checkbox" name="subject" value="Comercial"
+                               onChange={handleFilterChange}/> Comercial
+                        <input type="checkbox" name="subject" value="Informativ"
+                               onChange={handleFilterChange}/> Informativ
+                        <input type="checkbox" name="subject" value="Interactiv"
+                               onChange={handleFilterChange}/> Interactiv
+                        <input type="checkbox" name="subject" value="" onChange={handleFilterChange}/> None
                     </div>
                     <div className={"smm_main_filtering_block"}>
                         <div className={"smm_main_filtering_bold"}>Type:</div>
-                        <input type="checkbox" name="type" value="Carousel" onChange={handleFilterChange} /> Carousel
-                        <input type="checkbox" name="type" value="Reel" onChange={handleFilterChange} /> Reel
-                        <input type="checkbox" name="type" value="Video" onChange={handleFilterChange} /> Video
-                        <input type="checkbox" name="type" value="Solo" onChange={handleFilterChange} /> Solo
-                        <input type="checkbox" name="type" value="Animated" onChange={handleFilterChange} /> Animated
+                        <input type="checkbox" name="type" value="Carousel" onChange={handleFilterChange}/> Carousel
+                        <input type="checkbox" name="type" value="Reel" onChange={handleFilterChange}/> Reel
+                        <input type="checkbox" name="type" value="Video" onChange={handleFilterChange}/> Video
+                        <input type="checkbox" name="type" value="Solo" onChange={handleFilterChange}/> Solo
+                        <input type="checkbox" name="type" value="Animated" onChange={handleFilterChange}/> Animated
+                        <input type="checkbox" name="type" value="" onChange={handleFilterChange}/> None
                     </div>
                     <div className={"smm_main_filtering_block"}>
                         <div className={"smm_main_filtering_bold"}>Sponsor:</div>
                         <label>
-                            <input type="checkbox" name="withSponsor" value="withSponsor" checked={filterCriteria.sponsor === true} onChange={handleFilterChange} />
+                            <input type="checkbox" name="withSponsor" value="withSponsor"
+                                   checked={filterCriteria.sponsor === true} onChange={handleFilterChange}/>
                             Yes
                         </label>
                         <label>
-                            <input type="checkbox" name="withoutSponsor" value="withoutSponsor" checked={filterCriteria.sponsor === false} onChange={handleFilterChange} />
+                            <input type="checkbox" name="withoutSponsor" value="withoutSponsor"
+                                   checked={filterCriteria.sponsor === false} onChange={handleFilterChange}/>
                             No
                         </label>
                     </div>
                     <div className={"smm_main_filtering_block"}>
                         <div className={"smm_main_filtering_bold"}>Date Range:</div>
-                        <input type="date" name="from" onChange={handleFilterChange} />&nbsp; to &nbsp;
-                        <input type="date" name="to" onChange={handleFilterChange} />
+                        <input type="date" name="from" onChange={handleFilterChange}/>&nbsp; to &nbsp;
+                        <input type="date" name="to" onChange={handleFilterChange}/>
                     </div>
                     <div className={"smm_main_filtering_block"}>
                         <div className={"smm_main_filtering_bold"}>Day:</div>
-                        <input type="checkbox" name="day" value="Monday" onChange={handleFilterChange} /> Monday
-                        <input type="checkbox" name="day" value="Tuesday" onChange={handleFilterChange} /> Tuesday
-                        <input type="checkbox" name="day" value="Wednesday" onChange={handleFilterChange} /> Wednesday
-                        <input type="checkbox" name="day" value="Thursday" onChange={handleFilterChange} /> Thursday
-                        <input type="checkbox" name="day" value="Friday" onChange={handleFilterChange} /> Friday
-                        <input type="checkbox" name="day" value="Saturday" onChange={handleFilterChange} /> Saturday
-                        <input type="checkbox" name="day" value="Sunday" onChange={handleFilterChange} /> Sunday
+                        <input type="checkbox" name="day" value="Monday" onChange={handleFilterChange}/> Monday
+                        <input type="checkbox" name="day" value="Tuesday" onChange={handleFilterChange}/> Tuesday
+                        <input type="checkbox" name="day" value="Wednesday" onChange={handleFilterChange}/> Wednesday
+                        <input type="checkbox" name="day" value="Thursday" onChange={handleFilterChange}/> Thursday
+                        <input type="checkbox" name="day" value="Friday" onChange={handleFilterChange}/> Friday
+                        <input type="checkbox" name="day" value="Saturday" onChange={handleFilterChange}/> Saturday
+                        <input type="checkbox" name="day" value="Sunday" onChange={handleFilterChange}/> Sunday
                     </div>
                     <div className={"smm_main_filtering_block"}>
                         <div className={"smm_main_filtering_bold"}>Source:</div>
-                        <input type="checkbox" name="source" value="instagram" onChange={handleFilterChange} /> Instagram
-                        <input type="checkbox" name="source" value="facebook" onChange={handleFilterChange} /> Facebook
+                        <input type="checkbox" name="source" value="instagram" onChange={handleFilterChange}/> Instagram
+                        <input type="checkbox" name="source" value="facebook" onChange={handleFilterChange}/> Facebook
                     </div>
                 </div>
 
-                <div id="smm_main_table">
+                <div id="smm_main_table"style={{ display: visibleView === 'table' ? 'flex' : 'none' }}>
                     {searchFilter(filterData(sortData(ssmData))).map((item) => (
                         <div className="smm_main_table_cell" id={item.id} key={item.id}>
-                            <img className="smm_main_table_social" src={`images/general/${item.source}.png`} alt="" />
-                            <span className="smm_main_table_id" style={{ width: "60px" }}>{item.id}</span>
+                            <img className="smm_main_table_social" src={`images/general/${item.source}.png`} alt=""/>
+                            <span className="smm_main_table_id" style={{width: "60px"}}>{item.id}</span>
                             <span className={"smm_main_table_post_img"}>
-                <img className="smm_main_table_post" src={`http://127.0.0.1:5000/proxy_image?url=${encodeURIComponent(item.img)}`} alt="post" />
-                <img className="smm_main_table_post_big" src={`http://127.0.0.1:5000/proxy_image?url=${encodeURIComponent(item.img)}`} alt="post" />
+                <img className="smm_main_table_post"
+                     src={`http://127.0.0.1:5000/proxy_image?url=${encodeURIComponent(item.img)}`} alt="post"/>
+                <img className="smm_main_table_post_big"
+                     src={`http://127.0.0.1:5000/proxy_image?url=${encodeURIComponent(item.img)}`} alt="post"/>
               </span>
-                            <img className="smm_main_table_money" src={item.sponsor ? "images/general/money.png" : "images/general/no_money.png"} alt="" />
-                            <span className="smm_main_table_text_info" style={{ width: "85px" }}>{item.date}</span>
-                            <span className="smm_main_table_text_info" style={{ width: "85px" }}>{item.day}</span>
-                            <span className="smm_main_table_text_info" style={{ width: "105px" }}>{item.operator}</span>
+                            <img className="smm_main_table_money"
+                                 src={item.sponsor ? "images/general/money.png" : "images/general/no_money.png"}
+                                 alt=""/>
+                            <span className="smm_main_table_text_info" style={{width: "85px"}}>{item.date}</span>
+                            <span className="smm_main_table_text_info" style={{width: "85px"}}>{item.day}</span>
+                            <span className="smm_main_table_text_info" style={{width: "105px"}}>{item.operator}</span>
                             <div className="smm_main_table_social_count">
-                                <span style={{ width: "30px" }}>{item.likes}</span>
-                                <img className="smm_main_table_social_svg" src="images/general/like.png" alt="" />
+                                <span style={{width: "30px"}}>{item.likes}</span>
+                                <img className="smm_main_table_social_svg" src="images/general/like.png" alt=""/>
                             </div>
                             <div className="smm_main_table_social_count">
-                                <span style={{ width: "30px" }}>{item.comments}</span>
-                                <img className="smm_main_table_social_svg" src="images/general/comment.png" alt="" />
+                                <span style={{width: "30px"}}>{item.comments}</span>
+                                <img className="smm_main_table_social_svg" src="images/general/comment.png" alt=""/>
                             </div>
                             <div className="smm_main_table_social_count">
-                                <span style={{ width: "30px" }}>{item.shares}</span>
-                                <img className="smm_main_table_social_svg" src="images/general/share.png" alt="" />
+                                <span style={{width: "30px"}}>{item.shares}</span>
+                                <img className="smm_main_table_social_svg" src="images/general/share.png" alt=""/>
                             </div>
-                            <span className="smm_main_table_text_info_type" style={{ width: "100px" }}>{item.subject}</span>
-                            <span className="smm_main_table_text_info_type" style={{ width: "100px" }}>{item.type}</span>
-                            <a className="smm_main_table_text_info" href={item.link}>link</a>
-                            <img className="smm_main_table_control smm_main_table_control_more" onClick={() => showInfoPopup(item.id)} src="images/general/more.png" alt="" />
-                            <img className="smm_main_table_control smm_main_table_control_edit" onClick={() => showEditPopup(item.id)} src="images/general/edit.png" alt="" />
+                            <span className="smm_main_table_text_info_type"
+                                  style={{width: "100px"}}>{item.subject}</span>
+                            <span className="smm_main_table_text_info_type" style={{width: "100px"}}>{item.type}</span>
+                            <a className="smm_main_table_text_info" href={item.link} target="_blank"
+                               rel="noopener noreferrer">link</a>
+                            <img className="smm_main_table_control smm_main_table_control_more"
+                                 onClick={() => showInfoPopup(item.id)} src="images/general/more.png" alt=""/>
+                            <img className="smm_main_table_control smm_main_table_control_edit"
+                                 onClick={() => showEditPopup(item.id)} src="images/general/edit.png" alt=""/>
                         </div>
                     ))}
                 </div>
+                <div id="smm_main_feed_block"style={{ display: visibleView === 'feed' ? 'flex' : 'none' }}>
+                   <div id="smm_main_feed_block_btns">
+                       <Button
+                               className={`smm_main_btn ${activeFeedButton === 'feed' ? 'smm_main_btn_pressed' : ''}`}
+                               onClick={handleFeedButtonClick}>
+                           <Icon type="feed_small" />
+                           Feed
+                       </Button>
+                       <Button
+                               className={`smm_main_btn ${activeFeedButton === 'all' ? 'smm_main_btn_pressed' : ''}`}
+                               onClick={handleAllButtonClick}>
+                           <Icon type="feed" />
+                           All
+                       </Button>
+                   </div>
+
+                    <div id="smm_main_feed">
+                        {searchFilter(filterData(sortData(ssmData))).map((item) => (
+                            <a className="smm_main_feed_cell" id={item.id} key={item.id} href={item.link}
+                               target="_blank"
+                               rel="noopener noreferrer">
+
+                                <img className="smm_main_feed_post"
+                                     src={`http://127.0.0.1:5000/proxy_image?url=${encodeURIComponent(item.img)}`}
+                                     alt="post"/>
+
+                                <div className={"smm_main_feed_post_counts"}>
+                                    <div className="smm_main_feed_social_count">
+                                        <span style={{width: "30px"}}>{item.likes}</span>
+                                        <img className="smm_main_table_social_svg" src="images/general/like_white.png"
+                                             alt=""/>
+                                    </div>
+                                    <div className="smm_main_feed_social_count">
+                                        <span style={{width: "30px"}}>{item.comments}</span>
+                                        <img className="smm_main_table_social_svg" src="images/general/comment_white.png"
+                                             alt=""/>
+                                    </div>
+                                    <div className="smm_main_feed_social_count">
+                                        <span style={{width: "30px"}}>{item.shares}</span>
+                                        <img className="smm_main_table_social_svg" src="images/general/share_white.png"
+                                             alt=""/>
+                                    </div>
+                                </div>
+
+                            </a>
+                        ))}
+                    </div>
+                </div>
             </div>
+
 
             <Popup id="manual_add" title="Manual Add" isVisible={isPopupVisible} onClose={togglePopup}>
                 Manual Add Form or Content Here
@@ -916,17 +1037,17 @@ export default function SMM() {
                         <option value='["https://www.instagram.com/vodafone.romania/","Vodaphone RO"]'>Vodaphone RO
                         </option>
                         <option value='["https://www.instagram.com/vodafoneit/","Vodaphone IT"]'>Vodaphone IT</option>
-                        <option value='["https://www.instagram.com/araxmd","Arax"]'>Arax</option>
-                        <option value='["https://www.instagram.com/mts.official","MTS"]'>RU | MTS</option>
-                        <option value='["https://www.instagram.com/megafon","Megafon"]'>RU | Megafon</option>
-                        <option value='["https://www.instagram.com/beelinerus","Beeline"]'>RU | Beeline</option>
-                        <option value='["https://www.instagram.com/darwinmoldova","Darwin"]'>Others | Darwin</option>
-                        <option value='["https://www.instagram.com/entermoldova","Enter"]'>Others | Enter</option>
-                        <option value='["https://www.instagram.com/maib_md","MAIB"]'>Others | MAIB</option>
-                        <option value='["https://www.instagram.com/moldcellmoney","Moldcell Money"]'>Moldcell Money
+                        <option value='["https://www.instagram.com/araxmd/","Arax"]'>Arax</option>
+                        <option value='["https://www.instagram.com/mts.official/","MTS"]'>RU | MTS</option>
+                        <option value='["https://www.instagram.com/megafon/","Megafon"]'>RU | Megafon</option>
+                        <option value='["https://www.instagram.com/beelinerus/","Beeline"]'>RU | Beeline</option>
+                        <option value='["https://www.instagram.com/darwinmoldova/","Darwin"]'>Others | Darwin</option>
+                        <option value='["https://www.instagram.com/entermoldova/","Enter"]'>Others | Enter</option>
+                        <option value='["https://www.instagram.com/maib_md/","MAIB"]'>Others | MAIB</option>
+                        <option value='["https://www.instagram.com/moldcellmoney/","Moldcell Money"]'>Moldcell Money
                         </option>
                     </select>
-                    <input className={"update_operators_input"} type="number" name="nr" min="1" step="1" />
+                    <input className={"update_operators_input"} type="number" name="nr" min="1" step="1"/>
                     <Button id="update_operators_btn" type="button" onClick={handleUpdateOperators}>Update</Button>
                     <div>{updateOperatorsFeedbackMessage}</div>
                 </div>
@@ -992,24 +1113,29 @@ export default function SMM() {
                         <div className={"smm_popup_row"}>
                             <div className="smm_main_add_label">Sponsor:</div>
                             <label className="toggle-switch">
-                                <input type="checkbox" name="sponsor" checked={formInputs.sponsor} onChange={handleCheckboxChange} />
+                                <input type="checkbox" name="sponsor" checked={formInputs.sponsor}
+                                       onChange={handleCheckboxChange}/>
                                 <span className="slider"></span>
                             </label>
                         </div>
                         <div className={"smm_popup_row"}>
                             <div className="smm_main_add_label">Comment:</div>
-                            <textarea name="comment" value={formInputs.comment} onChange={handleInputChange} rows={2} cols={50} className="textarea-comment" />
+                            <textarea name="comment" value={formInputs.comment} onChange={handleInputChange} rows={2}
+                                      cols={50} className="textarea-comment"/>
                         </div>
                         <div className={"smm_popup_row smm_popup_row_btns"}>
                             <Button id="smm_popup_edit_button" type="button" onClick={handleUpdate}>Update</Button>
-                            <Button id="smm_popup_delete_button" type="button" style={{ borderColor: '#ffb4b4', color: '#ffb4b4' }} onClick={() => setIsConfirmPopupVisible(true)}>Delete</Button>
+                            <Button id="smm_popup_delete_button" type="button"
+                                    style={{borderColor: '#ffb4b4', color: '#ffb4b4'}}
+                                    onClick={() => setIsConfirmPopupVisible(true)}>Delete</Button>
                         </div>
                     </form>
                 </Popup>
             )}
 
             {isInfoPopupVisible && selectedItemInfo && (
-                <Popup id="info_popup" title="Item Details" isVisible={isInfoPopupVisible} onClose={() => setIsInfoPopupVisible(false)}>
+                <Popup id="info_popup" title="Item Details" isVisible={isInfoPopupVisible}
+                       onClose={() => setIsInfoPopupVisible(false)}>
                     <div id="info_popup_inside">
                         <div id="info_popup_inside_left">
                             <div className={"smm_popup_row"}>
@@ -1050,36 +1176,44 @@ export default function SMM() {
                             </div>
                             <div className={"smm_popup_row"}>
                                 <div className="smm_main_add_label">Link:</div>
-                                <a href={selectedItemInfo.link} target="_blank" rel="noopener noreferrer">{selectedItemInfo.link}</a>
+                                <a href={selectedItemInfo.link} target="_blank"
+                                   rel="noopener noreferrer">{selectedItemInfo.link}</a>
                             </div>
                             <div className={"smm_popup_row"}>
                                 <div className="smm_main_add_label">Comment:</div>
                                 <div>{selectedItemInfo.comment}</div>
                             </div>
                         </div>
-                        <img className="smm_popup_row_post" src={`http://127.0.0.1:5000/proxy_image?url=${encodeURIComponent(selectedItemInfo.img)}`} alt="post" />
+                        <img className="smm_popup_row_post"
+                             src={`http://127.0.0.1:5000/proxy_image?url=${encodeURIComponent(selectedItemInfo.img)}`}
+                             alt="post"/>
                     </div>
                 </Popup>
             )}
 
             {isUpdatePopupVisible && (
-                <Popup id="update_popup" title="Updating Records" isVisible={isUpdatePopupVisible} onClose={() => { if (!isUpdating) setIsUpdatePopupVisible(false); }}>
+                <Popup id="update_popup" title="Updating Records" isVisible={isUpdatePopupVisible} onClose={() => {
+                    if (!isUpdating) setIsUpdatePopupVisible(false);
+                }}>
                     <div id="update_popup_inside">
                         <p>{updateStatusMessage}</p>
                         {isUpdating && <div className="loading-animation"></div>}
                         {isUpdateComplete && (
-                            <Button className="smm_main_btn" onClick={() => setIsUpdatePopupVisible(false)}>Close</Button>
+                            <Button className="smm_main_btn"
+                                    onClick={() => setIsUpdatePopupVisible(false)}>Close</Button>
                         )}
                     </div>
                 </Popup>
             )}
 
             {isConfirmPopupVisible && (
-                <Popup id="confirm_delete_popup" title="Confirm Delete" isVisible={isConfirmPopupVisible} onClose={() => setIsConfirmPopupVisible(false)}>
+                <Popup id="confirm_delete_popup" title="Confirm Delete" isVisible={isConfirmPopupVisible}
+                       onClose={() => setIsConfirmPopupVisible(false)}>
                     <div>
                         <p>Are you sure you want to delete this item?</p>
                         <div className={"smm_popup_row"}>
-                            <Button onClick={handleConfirmDelete} style={{ borderColor: '#ffb4b4', color: '#ffb4b4' }}>Yes</Button>
+                            <Button onClick={handleConfirmDelete}
+                                    style={{borderColor: '#ffb4b4', color: '#ffb4b4'}}>Yes</Button>
                             <Button onClick={() => setIsConfirmPopupVisible(false)}>No</Button>
                         </div>
                     </div>
