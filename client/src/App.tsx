@@ -6,6 +6,8 @@ import SMM from "./pages/SMM.tsx";
 import Test from "./pages/Test.tsx";
 import Navbar from "./components/Navbar.tsx";
 import React from "react";
+import Utilities from "./pages/Utilities.tsx";
+import QR from "./Utilities/QR/QR.tsx";
 
 function App() {
 
@@ -21,6 +23,8 @@ function App() {
                   <Route path="*" element={<NotFound />} />
                   <Route path="/smm" element={<SMM />} />
                   <Route path="/test" element={<Test />} />
+                  <Route path="/utilities" element={<Utilities />} />
+                  <Route path="/qr_generator" element={<QR />} />
               </Routes>
           </BrowserRouter>
       </>

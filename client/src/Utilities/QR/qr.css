@@ -1,0 +1,31 @@
+.qr_main{
+    width: 100%;
+    max-width: 1180px;
+    margin: 50px auto;
+}
+
+#qr_title{
+    color: #212A55;
+    font-family: "Source Sans Pro";
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 16px; /* 80% */
+
+}
+
+
+#qr_main_back{
+    color: #9DAEFF;
+    font-family: "Source Sans Pro";
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 36px;
+    letter-spacing: 0.16px;
+    margin: 0 0 20px 0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+}

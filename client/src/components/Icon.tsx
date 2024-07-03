@@ -47,16 +47,23 @@ const Icon = ({ type, width = 24, height = 24, fill = "#9DAEFF" }) => {
                 stroke={fill} strokeWidth="2" strokeLinecap="round" />
         ),
         update: (
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path
                     d="M17.9062 17.9062V14.2148H14.2148M6.09375 6.09367V9.78508H9.78516M17.8605 11.2616C17.7059 10.0342 17.1699 8.88621 16.328 7.97971C15.4861 7.07321 14.3808 6.45392 13.1681 6.20923C11.9554 5.96453 10.6964 6.10678 9.5689 6.61589C8.44136 7.12501 7.50213 7.9753 6.88371 9.0468M6.13952 12.7382C6.29406 13.9657 6.8301 15.1136 7.67201 16.0201C8.51391 16.9266 9.61919 17.5459 10.8319 17.7906C12.0446 18.0353 13.3036 17.8931 14.4311 17.3839C15.5586 16.8748 16.4979 16.0245 17.1163 14.953"
                     stroke="#9DAEFF" strokeWidth="1.47656" strokeLinecap="round" strokeLinejoin="round"></path>
-            </svg>
         ),
-    };
+    back: (
+        <>
+        <path d="M15 17L9 12" stroke="#9DAEFF" stroke-width="2" stroke-linecap="round"/>
+            <path d="M15 7L9 12" stroke="#9DAEFF" stroke-width="2" stroke-linecap="round"/>
+        </>
+
+    )
+        }
+    ;
 
     return (
-        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} fill="none"
+             xmlns="http://www.w3.org/2000/svg">
             {icons[type]}
         </svg>
     );
