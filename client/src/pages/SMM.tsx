@@ -41,6 +41,8 @@ export default function SMM() {
     const [formInputs, setFormInputs] = useState({ operator: '', subject: '', sponsor: false, type: '', comment: '' });
     const [sortCriteria, setSortCriteria] = useState("none");
     const [updateOperatorsFeedbackMessage, setUpdateOperatorsFeedbackMessage] = useState("");
+    const [isFilterDotVisible, setIsFilterDotVisible] = useState(false);
+    const [isSortDotVisible, setIsSortDotVisible] = useState(false);
     const [visibleUpdateBlock, setVisibleUpdateBlock] = useState<string | null>(null);
     const [sortOrder, setSortOrder] = useState("ascending");
     const [filterCriteria, setFilterCriteria] = useState({
@@ -340,8 +342,15 @@ export default function SMM() {
         }
     };
 
-    const handleSortChange = (e: React.ChangeEvent<HTMLInputElement>) => setSortCriteria(e.target.value);
-    const handleOrderChange = (e: React.ChangeEvent<HTMLSelectElement>) => setSortOrder(e.target.value);
+    const handleSortChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSortCriteria(e.target.value);
+        setIsSortDotVisible(e.target.value !== "none"); // Update the sort dot visibility
+    };
+
+    const handleOrderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setSortOrder(e.target.value);
+        setIsSortDotVisible(sortCriteria !== "none"); // Update the sort dot visibility
+    };
 
     const sortData = (data: SsmData[]) => {
         if (sortCriteria === "none") return data;
@@ -802,11 +811,14 @@ export default function SMM() {
                     </Button>
                     <input type="text" placeholder="Search by link or ID" value={searchQuery}
                            onChange={handleSearchChange}/>
-                    <Button id="show_sort" className={visibleSort === 'sorting' ? 'smm_main_btn_pressed' : ''}
+                    <Button id="show_sort"
+                            className={`show_sort ${visibleSort === 'sorting' ? 'smm_main_btn_pressed' : ''}`}
                             onClick={() => setVisibleSort(visibleSort === "sorting" ? null : "sorting")}>
-                        <Icon type="sort"/>
+                        <Icon type="sort" />
                         Sort by
+                        {isSortDotVisible && <span className="sort-dot"></span>}
                     </Button>
+
                     <Button
                         id="show_filter"
                         className={`show_filter ${visibleFilter === 'filter' ? 'smm_main_btn_pressed' : ''}`}
