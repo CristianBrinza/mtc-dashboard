@@ -1020,7 +1020,8 @@ export default function SMM() {
                                     </div>
                                     <div className="smm_main_feed_social_count">
                                         <span style={{width: "30px"}}>{item.comments}</span>
-                                        <img className="smm_main_table_social_svg" src="images/general/comment_white.png"
+                                        <img className="smm_main_table_social_svg"
+                                             src="images/general/comment_white.png"
                                              alt=""/>
                                     </div>
                                     <div className="smm_main_feed_social_count">
@@ -1031,6 +1032,7 @@ export default function SMM() {
                                 </div>
 
                             </a>
+
                         ))}
                     </div>
                 </div>
