@@ -35,6 +35,7 @@ export default function SMM() {
     const [visibleNewAdvanced, setVisibleNewAdvanced] = useState<string | null>(null);
     const [isListAllOperatorsPopupVisible, setIsListAllOperatorsPopupVisible] = useState(false);
     const [isListAllSettingsPopupVisible, setIsListAllSettingsPopupVisible] = useState(false);
+    const [isFilterApplied, setIsFilterApplied] = useState(false);
     const [isButtonDisabled, setIsButtonDisabled] = useState(false);
     const [statusMessage, setStatusMessage] = useState(" ");
     const [formInputs, setFormInputs] = useState({ operator: '', subject: '', sponsor: false, type: '', comment: '' });
@@ -385,19 +386,35 @@ export default function SMM() {
         const { name, value, type, checked } = e.target;
         setSearchQuery('');
         setFilterCriteria((prev) => {
+            let updatedCriteria = { ...prev };
             if (name === "withSponsor" || name === "withoutSponsor") {
                 let sponsor = null;
                 if (name === "withSponsor" && checked) sponsor = true;
                 if (name === "withoutSponsor" && checked) sponsor = false;
                 if (!checked) sponsor = null;
-                return { ...prev, sponsor };
+                updatedCriteria.sponsor = sponsor;
             } else if (type === "checkbox") {
-                return { ...prev, [name]: checked ? [...prev[name], value] : prev[name].filter((item) => item !== value) };
+                updatedCriteria[name] = checked ? [...prev[name], value] : prev[name].filter((item) => item !== value);
             } else if (type === "date") {
-                return { ...prev, dateRange: { ...prev.dateRange, [name]: value } };
+                updatedCriteria.dateRange = { ...prev.dateRange, [name]: value };
             } else {
-                return { ...prev, [name]: value };
+                updatedCriteria[name] = value;
             }
+            setIsFilterApplied(checkIfFiltersApplied(updatedCriteria));
+            return updatedCriteria;
+        });
+    };
+
+
+
+    const checkIfFiltersApplied = (criteria) => {
+        return Object.values(criteria).some(value => {
+            if (Array.isArray(value)) {
+                return value.length > 0;
+            } else if (typeof value === 'object') {
+                return value && (value.from || value.to);
+            }
+            return value !== null && value !== '';
         });
     };
 
@@ -790,10 +807,14 @@ export default function SMM() {
                         <Icon type="sort"/>
                         Sort by
                     </Button>
-                    <Button id="show_filter" className={visibleFilter === 'filter' ? 'smm_main_btn_pressed' : ''}
-                            onClick={() => setVisibleFilter(visibleFilter === "filter" ? null : "filter")}>
-                        <Icon type="filter"/>
+                    <Button
+                        id="show_filter"
+                        className={`show_filter ${visibleFilter === 'filter' ? 'smm_main_btn_pressed' : ''}`}
+                        onClick={() => setVisibleFilter(visibleFilter === "filter" ? null : "filter")}
+                    >
+                        <Icon type="filter" />
                         Filter
+                        {isFilterApplied && <span className="filter-dot"></span>}
                     </Button>
                 </div>
 
