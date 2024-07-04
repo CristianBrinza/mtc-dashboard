@@ -33,6 +33,8 @@ export default function SMM() {
     const [visibleSort, setVisibleSort] = useState<string | null>(null);
     const [visibleFilter, setVisibleFilter] = useState<string | null>(null);
     const [visibleNewAdvanced, setVisibleNewAdvanced] = useState<string | null>(null);
+    const [isListAllOperatorsPopupVisible, setIsListAllOperatorsPopupVisible] = useState(false);
+    const [isListAllSettingsPopupVisible, setIsListAllSettingsPopupVisible] = useState(false);
     const [isButtonDisabled, setIsButtonDisabled] = useState(false);
     const [statusMessage, setStatusMessage] = useState(" ");
     const [formInputs, setFormInputs] = useState({ operator: '', subject: '', sponsor: false, type: '', comment: '' });
@@ -84,7 +86,12 @@ export default function SMM() {
     const toggleSection = (section: string) => {
         setVisibleSection(visibleSection === section ? null : section);
     };
-
+    const toggleListAllOperatorsPopup = () => {
+        setIsListAllOperatorsPopupVisible(!isListAllOperatorsPopupVisible);
+    };
+    const toggleAllSettingsPopup = () => {
+        setIsListAllSettingsPopupVisible(!isListAllSettingsPopupVisible);
+    };
     const toggleNewAdvanced = () => {
         setVisibleNewAdvanced(visibleNewAdvanced === "advenced" ? null : "advenced");
     };
@@ -657,7 +664,7 @@ export default function SMM() {
                         <Icon type="options"/>
                         Options
                     </Button>
-                    <Button className="smm_main_btn">
+                    <Button className="smm_main_btn" onClick={toggleAllSettingsPopup}>
                         <Icon type="settings"/>
                         Settings
                     </Button>
@@ -698,15 +705,20 @@ export default function SMM() {
                                 <option value="Enter">Others | Enter</option>
                                 <option value="MAIB">Others | MAIB</option>
                                 <option value="Moldcell Money">Moldcell Money</option>
+                                <option value="Others">Others</option>
                             </select>
                             <select name="subject">
                                 <option value="">Select Subject</option>
-                                <option value="Comercial">Comercial</option>
                                 <option value="PR">Branding | PR</option>
                                 <option value="Event">Branding | Event</option>
                                 <option value="Promoted">Branding | Promoted</option>
+                                <option value="Comercial">Comercial</option>
                                 <option value="Informativ">Informativ</option>
                                 <option value="Interactiv">Interactiv</option>
+                                <option value="(I) Comecial">Influencer | Comecial</option>
+                                <option value="(I) Informativ">Influencer | Informativ</option>
+                                <option value="(I) Interactiv">Influencer | Interactiv</option>
+
                             </select>
                             <select name="type">
                                 <option value="">Select Type</option>
@@ -758,6 +770,11 @@ export default function SMM() {
                         <Icon type="update"/>
                         Update
                     </Button>
+                    <Button onClick={toggleListAllOperatorsPopup}>
+                        <Icon type="menu" />
+                        List all Operators
+                    </Button>
+
                 </div>
 
                 <div id="smm_main_table_options">
@@ -838,10 +855,9 @@ export default function SMM() {
                                     <input type="checkbox" name="operator" value="Vodaphone IT"
                                            onChange={handleFilterChange}/> Vodaphone IT
                                 </div>
-                            </div>
 
-                            <div className={"smm_main_filtering_muiltiple_choice"}>
-                                Others :
+                                <div className={"smm_main_filtering_block_category"}>
+                                    Others |
                                 <input type="checkbox" name="operator" value="Darwin"
                                        onChange={handleFilterChange}/> Darwin
                                 <input type="checkbox" name="operator" value="Enter"
@@ -850,26 +866,40 @@ export default function SMM() {
                                        onChange={handleFilterChange}/> MAIB
                                 <input type="checkbox" name="operator" value="Moldcell Money"
                                        onChange={handleFilterChange}/> Moldcell Money
-
+                                <input type="checkbox" name="operator" value="Others"
+                                       onChange={handleFilterChange}/> Others
                             </div>
+                            </div>
+
                         </div>
                     </div>
                     <div className={"smm_main_filtering_block"}>
                         <div className={"smm_main_filtering_bold"}>Subject:</div>
-                        <div className={"smm_main_filtering_block_category"}>
+                        <div>
+                            <div className={"smm_main_filtering_muiltiple_choice"}>
+                        <div className={"smm_main_filtering_block_category"} id="smm_main_filtering_block_category_subject">
                             Branding |
                             <input type="checkbox" name="subject" value="Event" onChange={handleFilterChange}/> Event
                             <input type="checkbox" name="subject" value="PR" onChange={handleFilterChange}/> PR
                             <input type="checkbox" name="subject" value="Promoted"
                                    onChange={handleFilterChange}/> Promoted
                         </div>
-                        <input type="checkbox" name="subject" value="Comercial"
-                               onChange={handleFilterChange}/> Comercial
-                        <input type="checkbox" name="subject" value="Informativ"
+                        <input type="checkbox" name="subject" value="(I) Comecial"
+                               onChange={handleFilterChange}/> Comecial
+                        <input type="checkbox" name="subject" value="(I) Informativ"
                                onChange={handleFilterChange}/> Informativ
-                        <input type="checkbox" name="subject" value="Interactiv"
+                        <input type="checkbox" name="subject" value="(I) Interactiv"
                                onChange={handleFilterChange}/> Interactiv
-                        <input type="checkbox" name="subject" value="" onChange={handleFilterChange}/> None
+                        <div className={"smm_main_filtering_block_category"}>
+                            Influencer |
+                            <input type="checkbox" name="subject" value="(I) Comecial" onChange={handleFilterChange}/> Comecial
+                            <input type="checkbox" name="subject" value="(I) Informativ" onChange={handleFilterChange}/> Informativ
+                            <input type="checkbox" name="subject" value="(I) Interactiv"
+                                   onChange={handleFilterChange}/> Interactiv
+                        </div>
+                       <span> <input type="checkbox" name="subject" value="" onChange={handleFilterChange}/> None
+                   </span> </div>
+                        </div>
                     </div>
                     <div className={"smm_main_filtering_block"}>
                         <div className={"smm_main_filtering_bold"}>Type:</div>
@@ -1085,22 +1115,27 @@ export default function SMM() {
                                 <option value="Enter">Others | Enter</option>
                                 <option value="MAIB">Others | MAIB</option>
                                 <option value="Moldcell Money">Moldcell Money</option>
+                                <option value="Others">Others</option>
+
                             </select>
                         </div>
                         <div className={"smm_popup_row"}>
                             <div className="smm_main_add_label">Subject:</div>
                             <select name="subject" value={formInputs.subject} onChange={handleInputChange}>
                                 <option value="">Select Subject</option>
-                                <option value="Comercial">Comercial</option>
                                 <option value="Event">Branding | Event</option>
                                 <option value="PR">Branding | PR</option>
                                 <option value="Promoted">Branding | Promoted</option>
+                                <option value="Comercial">Comercial</option>
                                 <option value="Informativ">Informativ</option>
                                 <option value="Interactiv">Interactiv</option>
+                                <option value="(I) Comecial">Influencer | Comecial</option>
+                                <option value="(I) Informativ">Influencer | Informativ</option>
+                                <option value="(I) Interactiv">Influencer | Interactiv</option>
                             </select>
                         </div>
                         <div className={"smm_popup_row"}>
-                            <div className="smm_main_add_label">Type:</div>
+                        <div className="smm_main_add_label">Type:</div>
                             <select name="type" value={formInputs.type} onChange={handleInputChange}>
                                 <option value="">Select Type</option>
                                 <option value="Carousel">Carousel</option>
@@ -1219,6 +1254,132 @@ export default function SMM() {
                     </div>
                 </Popup>
             )}
+            {isListAllOperatorsPopupVisible && (
+                <Popup id="list_all_operators_popup" title="List all Operators" isVisible={isListAllOperatorsPopupVisible} onClose={toggleListAllOperatorsPopup}>
+                    <div>
+                        <div id="list_all_operator_header">
+                            <div className={"list_all_operator_header_blocks"} id="list_all_operator_header_blocks_title">Operator</div>
+                            <div className={"list_all_operator_header_blocks"}> Instagram</div>
+                        </div>
+
+                        <div className={"list_all_operator_block"}>
+                            <div className={"list_all_operator_title"}>Moldtelecom</div>
+                            <a href="https://www.instagram.com/moldtelecom.md/">
+                                <img className="smm_main_settings_social_icon" src="images/general/instagram.png"
+                                     alt="instagram"/>
+                            </a>
+                        </div>
+                        <div className={"list_all_operator_block"}>
+                            <div className={"list_all_operator_title"}>Orange MD</div>
+                            <a href="https://www.instagram.com/orangemoldova/">
+                                <img className="smm_main_settings_social_icon" src="images/general/instagram.png"
+                                     alt="instagram"/>
+                            </a>
+                        </div>
+                        <div className={"list_all_operator_block"}>
+                            <div className={"list_all_operator_title"}>Orange RO</div>
+                            <a href="https://www.instagram.com/orangeromania/">
+                                <img className="smm_main_settings_social_icon" src="images/general/instagram.png"
+                                     alt="instagram"/>
+                            </a>
+                        </div>
+                        <div className={"list_all_operator_block"}>
+                            <div className={"list_all_operator_title"}>Moldcell</div>
+                            <a href="https://www.instagram.com/moldcell/">
+                                <img className="smm_main_settings_social_icon" src="images/general/instagram.png"
+                                     alt="instagram"/>
+                            </a>
+                        </div>
+                        <div className={"list_all_operator_block"}>
+                            <div className={"list_all_operator_title"}>Starnet</div>
+                            <a href="https://www.instagram.com/starnet.md/">
+                                <img className="smm_main_settings_social_icon" src="images/general/instagram.png"
+                                     alt="instagram"/>
+                            </a>
+                        </div>
+                        <div className={"list_all_operator_block"}>
+                            <div className={"list_all_operator_title"}>Vodaphone RO</div>
+                            <a href="https://www.instagram.com/vodafone.romania/">
+                                <img className="smm_main_settings_social_icon" src="images/general/instagram.png"
+                                     alt="instagram"/>
+                            </a>
+                        </div>
+                        <div className={"list_all_operator_block"}>
+                            <div className={"list_all_operator_title"}>Vodaphone IT</div>
+                            <a href="https://www.instagram.com/vodafoneit/">
+                                <img className="smm_main_settings_social_icon" src="images/general/instagram.png"
+                                     alt="instagram"/>
+                            </a>
+                        </div>
+                        <div className={"list_all_operator_block"}>
+                            <div className={"list_all_operator_title"}>Arax</div>
+                            <a href="https://www.instagram.com/araxmd/">
+                                <img className="smm_main_settings_social_icon" src="images/general/instagram.png"
+                                     alt="instagram"/>
+                            </a>
+                        </div>
+                        <div className={"list_all_operator_block"}>
+                            <div className={"list_all_operator_title"}>MTS</div>
+                            <a href="https://www.instagram.com/mts.official/">
+                                <img className="smm_main_settings_social_icon" src="images/general/instagram.png"
+                                     alt="instagram"/>
+                            </a>
+                        </div>
+                        <div className={"list_all_operator_block"}>
+                            <div className={"list_all_operator_title"}>Megafon</div>
+                            <a href="https://www.instagram.com/megafon/">
+                                <img className="smm_main_settings_social_icon" src="images/general/instagram.png"
+                                     alt="instagram"/>
+                            </a>
+                        </div>
+                        <div className={"list_all_operator_block"}>
+                            <div className={"list_all_operator_title"}>Beeline</div>
+                            <a href="https://www.instagram.com/beelinerus/">
+                                <img className="smm_main_settings_social_icon" src="images/general/instagram.png"
+                                     alt="instagram"/>
+                            </a>
+                        </div>
+                        <div className={"list_all_operator_block"}>
+                            <div className={"list_all_operator_title"}>Darwin</div>
+                            <a href="https://www.instagram.com/darwinmoldova/">
+                                <img className="smm_main_settings_social_icon" src="images/general/instagram.png"
+                                     alt="instagram"/>
+                            </a>
+                        </div>
+                        <div className={"list_all_operator_block"}>
+                            <div className={"list_all_operator_title"}>Enter</div>
+                            <a href="https://www.instagram.com/entermoldova/">
+                                <img className="smm_main_settings_social_icon" src="images/general/instagram.png"
+                                     alt="instagram"/>
+                            </a>
+                        </div>
+                        <div className={"list_all_operator_block"}>
+                            <div className={"list_all_operator_title"}>MAIB</div>
+                            <a href="https://www.instagram.com/maib_md/">
+                                <img className="smm_main_settings_social_icon" src="images/general/instagram.png"
+                                     alt="instagram"/>
+                            </a>
+                        </div>
+                        <div className={"list_all_operator_block"}>
+                            <div className={"list_all_operator_title"}>Moldcell Money</div>
+                            <a href="https://www.instagram.com/moldcellmoney/">
+                                <img className="smm_main_settings_social_icon" src="images/general/instagram.png"
+                                     alt="instagram"/>
+                            </a>
+                        </div>
+                    </div>
+                </Popup>
+            )}
+
+            {isListAllSettingsPopupVisible && (
+                <Popup id="list_all_operators_popup" title="Settings" isVisible={isListAllSettingsPopupVisible}
+                       onClose={toggleAllSettingsPopup}>
+                    <div>
+                        test
+                    </div>
+                </Popup>
+            )}
+
         </>
     );
 }
