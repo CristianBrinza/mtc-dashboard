@@ -53,8 +53,8 @@ const Icon = ({ type, width = 24, height = 24, fill = "#9DAEFF",}) => {
         ),
     back: (
         <>
-        <path d="M15 17L9 12" stroke="#9DAEFF" stroke-width="2" stroke-linecap="round"/>
-            <path d="M15 7L9 12" stroke="#9DAEFF" stroke-width="2" stroke-linecap="round"/>
+        <path d="M15 17L9 12" stroke="#9DAEFF" strokeWidth="2" strokeLinecap="round"/>
+            <path d="M15 7L9 12" stroke="#9DAEFF" strokeWidth="2" strokeLinecap="round"/>
         </>
 
     ),
@@ -92,7 +92,15 @@ const Icon = ({ type, width = 24, height = 24, fill = "#9DAEFF",}) => {
 
 
 
-            )
+            ),
+        menu: (
+          <>
+              <path d="M6 7H17" stroke="#9DAEFF" strokeWidth="1.5" strokeLinecap="round"/>
+                <path d="M6 12H17" stroke="#9DAEFF" strokeWidth="1.5" strokeLinecap="round"/>
+                <path d="M6 17H17" stroke="#9DAEFF" strokeWidth="1.5" strokeLinecap="round"/>
+          </>
+
+        )
 
 
         }
