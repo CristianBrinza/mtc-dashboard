@@ -343,14 +343,22 @@ export default function SMM() {
     };
 
     const handleSortChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSortCriteria(e.target.value);
-        setIsSortDotVisible(e.target.value !== "none"); // Update the sort dot visibility
+        const newSortCriteria = e.target.value;
+        setSortCriteria(newSortCriteria);
+        setIsSortDotVisible(newSortCriteria !== "none");
+        localStorage.setItem('sortCriteria', newSortCriteria); // Save to localStorage
+        console.log('Sort criteria updated:', newSortCriteria);
     };
 
     const handleOrderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        setSortOrder(e.target.value);
-        setIsSortDotVisible(sortCriteria !== "none"); // Update the sort dot visibility
+        const newSortOrder = e.target.value;
+        setSortOrder(newSortOrder);
+        setIsSortDotVisible(sortCriteria !== "none");
+        localStorage.setItem('sortOrder', newSortOrder); // Save to localStorage
+        console.log('Sort order updated:', newSortOrder);
     };
+
+
 
     const sortData = (data: SsmData[]) => {
         if (sortCriteria === "none") return data;
@@ -380,16 +388,33 @@ export default function SMM() {
 
 
     useEffect(() => {
-        const savedSortCriteria = localStorage.getItem("sortCriteria");
-        const savedSortOrder = localStorage.getItem("sortOrder");
-        if (savedSortCriteria) setSortCriteria(savedSortCriteria);
-        if (savedSortOrder) setSortOrder(savedSortOrder);
+       const savedFilterCriteria = localStorage.getItem("filterCriteria");
+
+        if (savedFilterCriteria) {
+            const criteria = JSON.parse(savedFilterCriteria);
+            setFilterCriteria(criteria);
+            setIsFilterApplied(checkIfFiltersApplied(criteria));
+        }
     }, []);
 
     useEffect(() => {
-        localStorage.setItem("sortCriteria", sortCriteria);
-        localStorage.setItem("sortOrder", sortOrder);
-    }, [sortCriteria, sortOrder]);
+        const savedSortCriteria = localStorage.getItem("sortCriteria");
+        const savedSortOrder = localStorage.getItem("sortOrder");
+
+        if (savedSortCriteria) {
+            setSortCriteria(savedSortCriteria);
+            setIsSortDotVisible(savedSortCriteria !== "none"); // Update the dot visibility based on saved criteria
+            console.log('Loaded sort criteria from localStorage:', savedSortCriteria);
+        }
+
+        if (savedSortOrder) {
+            setSortOrder(savedSortOrder);
+            console.log('Loaded sort order from localStorage:', savedSortOrder);
+        }
+    }, []);
+
+
+
 
     const handleFilterChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -410,9 +435,11 @@ export default function SMM() {
                 updatedCriteria[name] = value;
             }
             setIsFilterApplied(checkIfFiltersApplied(updatedCriteria));
+            localStorage.setItem('filterCriteria', JSON.stringify(updatedCriteria)); // Save to localStorage
             return updatedCriteria;
         });
     };
+
 
 
 
@@ -797,7 +824,7 @@ export default function SMM() {
                         Update
                     </Button>
                     <Button onClick={toggleListAllOperatorsPopup}>
-                        <Icon type="menu" />
+                        <Icon type="menu"/>
                         List all Operators
                     </Button>
 
@@ -814,7 +841,7 @@ export default function SMM() {
                     <Button id="show_sort"
                             className={`show_sort ${visibleSort === 'sorting' ? 'smm_main_btn_pressed' : ''}`}
                             onClick={() => setVisibleSort(visibleSort === "sorting" ? null : "sorting")}>
-                        <Icon type="sort" />
+                        <Icon type="sort"/>
                         Sort by
                         {isSortDotVisible && <span className="sort-dot"></span>}
                     </Button>
@@ -824,30 +851,30 @@ export default function SMM() {
                         className={`show_filter ${visibleFilter === 'filter' ? 'smm_main_btn_pressed' : ''}`}
                         onClick={() => setVisibleFilter(visibleFilter === "filter" ? null : "filter")}
                     >
-                        <Icon type="filter" />
+                        <Icon type="filter"/>
                         Filter
                         {isFilterApplied && <span className="filter-dot"></span>}
                     </Button>
                 </div>
 
                 <div id="smm_main_sorting" style={{display: visibleSort === 'sorting' ? 'flex' : 'none'}}>
-          <span>
-            <input type="radio" name="sortCriteria" value="none" onChange={handleSortChange}
-                   checked={sortCriteria === "none"}/>
-            <span>no sorting</span>&nbsp;&nbsp;&nbsp;&nbsp;
-              <input type="radio" name="sortCriteria" value="date" onChange={handleSortChange}
-                     checked={sortCriteria === "date"}/>
-            <span>by date</span>&nbsp;&nbsp;&nbsp;&nbsp;
-              <input type="radio" name="sortCriteria" value="likes" onChange={handleSortChange}
-                     checked={sortCriteria === "likes"}/>
-            <span>by likes</span>&nbsp;&nbsp;&nbsp;&nbsp;
-              <input type="radio" name="sortCriteria" value="comments" onChange={handleSortChange}
-                     checked={sortCriteria === "comments"}/>
-            <span>by comments</span>&nbsp;&nbsp;&nbsp;&nbsp;
-              <input type="radio" name="sortCriteria" value="shares" onChange={handleSortChange}
-                     checked={sortCriteria === "shares"}/>
-            <span>by shares</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-          </span>
+    <span>
+        <input type="radio" name="sortCriteria" value="none" onChange={handleSortChange}
+               checked={sortCriteria === "none"}/>
+        <span>no sorting</span>&nbsp;&nbsp;&nbsp;&nbsp;
+        <input type="radio" name="sortCriteria" value="date" onChange={handleSortChange}
+               checked={sortCriteria === "date"}/>
+        <span>by date</span>&nbsp;&nbsp;&nbsp;&nbsp;
+        <input type="radio" name="sortCriteria" value="likes" onChange={handleSortChange}
+               checked={sortCriteria === "likes"}/>
+        <span>by likes</span>&nbsp;&nbsp;&nbsp;&nbsp;
+        <input type="radio" name="sortCriteria" value="comments" onChange={handleSortChange}
+               checked={sortCriteria === "comments"}/>
+        <span>by comments</span>&nbsp;&nbsp;&nbsp;&nbsp;
+        <input type="radio" name="sortCriteria" value="shares" onChange={handleSortChange}
+               checked={sortCriteria === "shares"}/>
+        <span>by shares</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    </span>
                     <select onChange={handleOrderChange} value={sortOrder}>
                         <option value="ascending">ascending</option>
                         <option value="descending">descending</option>
@@ -855,93 +882,113 @@ export default function SMM() {
                 </div>
 
                 <div id="smm_main_filtering" style={{display: visibleFilter === 'filter' ? 'flex' : 'none'}}>
-
                     <div className={"smm_main_filtering_block"}>
                         <div className={"smm_main_filtering_bold"}>Operator:</div>
                         <div>
                             <div className={"smm_main_filtering_muiltiple_choice"}>
-                                <input type="checkbox" name="operator" value="Moldtelecom"
-                                       onChange={handleFilterChange}/> Moldtelecom
+                                <input type="checkbox" name="operator" value="Moldtelecom" onChange={handleFilterChange}
+                                       checked={filterCriteria.operator.includes("Moldtelecom")}/> Moldtelecom
                                 <div className={"smm_main_filtering_block_category"}>
                                     <input type="checkbox" name="operator" value="Orange MD"
-                                           onChange={handleFilterChange}/> Orange MD
+                                           onChange={handleFilterChange}
+                                           checked={filterCriteria.operator.includes("Orange MD")}/> Orange MD
                                     <input type="checkbox" name="operator" value="Orange RO"
-                                           onChange={handleFilterChange}/> Orange RO
+                                           onChange={handleFilterChange}
+                                           checked={filterCriteria.operator.includes("Orange RO")}/> Orange RO
                                 </div>
-                                <input type="checkbox" name="operator" value="Moldcell"
-                                       onChange={handleFilterChange}/> Moldcell
-                                <input type="checkbox" name="operator" value="Starnet"
-                                       onChange={handleFilterChange}/> Starnet
-                                <input type="checkbox" name="operator" value="Arax" onChange={handleFilterChange}/> Arax
+                                <input type="checkbox" name="operator" value="Moldcell" onChange={handleFilterChange}
+                                       checked={filterCriteria.operator.includes("Moldcell")}/> Moldcell
+                                <input type="checkbox" name="operator" value="Starnet" onChange={handleFilterChange}
+                                       checked={filterCriteria.operator.includes("Starnet")}/> Starnet
+                                <input type="checkbox" name="operator" value="Arax" onChange={handleFilterChange}
+                                       checked={filterCriteria.operator.includes("Arax")}/> Arax
                                 <div className={"smm_main_filtering_block_category"}>
                                     RU |
-                                    <input type="checkbox" name="operator" value="Megafon"
-                                           onChange={handleFilterChange}/> Megafon
-                                    <input type="checkbox" name="operator" value="MTS"
-                                           onChange={handleFilterChange}/> MTS
-                                    <input type="checkbox" name="operator" value="Beeline"
-                                           onChange={handleFilterChange}/> Beeline
+                                    <input type="checkbox" name="operator" value="Megafon" onChange={handleFilterChange}
+                                           checked={filterCriteria.operator.includes("Megafon")}/> Megafon
+                                    <input type="checkbox" name="operator" value="MTS" onChange={handleFilterChange}
+                                           checked={filterCriteria.operator.includes("MTS")}/> MTS
+                                    <input type="checkbox" name="operator" value="Beeline" onChange={handleFilterChange}
+                                           checked={filterCriteria.operator.includes("Beeline")}/> Beeline
                                 </div>
                                 <div className={"smm_main_filtering_block_category"}>
                                     <input type="checkbox" name="operator" value="Vodaphone RO"
-                                           onChange={handleFilterChange}/> Vodaphone RO
+                                           onChange={handleFilterChange}
+                                           checked={filterCriteria.operator.includes("Vodaphone RO")}/> Vodaphone RO
                                     <input type="checkbox" name="operator" value="Vodaphone IT"
-                                           onChange={handleFilterChange}/> Vodaphone IT
+                                           onChange={handleFilterChange}
+                                           checked={filterCriteria.operator.includes("Vodaphone IT")}/> Vodaphone IT
                                 </div>
-
                                 <div className={"smm_main_filtering_block_category"}>
                                     Others |
-                                <input type="checkbox" name="operator" value="Darwin"
-                                       onChange={handleFilterChange}/> Darwin
-                                <input type="checkbox" name="operator" value="Enter"
-                                       onChange={handleFilterChange}/> Enter
-                                <input type="checkbox" name="operator" value="MAIB"
-                                       onChange={handleFilterChange}/> MAIB
-                                <input type="checkbox" name="operator" value="Moldcell Money"
-                                       onChange={handleFilterChange}/> Moldcell Money
-                                <input type="checkbox" name="operator" value="Others"
-                                       onChange={handleFilterChange}/> Others
+                                    <input type="checkbox" name="operator" value="Darwin" onChange={handleFilterChange}
+                                           checked={filterCriteria.operator.includes("Darwin")}/> Darwin
+                                    <input type="checkbox" name="operator" value="Enter" onChange={handleFilterChange}
+                                           checked={filterCriteria.operator.includes("Enter")}/> Enter
+                                    <input type="checkbox" name="operator" value="MAIB" onChange={handleFilterChange}
+                                           checked={filterCriteria.operator.includes("MAIB")}/> MAIB
+                                    <input type="checkbox" name="operator" value="Moldcell Money"
+                                           onChange={handleFilterChange}
+                                           checked={filterCriteria.operator.includes("Moldcell Money")}/> Moldcell Money
+                                    <input type="checkbox" name="operator" value="Others" onChange={handleFilterChange}
+                                           checked={filterCriteria.operator.includes("Others")}/> Others
+                                </div>
                             </div>
-                            </div>
-
                         </div>
                     </div>
                     <div className={"smm_main_filtering_block"}>
                         <div className={"smm_main_filtering_bold"}>Subject:</div>
                         <div>
                             <div className={"smm_main_filtering_muiltiple_choice"}>
-                        <div className={"smm_main_filtering_block_category"} id="smm_main_filtering_block_category_subject">
-                            Branding |
-                            <input type="checkbox" name="subject" value="Event" onChange={handleFilterChange}/> Event
-                            <input type="checkbox" name="subject" value="PR" onChange={handleFilterChange}/> PR
-                            <input type="checkbox" name="subject" value="Promoted"
-                                   onChange={handleFilterChange}/> Promoted
-                        </div>
-                        <input type="checkbox" name="subject" value="(I) Comecial"
-                               onChange={handleFilterChange}/> Comecial
-                        <input type="checkbox" name="subject" value="(I) Informativ"
-                               onChange={handleFilterChange}/> Informativ
-                        <input type="checkbox" name="subject" value="(I) Interactiv"
-                               onChange={handleFilterChange}/> Interactiv
-                        <div className={"smm_main_filtering_block_category"}>
-                            Influencer |
-                            <input type="checkbox" name="subject" value="(I) Comecial" onChange={handleFilterChange}/> Comecial
-                            <input type="checkbox" name="subject" value="(I) Informativ" onChange={handleFilterChange}/> Informativ
-                            <input type="checkbox" name="subject" value="(I) Interactiv"
-                                   onChange={handleFilterChange}/> Interactiv
-                        </div>
-                       <span> <input type="checkbox" name="subject" value="" onChange={handleFilterChange}/> None
-                   </span> </div>
+                                <div className={"smm_main_filtering_block_category"}
+                                     id="smm_main_filtering_block_category_subject">
+                                    Branding |
+                                    <input type="checkbox" name="subject" value="Event" onChange={handleFilterChange}
+                                           checked={filterCriteria.subject.includes("Event")}/> Event
+                                    <input type="checkbox" name="subject" value="PR" onChange={handleFilterChange}
+                                           checked={filterCriteria.subject.includes("PR")}/> PR
+                                    <input type="checkbox" name="subject" value="Promoted" onChange={handleFilterChange}
+                                           checked={filterCriteria.subject.includes("Promoted")}/> Promoted
+                                </div>
+                                <input type="checkbox" name="subject" value="Comercial" onChange={handleFilterChange}
+                                       checked={filterCriteria.subject.includes("Comercial")}/> Comercial
+                                <input type="checkbox" name="subject" value="Informativ" onChange={handleFilterChange}
+                                       checked={filterCriteria.subject.includes("Informativ")}/> Informativ
+                                <input type="checkbox" name="subject" value="Interactiv" onChange={handleFilterChange}
+                                       checked={filterCriteria.subject.includes("Interactiv")}/> Interactiv
+                                <div className={"smm_main_filtering_block_category"}>
+                                    Influencer |
+                                    <input type="checkbox" name="subject" value="(I) Comecial"
+                                           onChange={handleFilterChange}
+                                           checked={filterCriteria.subject.includes("(I) Comecial")}/> Comecial
+                                    <input type="checkbox" name="subject" value="(I) Informativ"
+                                           onChange={handleFilterChange}
+                                           checked={filterCriteria.subject.includes("(I) Informativ")}/> Informativ
+                                    <input type="checkbox" name="subject" value="(I) Interactiv"
+                                           onChange={handleFilterChange}
+                                           checked={filterCriteria.subject.includes("(I) Interactiv")}/> Interactiv
+                                </div>
+                                <span>
+                    <input type="checkbox" name="subject" value="" onChange={handleFilterChange}
+                           checked={filterCriteria.subject.includes("")}/> None
+                </span>
+                            </div>
                         </div>
                     </div>
                     <div className={"smm_main_filtering_block"}>
                         <div className={"smm_main_filtering_bold"}>Type:</div>
-                        <input type="checkbox" name="type" value="Carousel" onChange={handleFilterChange}/> Carousel
-                        <input type="checkbox" name="type" value="Reel" onChange={handleFilterChange}/> Reel
-                        <input type="checkbox" name="type" value="Video" onChange={handleFilterChange}/> Video
-                        <input type="checkbox" name="type" value="Solo" onChange={handleFilterChange}/> Solo
-                        <input type="checkbox" name="type" value="Animated" onChange={handleFilterChange}/> Animated
-                        <input type="checkbox" name="type" value="" onChange={handleFilterChange}/> None
+                        <input type="checkbox" name="type" value="Carousel" onChange={handleFilterChange}
+                               checked={filterCriteria.type.includes("Carousel")}/> Carousel
+                        <input type="checkbox" name="type" value="Reel" onChange={handleFilterChange}
+                               checked={filterCriteria.type.includes("Reel")}/> Reel
+                        <input type="checkbox" name="type" value="Video" onChange={handleFilterChange}
+                               checked={filterCriteria.type.includes("Video")}/> Video
+                        <input type="checkbox" name="type" value="Solo" onChange={handleFilterChange}
+                               checked={filterCriteria.type.includes("Solo")}/> Solo
+                        <input type="checkbox" name="type" value="Animated" onChange={handleFilterChange}
+                               checked={filterCriteria.type.includes("Animated")}/> Animated
+                        <input type="checkbox" name="type" value="" onChange={handleFilterChange}
+                               checked={filterCriteria.type.includes("")}/> None
                     </div>
                     <div className={"smm_main_filtering_block"}>
                         <div className={"smm_main_filtering_bold"}>Sponsor:</div>
@@ -958,27 +1005,37 @@ export default function SMM() {
                     </div>
                     <div className={"smm_main_filtering_block"}>
                         <div className={"smm_main_filtering_bold"}>Date Range:</div>
-                        <input type="date" name="from" onChange={handleFilterChange}/>&nbsp; to &nbsp;
-                        <input type="date" name="to" onChange={handleFilterChange}/>
+                        <input type="date" name="from" onChange={handleFilterChange}
+                               value={filterCriteria.dateRange.from}/>&nbsp; to &nbsp;
+                        <input type="date" name="to" onChange={handleFilterChange} value={filterCriteria.dateRange.to}/>
                     </div>
                     <div className={"smm_main_filtering_block"}>
                         <div className={"smm_main_filtering_bold"}>Day:</div>
-                        <input type="checkbox" name="day" value="Monday" onChange={handleFilterChange}/> Monday
-                        <input type="checkbox" name="day" value="Tuesday" onChange={handleFilterChange}/> Tuesday
-                        <input type="checkbox" name="day" value="Wednesday" onChange={handleFilterChange}/> Wednesday
-                        <input type="checkbox" name="day" value="Thursday" onChange={handleFilterChange}/> Thursday
-                        <input type="checkbox" name="day" value="Friday" onChange={handleFilterChange}/> Friday
-                        <input type="checkbox" name="day" value="Saturday" onChange={handleFilterChange}/> Saturday
-                        <input type="checkbox" name="day" value="Sunday" onChange={handleFilterChange}/> Sunday
+                        <input type="checkbox" name="day" value="Monday" onChange={handleFilterChange}
+                               checked={filterCriteria.day.includes("Monday")}/> Monday
+                        <input type="checkbox" name="day" value="Tuesday" onChange={handleFilterChange}
+                               checked={filterCriteria.day.includes("Tuesday")}/> Tuesday
+                        <input type="checkbox" name="day" value="Wednesday" onChange={handleFilterChange}
+                               checked={filterCriteria.day.includes("Wednesday")}/> Wednesday
+                        <input type="checkbox" name="day" value="Thursday" onChange={handleFilterChange}
+                               checked={filterCriteria.day.includes("Thursday")}/> Thursday
+                        <input type="checkbox" name="day" value="Friday" onChange={handleFilterChange}
+                               checked={filterCriteria.day.includes("Friday")}/> Friday
+                        <input type="checkbox" name="day" value="Saturday" onChange={handleFilterChange}
+                               checked={filterCriteria.day.includes("Saturday")}/> Saturday
+                        <input type="checkbox" name="day" value="Sunday" onChange={handleFilterChange}
+                               checked={filterCriteria.day.includes("Sunday")}/> Sunday
                     </div>
                     <div className={"smm_main_filtering_block"}>
                         <div className={"smm_main_filtering_bold"}>Source:</div>
-                        <input type="checkbox" name="source" value="instagram" onChange={handleFilterChange}/> Instagram
-                        <input type="checkbox" name="source" value="facebook" onChange={handleFilterChange}/> Facebook
+                        <input type="checkbox" name="source" value="instagram" onChange={handleFilterChange}
+                               checked={filterCriteria.source.includes("instagram")}/> Instagram
+                        <input type="checkbox" name="source" value="facebook" onChange={handleFilterChange}
+                               checked={filterCriteria.source.includes("facebook")}/> Facebook
                     </div>
                 </div>
 
-                <div id="smm_main_table"style={{ display: visibleView === 'table' ? 'flex' : 'none' }}>
+                <div id="smm_main_table" style={{display: visibleView === 'table' ? 'flex' : 'none'}}>
                     {searchFilter(filterData(sortData(ssmData))).map((item) => (
                         <div className="smm_main_table_cell" id={item.id} key={item.id}>
                             <img className="smm_main_table_social" src={`images/general/${item.source}.png`} alt=""/>
@@ -1019,21 +1076,21 @@ export default function SMM() {
                         </div>
                     ))}
                 </div>
-                <div id="smm_main_feed_block"style={{ display: visibleView === 'feed' ? 'flex' : 'none' }}>
-                   <div id="smm_main_feed_block_btns">
-                       <Button
-                               className={`smm_main_btn ${activeFeedButton === 'feed' ? 'smm_main_btn_pressed' : ''}`}
-                               onClick={handleFeedButtonClick}>
-                           <Icon type="feed_small" />
-                           Feed
-                       </Button>
-                       <Button
-                               className={`smm_main_btn ${activeFeedButton === 'all' ? 'smm_main_btn_pressed' : ''}`}
-                               onClick={handleAllButtonClick}>
-                           <Icon type="feed" />
-                           All
-                       </Button>
-                   </div>
+                <div id="smm_main_feed_block" style={{display: visibleView === 'feed' ? 'flex' : 'none'}}>
+                    <div id="smm_main_feed_block_btns">
+                        <Button
+                            className={`smm_main_btn ${activeFeedButton === 'feed' ? 'smm_main_btn_pressed' : ''}`}
+                            onClick={handleFeedButtonClick}>
+                            <Icon type="feed_small"/>
+                            Feed
+                        </Button>
+                        <Button
+                            className={`smm_main_btn ${activeFeedButton === 'all' ? 'smm_main_btn_pressed' : ''}`}
+                            onClick={handleAllButtonClick}>
+                            <Icon type="feed"/>
+                            All
+                        </Button>
+                    </div>
 
                     <div id="smm_main_feed">
                         {searchFilter(filterData(sortData(ssmData))).map((item) => (
@@ -1170,7 +1227,7 @@ export default function SMM() {
                             </select>
                         </div>
                         <div className={"smm_popup_row"}>
-                        <div className="smm_main_add_label">Type:</div>
+                            <div className="smm_main_add_label">Type:</div>
                             <select name="type" value={formInputs.type} onChange={handleInputChange}>
                                 <option value="">Select Type</option>
                                 <option value="Carousel">Carousel</option>
