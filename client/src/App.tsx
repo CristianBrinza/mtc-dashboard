@@ -1,3 +1,4 @@
+// src/App.tsx
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
@@ -15,6 +16,7 @@ import PrivateRoute from "./components/PrivateRoute.tsx";
 import RegisterPage from "./pages/RegisterPage.tsx";
 import { AuthProvider } from "./context/AuthContext.tsx";
 import LoginPage from "./pages/LoginPage.tsx";
+import AdminPage from "./pages/AdminPage.tsx";
 import "./App.css";
 
 function App() {
@@ -30,6 +32,7 @@ function App() {
                         <Route path="/dashboard" element={<Home />} />
                         <Route path="/smm" element={<PrivateRoute component={SMM} />} />
                         <Route path="/phones" element={<PrivateRoute component={Phones} />} />
+                        <Route path="/admin" element={<PrivateRoute component={AdminPage} roles={['ADMIN']} />} />
                         <Route path="*" element={<NotFound />} />
                         <Route path="/test" element={<Test />} />
                         <Route path="/utilities" element={<Utilities />} />

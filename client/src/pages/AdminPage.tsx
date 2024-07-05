@@ -1,13 +1,15 @@
-import Navbar from '../components/Navbar';
-import React from "react";
+// src/pages/AdminPage.tsx
+import React from 'react';
+import Navbar from "../components/Navbar.tsx";
 
-
-export default function AdminPage() {
+const AdminPage: React.FC = () => {
     return (
-        <div>
-            <Navbar />
-Admin
-
-        </div>
+        <>
+            <Navbar/>
+            <h1>Admin Page</h1>
+            <p>Only accessible by users with the ADMIN role.</p>
+        </>
     );
-}
+};
+
+export default AdminPage;
