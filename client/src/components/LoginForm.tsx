@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import AuthContext from '../context/AuthContext';
 import { loginUser } from '../services/api';
-import "./../styles/loginform.css"
-import Button from "./Button.tsx";
+import './../styles/loginform.css';
+import Button from './Button.tsx';
 
 const LoginForm: React.FC = () => {
     const [username, setUsername] = useState('');
@@ -35,7 +35,12 @@ const LoginForm: React.FC = () => {
 
     return (
         <div className="login_main">
-            <img src="images/general/logo.png" alt="Dashboard" id="login_img" />
+            <img
+                src="images/general/logo.png"
+                alt="Dashboard"
+                id="login_img"
+                onClick={() => navigate('/')} // Corrected onClick
+            />
             <form onSubmit={handleSubmit} id="login_form">
                 <input
                     type="text"

@@ -3,11 +3,12 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import "../styles/navbar.css";
 import AuthContext from '../context/AuthContext';
-import Button from "./Button.tsx";
+import UserMenu from './UserMenu';
 
 const Navbar: React.FC = () => {
     const [menuData, setMenuData] = useState({ menu: [] });
-    const { isAuthenticated, logout } = useContext(AuthContext);
+    const { isAuthenticated, logout, userInfo } = useContext(AuthContext);
+    const [showUserMenu, setShowUserMenu] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -31,6 +32,12 @@ const Navbar: React.FC = () => {
         }
     };
 
+    const toggleUserMenu = () => {
+        setShowUserMenu(!showUserMenu);
+    };
+
+    const initial = userInfo?.username ? userInfo.username.charAt(0).toUpperCase() : '';
+
     return (
         <div id="mtc_dashboard_menu">
             <a href="home" style={{ height: "100%" }}>
@@ -39,12 +46,14 @@ const Navbar: React.FC = () => {
             {menuData.menu.map((item, index) => (
                 <a key={index} href={item[1]}>{item[0]}</a>
             ))}
-            <Button
-                onClick={handleAuthAction}
+            <div
+                className="user-initial-circle"
+                onClick={toggleUserMenu}
                 style={{ marginLeft: 'auto' }}
             >
-                {isAuthenticated ? 'Logout' : 'Login'}
-            </Button>
+                {initial}
+            </div>
+            {showUserMenu && <UserMenu onLogout={handleAuthAction} isAuthenticated={isAuthenticated} />}
         </div>
     );
 };
