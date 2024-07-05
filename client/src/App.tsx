@@ -15,6 +15,7 @@ import PrivateRoute from "./components/PrivateRoute.tsx";
 import RegisterPage from "./pages/RegisterPage.tsx";
 import { AuthProvider } from "./context/AuthContext.tsx";
 import LoginPage from "./pages/LoginPage.tsx";
+import "./App.css";
 
 function App() {
     return (
