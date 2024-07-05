@@ -19,6 +19,8 @@ import LoginPage from "./pages/LoginPage.tsx";
 import AdminPage from "./pages/AdminPage.tsx";
 import "./App.css";
 import NoAccessPage from "./pages/NoAccessPage.tsx";
+import Profile from "./pages/Profile.tsx";
+import Website from "./pages/Website.tsx";
 
 function App() {
     return (
@@ -32,6 +34,7 @@ function App() {
                         <Route path="/home" element={<Home />} />
                         <Route path="/dashboard" element={<Home />} />
                         <Route path="/smm" element={<PrivateRoute component={SMM} roles={['ADMIN','DIRECTOR']}/>} />
+                        <Route path="/website" element={<PrivateRoute component={Website} roles={['ADMIN','DIRECTOR','WEB_DEVEPORER']}/>} />
                         <Route path="/phones" element={<PrivateRoute component={Phones} />} />
                         <Route path="/admin" element={<PrivateRoute component={AdminPage} roles={['ADMIN']} />} />
                         <Route path="*" element={<NotFound />} />
@@ -40,6 +43,8 @@ function App() {
                         <Route path="/utilities" element={<Utilities />} />
                         <Route path="/qr_generator" element={<QR />} />
                         <Route path="/statistics" element={<Statistics />} />
+                        <Route path="/profile" element={<PrivateRoute component={Profile} />} />
+
                     </Routes>
                 </AuthProvider>
             </BrowserRouter>
