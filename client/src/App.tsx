@@ -1,11 +1,12 @@
-import './App.css'
+import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import NotFound from "./pages/NotFound.tsx";
 import Home from "./pages/Home.tsx";
 import SMM from "./pages/SMM.tsx";
 import Test from "./pages/Test.tsx";
 import Navbar from "./components/Navbar.tsx";
-import React from "react";
 import Utilities from "./pages/Utilities.tsx";
 import QR from "./Utilities/QR/QR.tsx";
 import Statistics from "./pages/Statistics.tsx";
@@ -36,8 +37,9 @@ function App() {
                     </Routes>
                 </AuthProvider>
             </BrowserRouter>
+            <ToastContainer position="bottom-right" autoClose={5000} />
         </>
-    )
+    );
 }
 
 export default App;
