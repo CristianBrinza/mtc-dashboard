@@ -18,6 +18,7 @@ import { AuthProvider } from "./context/AuthContext.tsx";
 import LoginPage from "./pages/LoginPage.tsx";
 import AdminPage from "./pages/AdminPage.tsx";
 import "./App.css";
+import NoAccessPage from "./pages/NoAccessPage.tsx";
 
 function App() {
     return (
@@ -26,15 +27,16 @@ function App() {
                 <AuthProvider>
                     <Routes>
                         <Route path="/login" element={<LoginPage />} />
-                        <Route path="/register" element={<RegisterPage />} />
+                        <Route path="/register" element={<PrivateRoute component={RegisterPage} roles={['ADMIN']}/>} />
                         <Route path="/" element={<Home />} />
                         <Route path="/home" element={<Home />} />
                         <Route path="/dashboard" element={<Home />} />
-                        <Route path="/smm" element={<PrivateRoute component={SMM} />} />
+                        <Route path="/smm" element={<PrivateRoute component={SMM} roles={['ADMIN','DIRECTOR']}/>} />
                         <Route path="/phones" element={<PrivateRoute component={Phones} />} />
                         <Route path="/admin" element={<PrivateRoute component={AdminPage} roles={['ADMIN']} />} />
                         <Route path="*" element={<NotFound />} />
                         <Route path="/test" element={<Test />} />
+                        <Route path="/no_access" element={<NoAccessPage />} />
                         <Route path="/utilities" element={<Utilities />} />
                         <Route path="/qr_generator" element={<QR />} />
                         <Route path="/statistics" element={<Statistics />} />
