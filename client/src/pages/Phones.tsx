@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "../styles/phones.css"
 import Icon from "../components/Icon.tsx";
 import Button from "../components/Button.tsx";
+import Navbar from "../components/Navbar.tsx";
 
 interface PhoneEntry {
     name: string;
@@ -54,6 +55,7 @@ export default function Phones() {
 
     return (
         <>
+            <Navbar />
             <div className="phone_main">
                 <div id="phone_main_title">Moldtelecom | Marketing Phonebook</div>
                 <div id="phone_main_table">

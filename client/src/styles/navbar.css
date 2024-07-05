@@ -28,3 +28,22 @@
     margin-top: 3px;
 
 }
+
+.navbar_main_btn {
+    cursor: pointer;
+    display: flex;
+    padding: 0px 23px; !important;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    color: #9DAEFF;
+    font-family: "Source Sans Pro";
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 36px;
+    letter-spacing: 0.16px;
+    border-radius: 8px;
+    border: 1px solid #9DAEFF;
+    background: white;
+}

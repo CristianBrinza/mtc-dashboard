@@ -3,6 +3,7 @@ import React, { useEffect, useState, useRef } from "react";
 import Popup from "../components/Popup";
 import Button from "../components/Button";
 import Icon from "../components/Icon";
+import Navbar from "../components/Navbar.tsx";
 
 interface SsmData {
     id: string;
@@ -697,6 +698,7 @@ export default function SMM() {
 
     return (
         <>
+            <Navbar />
             <div className="smm_main">
                 <div id="smm_main_title">Moldtelecom SMM | Marketing Dashboard</div>
                 <div id="smm_main_options">

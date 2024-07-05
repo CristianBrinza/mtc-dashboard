@@ -3,6 +3,7 @@ import "./qr.css";
 import { useNavigate } from "react-router-dom";
 import Icon from "../../components/Icon.tsx";
 import Button from "../../components/Button.tsx";
+import Navbar from "../../components/Navbar.tsx";
 
 export default function QR() {
     const navigate = useNavigate();
@@ -45,6 +46,7 @@ export default function QR() {
 
     return (
         <>
+            <Navbar />
             <div className={"qr_main"}>
                 <div id="qr_main_back" onClick={() => navigate('/utilities')}>
                     <Button>
