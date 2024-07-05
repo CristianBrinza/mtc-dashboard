@@ -14,7 +14,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ onLogout, isAuthenticated }) => {
         <div className="user-menu">
             {isAuthenticated ? (
                 <>
-                    <div className="user-menu-item">Profile</div>
+                    <div className="user-menu-item" onClick={() => navigate('/profile')}>Profile</div>
                     <div className="user-menu-item">Settings</div>
                     <div className="user-menu-item" onClick={onLogout}>Logout</div>
                 </>

@@ -33,11 +33,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     useEffect(() => {
         if (token) {
             const decoded = decodeToken(token);
-            console.log('Decoded token:', decoded); // Debug log
+            //console.log('Decoded token:', decoded); // Debug log
             if (decoded && decoded.user && decoded.user.role) {
                 setUserRole(decoded.user.role);
                 setUserInfo(decoded.user);
-                console.log('User role set to:', decoded.user.role); // Debug log
+                //console.log('User role set to:', decoded.user.role); // Debug log
             }
         }
         setLoading(false); // Set loading to false after processing
@@ -47,11 +47,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setToken(newToken);
         localStorage.setItem('token', newToken);
         const decoded = decodeToken(newToken);
-        console.log('Decoded token on login:', decoded); // Debug log
+        //console.log('Decoded token on login:', decoded); // Debug log
         if (decoded && decoded.user && decoded.user.role) {
             setUserRole(decoded.user.role);
             setUserInfo(decoded.user);
-            console.log('User role set to:', decoded.user.role); // Debug log
+            //console.log('User role set to:', decoded.user.role); // Debug log
         }
         navigate('/');
     };

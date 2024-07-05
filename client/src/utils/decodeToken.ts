@@ -10,7 +10,7 @@ export const decodeToken = (token: string) => {
         }).join(''));
 
         const decoded = JSON.parse(jsonPayload);
-        console.log('Decoded JWT:', decoded); // Add debug log
+        //console.log('Decoded JWT:', decoded); // Add debug log
         return decoded;
     } catch (e) {
         console.error('Invalid token', e);

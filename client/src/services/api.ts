@@ -1,5 +1,5 @@
+// src/services/api.ts
 import axios from 'axios';
-import AuthContext from '../context/AuthContext';
 
 // Base URL for the API
 const API_URL = 'http://localhost:5001/api';
@@ -22,6 +22,7 @@ api.interceptors.request.use(
         return Promise.reject(error);
     }
 );
+
 // API function to login a user
 export const loginUser = (credentials: { username: string; password: string }) => {
     return api.post('/auth/login', credentials);
@@ -31,3 +32,15 @@ export const loginUser = (credentials: { username: string; password: string }) =
 export const registerUser = (user: { username: string; password: string; role: string }) => {
     return api.post('/auth/register', user);
 };
+
+// API function to fetch user profile
+export const fetchUserProfile = () => {
+    return api.get('/profile');
+};
+
+// API function to update user profile
+export const updateUserProfile = (data: { name: string; surname: string; password?: string; avatar: string }) => {
+    return api.put('/profile', data);
+};
+
+export default api;

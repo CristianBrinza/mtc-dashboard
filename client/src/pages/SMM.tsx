@@ -405,12 +405,12 @@ export default function SMM() {
         if (savedSortCriteria) {
             setSortCriteria(savedSortCriteria);
             setIsSortDotVisible(savedSortCriteria !== "none"); // Update the dot visibility based on saved criteria
-            console.log('Loaded sort criteria from localStorage:', savedSortCriteria);
+            //console.log('Loaded sort criteria from localStorage:', savedSortCriteria);
         }
 
         if (savedSortOrder) {
             setSortOrder(savedSortOrder);
-            console.log('Loaded sort order from localStorage:', savedSortOrder);
+            //console.log('Loaded sort order from localStorage:', savedSortOrder);
         }
     }, []);
 

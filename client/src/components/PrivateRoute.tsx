@@ -12,7 +12,7 @@ interface PrivateRouteProps {
 const PrivateRoute: React.FC<PrivateRouteProps> = ({ component: Component, roles, ...rest }) => {
     const { isAuthenticated, userRole, loading } = useContext(AuthContext);
 
-    console.log('PrivateRoute check:', { isAuthenticated, userRole, roles, loading }); // Debug log
+    //console.log('PrivateRoute check:', { isAuthenticated, userRole, roles, loading }); // Debug log
 
     if (loading) {
         return <div>Loading...</div>; // Show a loading state
@@ -24,7 +24,7 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ component: Component, roles
     }
 
     if (roles && roles.indexOf(userRole) === -1) {
-        console.log(`User role ${userRole} not authorized, redirecting to /no_access`); // Debug log
+        //console.log(`User role ${userRole} not authorized, redirecting to /no_access`); // Debug log
         return <Navigate to="/no_access" />;
     }
 

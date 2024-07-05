@@ -37,6 +37,11 @@ const Navbar: React.FC = () => {
     };
 
     const initial = userInfo?.username ? userInfo.username.charAt(0).toUpperCase() : '';
+    const avatar = userInfo?.avatar ? (
+        <img src={userInfo.avatar} alt="Profile" className="user-avatar" />
+    ) : (
+        initial
+    );
 
     return (
         <div id="mtc_dashboard_menu">
@@ -51,9 +56,14 @@ const Navbar: React.FC = () => {
                 onClick={toggleUserMenu}
                 style={{ marginLeft: 'auto' }}
             >
-                {initial}
+                {avatar}
             </div>
-            {showUserMenu && <UserMenu onLogout={handleAuthAction} isAuthenticated={isAuthenticated} />}
+            {showUserMenu && (
+                <UserMenu
+                    onLogout={handleAuthAction}
+                    isAuthenticated={isAuthenticated}
+                />
+            )}
         </div>
     );
 };
