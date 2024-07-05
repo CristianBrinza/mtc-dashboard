@@ -24,8 +24,8 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ component: Component, roles
     }
 
     if (roles && roles.indexOf(userRole) === -1) {
-        console.log(`User role ${userRole} not authorized, redirecting to /`); // Debug log
-        return <Navigate to="/" />;
+        console.log(`User role ${userRole} not authorized, redirecting to /no_access`); // Debug log
+        return <Navigate to="/no_access" />;
     }
 
     return <Component {...rest} />;
