@@ -2,7 +2,7 @@
 import React from 'react';
 import Navbar from "../components/Navbar.tsx";
 
-const AdminPage: React.FC = () => {
+const NoAccessPage: React.FC = () => {
     return (
         <>
             <Navbar/>
@@ -12,4 +12,4 @@ const AdminPage: React.FC = () => {
     );
 };
 
-export default AdminPage;
+export default NoAccessPage;
