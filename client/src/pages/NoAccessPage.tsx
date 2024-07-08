@@ -6,8 +6,8 @@ const NoAccessPage: React.FC = () => {
     return (
         <>
             <Navbar/>
-            <h1>Admin Page</h1>
-            <p>Only accessible by users with the ADMIN role.</p>
+            <h1>No Access</h1>
+
         </>
     );
 };
