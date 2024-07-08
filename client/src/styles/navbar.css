@@ -63,6 +63,13 @@
     font-weight: bold;
     cursor: pointer;
     position: relative;
+    color: #9DAEFF;
+    font-family: "Source Sans Pro";
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 16px;
+    letter-spacing: 0.16px;
 }
 
 .user-menu {
@@ -93,4 +100,9 @@
 
 .user-menu-item:hover {
     background-color: #f0f0f0;
+}
+
+.user-initial-circle img{
+    width: 40px;
+    border-radius: 50%;
 }
