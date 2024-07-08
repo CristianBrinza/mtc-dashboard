@@ -932,9 +932,13 @@ export default function SMM() {
                                     <input type="checkbox" name="operator" value="Moldcell Money"
                                            onChange={handleFilterChange}
                                            checked={filterCriteria.operator.includes("Moldcell Money")}/> Moldcell Money
-                                    <input type="checkbox" name="operator" value="Others" onChange={handleFilterChange}
-                                           checked={filterCriteria.operator.includes("Others")}/> Others
-                                </div>
+                                    </div>
+                                <input type="checkbox" name="operator" value="Others" onChange={handleFilterChange}
+                                       checked={filterCriteria.operator.includes("Others")}/> Others
+
+                                <input type="checkbox" name="operator" value="" onChange={handleFilterChange}
+                                       checked={filterCriteria.operator.includes("")}/> none
+
                             </div>
                         </div>
                     </div>
