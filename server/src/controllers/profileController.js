@@ -13,7 +13,11 @@ exports.getProfile = async (req, res) => {
 
 exports.updateProfile = async (req, res) => {
     const { name, surname, password, avatar } = req.body;
-    const updates = { name, surname, avatar };
+    const updates = { name, surname };
+
+    if (avatar) {
+        updates.avatar = avatar; // Assuming avatar is already base64 data or a URL
+    }
 
     if (password) {
         const salt = await bcrypt.genSalt(10);
