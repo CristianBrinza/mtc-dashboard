@@ -1,7 +1,7 @@
-// src/context/AuthContext.tsx
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { decodeToken } from '../utils/decodeToken';
+import axios from 'axios';
 
 interface AuthContextProps {
     token: string | null;
@@ -11,6 +11,7 @@ interface AuthContextProps {
     userRole: string;
     userInfo: any;
     loading: boolean;
+    setUserInfo: (info: any) => void;
 }
 
 const AuthContext = createContext<AuthContextProps>({
@@ -21,6 +22,7 @@ const AuthContext = createContext<AuthContextProps>({
     userRole: '',
     userInfo: null,
     loading: true,
+    setUserInfo: () => {},
 });
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -33,25 +35,38 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     useEffect(() => {
         if (token) {
             const decoded = decodeToken(token);
-            //console.log('Decoded token:', decoded); // Debug log
+            console.log('Decoded token:', decoded); // Debug log
             if (decoded && decoded.user && decoded.user.role) {
                 setUserRole(decoded.user.role);
                 setUserInfo(decoded.user);
-                //console.log('User role set to:', decoded.user.role); // Debug log
+                console.log('User role set to:', decoded.user.role); // Debug log
+                fetchUserProfile(decoded.user.id);
             }
         }
         setLoading(false); // Set loading to false after processing
     }, [token]);
 
+    const fetchUserProfile = async (userId: string) => {
+        try {
+            const response = await axios.get(`http://localhost:5001/api/profile`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setUserInfo(response.data);
+        } catch (error) {
+            console.error('Error fetching user profile:', error);
+        }
+    };
+
     const login = (newToken: string) => {
         setToken(newToken);
         localStorage.setItem('token', newToken);
         const decoded = decodeToken(newToken);
-        //console.log('Decoded token on login:', decoded); // Debug log
+        console.log('Decoded token on login:', decoded); // Debug log
         if (decoded && decoded.user && decoded.user.role) {
             setUserRole(decoded.user.role);
             setUserInfo(decoded.user);
-            //console.log('User role set to:', decoded.user.role); // Debug log
+            console.log('User role set to:', decoded.user.role); // Debug log
+            fetchUserProfile(decoded.user.id);
         }
         navigate('/');
     };
@@ -65,7 +80,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
 
     return (
-        <AuthContext.Provider value={{ token, login, logout, isAuthenticated: !!token, userRole, userInfo, loading }}>
+        <AuthContext.Provider value={{ token, login, logout, isAuthenticated: !!token, userRole, userInfo, loading, setUserInfo }}>
             {children}
         </AuthContext.Provider>
     );
