@@ -1,4 +1,4 @@
 module.exports = {
     secret: 'your_jwt_secret',
-    expireTime: '999m',
+    expireTime: '999999m',
 };
