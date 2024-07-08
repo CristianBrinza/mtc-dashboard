@@ -147,9 +147,9 @@ const Icon = ({ type, width = 24, height = 24, fill = "#9DAEFF",}) => {
                     <defs>
                         <linearGradient id="paint0_linear_1123_2181" x1="173.26" y1="-58.0096" x2="815.129" y2="1053.67"
                                         gradientUnits="userSpaceOnUse">
-                            <stop stop-color="#5A62C3"/>
-                            <stop offset="0.5" stop-color="#4D55BD"/>
-                            <stop offset="1" stop-color="#3940AB"/>
+                            <stop stopColor="#5A62C3"/>
+                            <stop offset="0.5" stopColor="#4D55BD"/>
+                            <stop offset="1" stopColor="#3940AB"/>
                         </linearGradient>
                     </defs>
             </>
@@ -196,9 +196,9 @@ const Icon = ({ type, width = 24, height = 24, fill = "#9DAEFF",}) => {
                 <defs>
                     <linearGradient id="paint0_linear_1194_1660" x1="3.7776" y1="5.53965" x2="10.455" y2="17.1045"
                                     gradientUnits="userSpaceOnUse">
-                        <stop stop-color="#058F92"/>
-                        <stop offset="0.5" stop-color="#038489"/>
-                        <stop offset="1" stop-color="#026D71"/>
+                        <stop stopColor="#058F92"/>
+                        <stop offset="0.5" stopColor="#038489"/>
+                        <stop offset="1" stopColor="#026D71"/>
                     </linearGradient>
                     <clipPath id="clip0_1194_1660">
                         <rect width="20" height="19.576" fill="white" transform="translate(2 1.55298)"/>
@@ -221,16 +221,16 @@ const Icon = ({ type, width = 24, height = 24, fill = "#9DAEFF",}) => {
                 <defs>
                     <radialGradient id="paint0_radial_1194_1687" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse"
                                     gradientTransform="translate(7.3125 23.0404) rotate(-90) scale(19.8215 18.4355)">
-                        <stop stop-color="#FFDD55"/>
-                        <stop offset="0.1" stop-color="#FFDD55"/>
-                        <stop offset="0.5" stop-color="#FF543E"/>
-                        <stop offset="1" stop-color="#C837AB"/>
+                        <stop stopColor="#FFDD55"/>
+                        <stop offset="0.1" stopColor="#FFDD55"/>
+                        <stop offset="0.5" stopColor="#FF543E"/>
+                        <stop offset="1" stopColor="#C837AB"/>
                     </radialGradient>
                     <radialGradient id="paint1_radial_1194_1687" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse"
                                     gradientTransform="translate(-1.35008 2.9407) rotate(78.681) scale(8.86031 36.5225)">
-                        <stop stop-color="#3771C8"/>
-                        <stop offset="0.128" stop-color="#3771C8"/>
-                        <stop offset="1" stop-color="#6600FF" stop-opacity="0"/>
+                        <stop stopColor="#3771C8"/>
+                        <stop offset="0.128" stopColor="#3771C8"/>
+                        <stop offset="1" stopColor="#6600FF" stopOpacity="0"/>
                     </radialGradient>
                 </defs>
             </>
@@ -318,8 +318,8 @@ const Icon = ({ type, width = 24, height = 24, fill = "#9DAEFF",}) => {
                 <defs>
                     <linearGradient id="paint0_linear_1194_1800" x1="1002" y1="1.5" x2="1002" y2="2001.5"
                                     gradientUnits="userSpaceOnUse">
-                        <stop stop-color="#2AABEE"/>
-                        <stop offset="1" stop-color="#229ED9"/>
+                        <stop stopColor="#2AABEE"/>
+                        <stop offset="1" stopColor="#229ED9"/>
                     </linearGradient>
                 </defs>
             </>
