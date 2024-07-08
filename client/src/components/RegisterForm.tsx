@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import AuthContext from '../context/AuthContext';
 import { registerUser, loginUser } from '../services/api';
+import "../styles/registerform.css";
+import Button from "./Button.tsx";
 
 const RegisterForm: React.FC = () => {
     const [username, setUsername] = useState('');
@@ -25,16 +27,26 @@ const RegisterForm: React.FC = () => {
     };
 
     return (
-        <form onSubmit={handleSubmit}>
-            <input type="text" value={username}
-                   onChange={(e) => setUsername(e.target.value)} placeholder="username"/>
-            <input type="password" value={password}
-                   onChange={(e) => setPassword(e.target.value)} placeholder="password"/>
-            <input type="text" value={role}
-                   onChange={(e) => setRole(e.target.value)} placeholder="role"/>
-            <button type="submit">Register</button>
-            <button onClick={() => navigate('/login')}>Login</button>
-        </form>
+        <div className="register_main">
+            <form onSubmit={handleSubmit} id="register_form">
+                <input type="text" value={username}
+                       onChange={(e) => setUsername(e.target.value)} placeholder="username"/>
+                <input type="password" value={password}
+                       onChange={(e) => setPassword(e.target.value)} placeholder="password"/>
+                <select value={role} onChange={(e) => setRole(e.target.value)}>
+                    <option value="">Select role</option>
+                    <option value="ADMIN">ADMIN</option>
+                    <option value="SMM">SMM</option>
+                    <option value="DIRECTOR">DIRECTOR</option>
+                    <option value="SEF">SEF</option>
+                    <option value="WEB_DEVELOPER">WEB_DEVELOPER</option>
+                    <option value="DEFAULT">DEFAULT</option>
+                    <option value="VIEWER">VIEWER</option>
+                </select>
+                <Button className={"register_form_submit"} type="submit">Register</Button>
+                <Button onClick={() => navigate('/login')}>Login</Button>
+            </form>
+        </div>
     );
 };
 
