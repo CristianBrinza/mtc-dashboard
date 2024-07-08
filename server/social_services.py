@@ -31,10 +31,17 @@ def read_json(file_name):
     file_path = get_json_file_path(file_name)
     if os.path.exists(file_path):
         with open(file_path, 'r') as file:
-            data = json.load(file)
-        return data
+            try:
+                data = json.load(file)
+                return data
+            except json.JSONDecodeError as e:
+                logging.error(f'Error decoding JSON file {file_name}: {e}')
+                raise
     else:
-        return {}
+        logging.error(f'{file_name}.json does not exist')
+        raise FileNotFoundError(f'{file_name}.json does not exist')
+
+
 
 def write_json(file_name, data):
     file_path = get_json_file_path(file_name)
@@ -243,6 +250,21 @@ def get_insta_post_links():
         return jsonify({'error': str(e)}), 500
 
 
+@app.route('/json/statistics', methods=['GET'])
+def get_statistics_json():
+    try:
+        data = read_json('statistics')
+        logging.info('Successfully retrieved statistics JSON data')
+        return jsonify(data)
+    except FileNotFoundError:
+        logging.error('Statistics JSON file not found')
+        return jsonify({'error': 'Statistics JSON file not found'}), 404
+    except json.JSONDecodeError:
+        logging.error('Error decoding JSON file')
+        return jsonify({'error': 'Error decoding JSON file'}), 500
+    except Exception as e:
+        logging.error(f'Unexpected error retrieving statistics JSON data: {e}')
+        return jsonify({'error': str(e)}), 500
 
 
 if __name__ == '__main__':
