@@ -42,7 +42,6 @@ export default function SMM() {
     const [formInputs, setFormInputs] = useState({ operator: '', subject: '', sponsor: false, type: '', comment: '' });
     const [sortCriteria, setSortCriteria] = useState("none");
     const [updateOperatorsFeedbackMessage, setUpdateOperatorsFeedbackMessage] = useState("");
-    const [isFilterDotVisible, setIsFilterDotVisible] = useState(false);
     const [isSortDotVisible, setIsSortDotVisible] = useState(false);
     const [visibleUpdateBlock, setVisibleUpdateBlock] = useState<string | null>(null);
     const [sortOrder, setSortOrder] = useState("ascending");
@@ -692,6 +691,31 @@ export default function SMM() {
         handleFeedButtonClick();
     }, []);
 
+    const handleClearFiltersAndSort = () => {
+        // Reset filter criteria to initial values
+        setFilterCriteria({
+            operator: [],
+            subject: [],
+            type: [],
+            sponsor: null,
+            dateRange: { from: "", to: "" },
+            day: [],
+            source: [],
+        });
+
+        // Reset sort criteria and order to initial values
+        setSortCriteria("none");
+        setSortOrder("ascending");
+
+        // Reset local storage
+        localStorage.removeItem('filterCriteria');
+        localStorage.setItem('sortCriteria', 'none');
+        localStorage.setItem('sortOrder', 'ascending');
+
+        // Hide the dots
+        setIsSortDotVisible(false);
+        setIsFilterApplied(false);
+    };
 
 
 
@@ -833,6 +857,17 @@ export default function SMM() {
                 </div>
 
                 <div id="smm_main_table_options">
+                    {(isFilterApplied || isSortDotVisible) && (
+                        <div id="smm_main_table_options_remove" onClick={handleClearFiltersAndSort}>
+                            <svg width="19" height="19" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M3.5625 15.4375L15.3781 3.5625M15.4375 15.4375L3.62187 3.5625"
+                                      stroke="rgba(157, 174, 255, 0.45)"
+                                      stroke-width="1.48438" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            filters
+                        </div>
+                    )}
+
                     <Button id="show_feed"
                             className={`smm_main_btn ${visibleView === 'feed' ? 'smm_main_btn_pressed' : ''}`}
                             onClick={() => toggleView('feed')}>
