@@ -13,10 +13,12 @@ export default function Statistics() {
     const [moldtelecomData, setMoldtelecomData] = useState<{ date: string, followers: number }[]>([]);
     const [orangeData, setOrangeData] = useState<{ date: string, followers: number }[]>([]);
     const [error, setError] = useState<string | null>(null);
-    const [heatmapData, setHeatmapData] = useState<any[]>([]);
     const [dateRange, setDateRange] = useState<{ from: string, to: string }>({ from: '', to: '' });
-    const [operator, setOperator] = useState<string>("Moldtelecom");
-    const [tooltip, setTooltip] = useState<{ visible: boolean, x: number, y: number, date: string }>({ visible: false, x: 0, y: 0, date: '' });
+    const [tableRows, setTableRows] = useState<JSX.Element[]>([]);
+    const [selectedOperator, setSelectedOperator] = useState<string>("");
+    const [selectedSubject, setSelectedSubject] = useState<string>("");
+    const [selectedType, setSelectedType] = useState<string>("");
+    const [dateCounts, setDateCounts] = useState<{ [key: string]: number }>({});
 
     useEffect(() => {
         const fetchFollowers = async () => {
@@ -54,19 +56,16 @@ export default function Statistics() {
     }, []);
 
     useEffect(() => {
-        const fetchHeatmapData = async () => {
-            try {
-                const response = await axios.get('http://127.0.0.1:5000/json/smm');
-                const data = response.data;
-                setHeatmapData(data);
-            } catch (error) {
-                console.error('Error fetching heatmap data:', error);
-                setError('Error fetching heatmap data.');
-            }
-        };
+        if (selectedOperator || selectedSubject || selectedType) {
+            fetchAndFilterData(selectedOperator, selectedSubject, selectedType);
+        }
+    }, [selectedOperator, selectedSubject, selectedType]);
 
-        fetchHeatmapData();
-    }, []);
+    useEffect(() => {
+        if (dateRange.from && dateRange.to) {
+            generateTableRows(dateRange.from, dateRange.to);
+        }
+    }, [dateRange, dateCounts]);
 
     const getLastNDaysData = (userData: { date: string, followers: number }[], daysInterval: number) => {
         const today = new Date();
@@ -125,72 +124,98 @@ export default function Statistics() {
         }
     };
 
-    const handleDateChange = (e) => {
-        setDateRange({ ...dateRange, [e.target.name]: e.target.value });
+    const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setDateRange(prevState => ({ ...prevState, [name]: value }));
     };
 
-    const handleOperatorChange = (e) => {
-        setOperator(e.target.value);
+    const handleOperatorChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setSelectedOperator(e.target.value);
     };
 
-    const handleMouseEnter = (event, date) => {
-        const rect = event.target.getBoundingClientRect();
-        setTooltip({ visible: true, x: rect.left + window.scrollX, y: rect.top + window.scrollY - 20, date });
+    const handleSubjectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setSelectedSubject(e.target.value);
     };
 
-    const handleMouseLeave = () => {
-        setTooltip({ visible: false, x: 0, y: 0, date: '' });
+    const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setSelectedType(e.target.value);
     };
 
-    const generateHeatmapData = () => {
-        const { from, to } = dateRange;
-        const fromDate = new Date(from);
-        const toDate = new Date(to);
+    const generateTableRows = (from: string, to: string) => {
+        const startDate = new Date(from);
+        const endDate = new Date(to);
+        const rows = [];
+        const dayMilliseconds = 86400000; // Number of milliseconds in a day
 
-        if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) return [];
+        while (startDate <= endDate) {
+            const week = [];
 
-        console.log("From Date:", fromDate);
-        console.log("To Date:", toDate);
-
-        const filteredData = heatmapData.filter(item => {
-            const itemDate = new Date(item.date.split('.').reverse().join('-'));
-            return itemDate >= fromDate && itemDate <= toDate && item.operator === operator;
-        });
-
-        console.log("Filtered Data:", filteredData);
-
-        const dayMap = { "Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3, "Friday": 4, "Saturday": 5, "Sunday": 6 };
-        const weekData = [];
-
-        let currentWeek = Array(7).fill(0).map(() => ({ count: 0, date: '' }));
-        let currentWeekNumber = -1;
-
-        filteredData.forEach(item => {
-            const itemDate = new Date(item.date.split('.').reverse().join('-'));
-            const dayIndex = dayMap[item.day];
-            const weekIndex = Math.floor((itemDate - fromDate) / (1000 * 60 * 60 * 24 * 7));
-
-            if (weekIndex !== currentWeekNumber) {
-                if (currentWeekNumber !== -1) {
-                    weekData.push(currentWeek);
+            // Add transparent cells if the start date is not Monday
+            if (week.length === 0 && startDate.getDay() !== 1) {
+                for (let i = 1; i < startDate.getDay(); i++) {
+                    week.push(<td key={`empty-${i}`} style={{ backgroundColor: 'transparent' }}></td>);
                 }
-                currentWeekNumber = weekIndex;
-                currentWeek = Array(7).fill(0).map(() => ({ count: 0, date: '' }));
             }
 
-            currentWeek[dayIndex] = { count: currentWeek[dayIndex].count + 1, date: item.date };
-        });
+            for (let i = startDate.getDay(); i < 8; i++) {
+                const dateString = startDate.toISOString().split('T')[0];
+                if (startDate > endDate) break;
 
-        if (currentWeekNumber !== -1) {
-            weekData.push(currentWeek);
+                const cellCount = dateCounts[dateString.split('-').reverse().join('.')] || 0;
+                const cellColor = getCellColor(cellCount);
+
+                week.push(
+                    <td
+                        key={dateString}
+                        style={{
+                            position: 'relative',
+                            backgroundColor: dateString < from || dateString > to ? 'transparent' : cellColor,
+                        }}
+                    >
+                        <div className="date-tooltip">{dateString}</div>
+                    </td>
+                );
+                startDate.setTime(startDate.getTime() + dayMilliseconds);
+            }
+
+            rows.push(<tr key={startDate.toISOString()}>{week}</tr>);
         }
 
-        console.log("Week Data:", weekData);
-
-        return weekData;
+        setTableRows(rows);
     };
 
-    const heatmapDataArray = generateHeatmapData();
+    const fetchAndFilterData = async (operator: string, subject: string, type: string) => {
+        try {
+            const response = await axios.get('http://127.0.0.1:5000/json/smm');
+            const data = response.data;
+
+            const filteredData = data.filter(item =>
+                (operator ? item.operator === operator : true) &&
+                (subject ? item.subject === subject : true) &&
+                (type ? item.type === type : true) &&
+                item.source === 'instagram'
+            );
+
+            const dateCounts = filteredData.reduce((acc, item) => {
+                if (acc[item.date]) {
+                    acc[item.date]++;
+                } else {
+                    acc[item.date] = 1;
+                }
+                return acc;
+            }, {});
+
+            setDateCounts(dateCounts);
+        } catch (error) {
+            console.error('Error fetching or filtering data:', error);
+        }
+    };
+
+    useEffect(() => {
+        if (dateRange.from && dateRange.to) {
+            generateTableRows(dateRange.from, dateRange.to);
+        }
+    }, [dateRange, dateCounts]);
 
     return (
         <>
@@ -246,12 +271,25 @@ export default function Statistics() {
                     <div id="statistics_heatmap_left">
                         <span>Date Range:</span>
                         <div id="statistics_heatmap_left_date_block">
-                            <input className="statistics_heatmap_left_date" type="date" name="from" onChange={handleDateChange} /><span>&nbsp;</span>
-                            <input className="statistics_heatmap_left_date" type="date" name="to" onChange={handleDateChange} />
+                            <input
+                                className="statistics_heatmap_left_date"
+                                type="date"
+                                name="from"
+                                value={dateRange.from}
+                                onChange={handleDateChange}
+                            />
+                            <span>&nbsp;</span>
+                            <input
+                                className="statistics_heatmap_left_date"
+                                type="date"
+                                name="to"
+                                value={dateRange.to}
+                                onChange={handleDateChange}
+                            />
                         </div>
                         <span>Subject:</span>
                         <div id="statistics_heatmap_left_date_block ">
-                            <select className={"statistics_main_select statistics_main_select_100"} name="subject">
+                            <select className={"statistics_main_select statistics_main_select_100"} name="subject" value={selectedSubject} onChange={handleSubjectChange}>
                                 <option value="">Select Subject</option>
                                 <option value="PR">Branding | PR</option>
                                 <option value="Event">Branding | Event</option>
@@ -266,7 +304,7 @@ export default function Statistics() {
                         </div>
                         <span>Type:</span>
                         <div>
-                            <select className={"statistics_main_select statistics_main_select_100"} name="type">
+                            <select className={"statistics_main_select statistics_main_select_100"} name="type" value={selectedType} onChange={handleTypeChange}>
                                 <option value="">Select Type</option>
                                 <option value="Carousel">Carousel</option>
                                 <option value="Reel">Reel</option>
@@ -278,7 +316,13 @@ export default function Statistics() {
                     </div>
                     <div id="statistics_heatmap_right">
                         <div className={"statistics_heatmap_right_block"}>
-                            <select className={"statistics_main_select"} name="operator" onChange={handleOperatorChange}>
+                            <select
+                                className={"statistics_main_select"}
+                                name="operator"
+                                value={selectedOperator}
+                                onChange={handleOperatorChange}
+                            >
+                                <option value="">Select Operator</option>
                                 <option value="Moldtelecom">Moldtelecom</option>
                                 <option value="Orange MD">Orange MD</option>
                                 <option value="Orange RO">Orange RO</option>
@@ -310,26 +354,9 @@ export default function Statistics() {
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    {heatmapDataArray.map((week, weekIndex) => (
-                                        <tr key={weekIndex}>
-                                            {week.map((cell, dayIndex) => (
-                                                <td
-                                                    key={dayIndex}
-                                                    style={{ backgroundColor: getCellColor(cell.count) }}
-                                                    onMouseEnter={(e) => handleMouseEnter(e, cell.date)}
-                                                    onMouseLeave={handleMouseLeave}
-                                                >
-                                                </td>
-                                            ))}
-                                        </tr>
-                                    ))}
+                                    {tableRows}
                                     </tbody>
                                 </table>
-                                {tooltip.visible && (
-                                    <div className="tooltip" style={{ top: tooltip.y, left: tooltip.x }}>
-                                        {tooltip.date}
-                                    </div>
-                                )}
                             </div>
                         </div>
                         <div className={"statistics_heatmap_right_block"}>
