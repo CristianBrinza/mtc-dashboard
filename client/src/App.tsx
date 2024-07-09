@@ -33,8 +33,8 @@ function App() {
                         <Route path="/" element={<Home />} />
                         <Route path="/home" element={<Home />} />
                         <Route path="/dashboard" element={<Home />} />
-                        <Route path="/smm" element={<PrivateRoute component={SMM} roles={['ADMIN','DIRECTOR']}/>} />
-                        <Route path="/website" element={<PrivateRoute component={Website} roles={['ADMIN','DIRECTOR','WEB_DEVEPORER']}/>} />
+                        <Route path="/smm" element={<PrivateRoute component={SMM} roles={['ADMIN','DIRECTOR','SMM', 'SEF']}/>} />
+                        <Route path="/website" element={<PrivateRoute component={Website} roles={['ADMIN','DIRECTOR', 'SEF', 'WEB_DEVEPORER']}/>} />
                         <Route path="/phones" element={<PrivateRoute component={Phones} />} />
                         <Route path="/admin" element={<PrivateRoute component={AdminPage} roles={['ADMIN']} />} />
                         <Route path="*" element={<NotFound />} />
@@ -42,7 +42,7 @@ function App() {
                         <Route path="/no_access" element={<NoAccessPage />} />
                         <Route path="/utilities" element={<Utilities />} />
                         <Route path="/qr_generator" element={<QR />} />
-                        <Route path="/statistics" element={<Statistics />} />
+                        <Route path="/statistics" element={<PrivateRoute component={Statistics} roles={['ADMIN','DIRECTOR','SMM', 'SEF']}/>} />
                         <Route path="/profile" element={<PrivateRoute component={Profile} />} />
 
                     </Routes>
