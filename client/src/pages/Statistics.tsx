@@ -16,6 +16,7 @@ export default function Statistics() {
     const [heatmapData, setHeatmapData] = useState<any[]>([]);
     const [dateRange, setDateRange] = useState<{ from: string, to: string }>({ from: '', to: '' });
     const [operator, setOperator] = useState<string>("Moldtelecom");
+    const [tooltip, setTooltip] = useState<{ visible: boolean, x: number, y: number, date: string }>({ visible: false, x: 0, y: 0, date: '' });
 
     useEffect(() => {
         const fetchFollowers = async () => {
@@ -132,6 +133,15 @@ export default function Statistics() {
         setOperator(e.target.value);
     };
 
+    const handleMouseEnter = (event, date) => {
+        const rect = event.target.getBoundingClientRect();
+        setTooltip({ visible: true, x: rect.left + window.scrollX, y: rect.top + window.scrollY - 20, date });
+    };
+
+    const handleMouseLeave = () => {
+        setTooltip({ visible: false, x: 0, y: 0, date: '' });
+    };
+
     const generateHeatmapData = () => {
         const { from, to } = dateRange;
         const fromDate = new Date(from);
@@ -139,20 +149,43 @@ export default function Statistics() {
 
         if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) return [];
 
+        console.log("From Date:", fromDate);
+        console.log("To Date:", toDate);
+
         const filteredData = heatmapData.filter(item => {
             const itemDate = new Date(item.date.split('.').reverse().join('-'));
             return itemDate >= fromDate && itemDate <= toDate && item.operator === operator;
         });
 
+        console.log("Filtered Data:", filteredData);
+
         const dayMap = { "Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3, "Friday": 4, "Saturday": 5, "Sunday": 6 };
-        const weekData = Array(7).fill(0).map(() => Array(7).fill(0));
+        const weekData = [];
+
+        let currentWeek = Array(7).fill(0).map(() => ({ count: 0, date: '' }));
+        let currentWeekNumber = -1;
 
         filteredData.forEach(item => {
             const itemDate = new Date(item.date.split('.').reverse().join('-'));
             const dayIndex = dayMap[item.day];
             const weekIndex = Math.floor((itemDate - fromDate) / (1000 * 60 * 60 * 24 * 7));
-            weekData[weekIndex][dayIndex] += 1;
+
+            if (weekIndex !== currentWeekNumber) {
+                if (currentWeekNumber !== -1) {
+                    weekData.push(currentWeek);
+                }
+                currentWeekNumber = weekIndex;
+                currentWeek = Array(7).fill(0).map(() => ({ count: 0, date: '' }));
+            }
+
+            currentWeek[dayIndex] = { count: currentWeek[dayIndex].count + 1, date: item.date };
         });
+
+        if (currentWeekNumber !== -1) {
+            weekData.push(currentWeek);
+        }
+
+        console.log("Week Data:", weekData);
 
         return weekData;
     };
@@ -270,7 +303,7 @@ export default function Statistics() {
                                         <th>Mon</th>
                                         <th>Tue</th>
                                         <th>Wed</th>
-                                        <th>Thuy</th>
+                                        <th>Thu</th>
                                         <th>Fri</th>
                                         <th>Sat</th>
                                         <th>Sun</th>
@@ -279,13 +312,24 @@ export default function Statistics() {
                                     <tbody>
                                     {heatmapDataArray.map((week, weekIndex) => (
                                         <tr key={weekIndex}>
-                                            {week.map((count, dayIndex) => (
-                                                <td key={dayIndex} style={{ backgroundColor: getCellColor(count) }}></td>
+                                            {week.map((cell, dayIndex) => (
+                                                <td
+                                                    key={dayIndex}
+                                                    style={{ backgroundColor: getCellColor(cell.count) }}
+                                                    onMouseEnter={(e) => handleMouseEnter(e, cell.date)}
+                                                    onMouseLeave={handleMouseLeave}
+                                                >
+                                                </td>
                                             ))}
                                         </tr>
                                     ))}
                                     </tbody>
                                 </table>
+                                {tooltip.visible && (
+                                    <div className="tooltip" style={{ top: tooltip.y, left: tooltip.x }}>
+                                        {tooltip.date}
+                                    </div>
+                                )}
                             </div>
                         </div>
                         <div className={"statistics_heatmap_right_block"}>
