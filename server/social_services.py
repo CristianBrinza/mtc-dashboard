@@ -1,3 +1,4 @@
+#social_services.py
 from flask import Flask, request, jsonify, send_file, make_response
 import requests
 from io import BytesIO
@@ -8,6 +9,8 @@ import logging
 import json
 import os
 from flask_cors import CORS
+from apscheduler.schedulers.background import BackgroundScheduler
+from datetime import datetime
 
 app = Flask(__name__)
 CORS(app, resources={r"/json/*": {"origins": "*"}})
@@ -41,13 +44,46 @@ def read_json(file_name):
         logging.error(f'{file_name}.json does not exist')
         raise FileNotFoundError(f'{file_name}.json does not exist')
 
-
-
 def write_json(file_name, data):
     file_path = get_json_file_path(file_name)
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
     with open(file_path, 'w') as file:
         json.dump(data, file, indent=4)
+
+def update_follower_counts():
+    try:
+        usernames = ["moldtelecom.md", "orangemoldova"]
+        today = datetime.utcnow().strftime('%d.%m.%Y')
+        statistics = read_json('statistics')
+
+        if "instagram" not in statistics:
+            statistics["instagram"] = {}
+
+        for username in usernames:
+            profile = Profile.from_username(bot.context, username)
+            follower_count = profile.followers
+            user_data = statistics["instagram"].get(username, [])
+
+            # Check if today's data exists
+            today_data = next((entry for entry in user_data if entry['date'] == today), None)
+
+            if today_data:
+                if today_data['followers'] != follower_count:
+                    today_data['followers'] = follower_count
+            else:
+                user_data.append({"date": today, "followers": follower_count})
+
+            statistics["instagram"][username] = user_data
+
+        write_json('statistics', statistics)
+        logging.info('Successfully updated follower counts')
+    except Exception as e:
+        logging.error(f'Error updating follower counts: {e}')
+
+# Schedule the job to run every day at 23:59 UTC
+scheduler = BackgroundScheduler()
+scheduler.add_job(update_follower_counts, 'cron', hour=23, minute=59)
+scheduler.start()
 
 @app.route('/get_profile', methods=['GET'])
 def get_profile():
@@ -77,7 +113,6 @@ def get_profile():
     except Exception as e:
         logging.error(f'Error retrieving profile data: {e}')
         return jsonify({'error': str(e)}), 500
-
 
 @app.route('/get_insta_post', methods=['GET'])
 def get_insta_post():
@@ -129,7 +164,6 @@ def get_insta_post():
         logging.error(f'Error retrieving post data: {e}')
         return jsonify({'error': str(e)}), 500
 
-
 @app.route('/json/<file_name>', methods=['GET'])
 def get_json(file_name):
     try:
@@ -139,7 +173,6 @@ def get_json(file_name):
     except Exception as e:
         logging.error(f'Error retrieving JSON data from {file_name}: {e}')
         return jsonify({'error': str(e)}), 500
-
 
 @app.route('/json/<file_name>', methods=['POST'])
 def post_json(file_name):
@@ -219,7 +252,6 @@ def proxy_image():
     response_obj.headers['Cache-Control'] = 'public, max-age=31536000'  # Cache for 1 year
     return response_obj
 
-
 @app.route('/get_insta_post_links', methods=['GET'])
 def get_insta_post_links():
     nr = request.args.get('nr', default=5, type=int)
@@ -249,7 +281,6 @@ def get_insta_post_links():
         logging.error(f'Error retrieving post links: {e}')
         return jsonify({'error': str(e)}), 500
 
-
 @app.route('/json/statistics', methods=['GET'])
 def get_statistics_json():
     try:
@@ -265,7 +296,6 @@ def get_statistics_json():
     except Exception as e:
         logging.error(f'Unexpected error retrieving statistics JSON data: {e}')
         return jsonify({'error': str(e)}), 500
-
 
 if __name__ == '__main__':
     app.run(debug=True)
