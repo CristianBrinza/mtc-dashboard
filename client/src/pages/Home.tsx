@@ -15,7 +15,7 @@ export default function Home() {
             <div className={"home_main"}>
                 <div id="home_main_title">Moldtelecom Dashboard</div>
                 <div className={"home_empty_space"}>
-                 <span>Usefull link:</span>
+                    <span>Usefull link:</span>
                 </div>
                 <div className="home_main_select">
                     <div className={"home_main_select_block"}
@@ -26,7 +26,7 @@ export default function Home() {
                 </div>
 
                 <div className={"home_empty_space"}>
-                   <br/> <span>Social platforms:</span>
+                    <br/> <span>Social platforms:</span>
                 </div>
                 <div className="home_main_select">
                     <div className={"home_main_select_block"}
@@ -65,6 +65,17 @@ export default function Home() {
                         <div className={"home_main_select_block_text"}>Telegram</div>
                     </div>
                 </div>
+                <div className={"home_empty_space"}>
+                    <br/> <span>Other resources:</span>
+                </div>
+                <div className="home_main_select">
+                    <div className={"home_main_select_block"}
+                         onClick={() => redirectToExternal('https://reporting.internal.moldtelecom.md/Timex/timex_login.php?page=1')}>
+                        <Icon type="time"/>
+                        <div className={"home_main_select_block_text"}>Timex</div>
+                    </div>
+                </div>
+
             </div>
 
         </>
