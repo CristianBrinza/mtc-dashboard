@@ -332,6 +332,13 @@ const Icon = ({ type, width = 24, height = 24, fill = "#9DAEFF",}) => {
                     fill="#9DAEFF"/>
             </>
 
+        ),
+        close: (
+            <>
+                <path d="M4.5 19.5L19.425 4.5M19.5 19.5L4.575 4.5" stroke="#9DAEFF" stroke-width="1.875"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+            </>
+
         )
 
 
