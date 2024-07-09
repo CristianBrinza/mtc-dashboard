@@ -14,13 +14,27 @@ export default function Statistics() {
     const [orangeData, setOrangeData] = useState<{ date: string, followers: number }[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [dateRange, setDateRange] = useState<{ from: string, to: string }>({ from: '', to: '' });
-    const [tableRows, setTableRows] = useState<JSX.Element[]>([]);
-    const [selectedOperator, setSelectedOperator] = useState<string>("");
+    const [tableRows1, setTableRows1] = useState<JSX.Element[]>([]);
+    const [tableRows2, setTableRows2] = useState<JSX.Element[]>([]);
+    const [selectedOperator1, setSelectedOperator1] = useState<string>("");
+    const [selectedOperator2, setSelectedOperator2] = useState<string>("");
     const [selectedSubject, setSelectedSubject] = useState<string>("");
     const [selectedType, setSelectedType] = useState<string>("");
-    const [dateCounts, setDateCounts] = useState<{ [key: string]: number }>({});
+    const [dateCounts1, setDateCounts1] = useState<{ [key: string]: number }>({});
+    const [dateCounts2, setDateCounts2] = useState<{ [key: string]: number }>({});
 
+    // Load filters from local storage on mount
+    // Load filters from local storage on mount
     useEffect(() => {
+        const savedFilters = JSON.parse(localStorage.getItem('statisticsFilters') || '{}');
+        if (Object.keys(savedFilters).length > 0) {
+            setSelectedOperator1(savedFilters.selectedOperator1 || '');
+            setSelectedOperator2(savedFilters.selectedOperator2 || '');
+            setSelectedSubject(savedFilters.selectedSubject || '');
+            setSelectedType(savedFilters.selectedType || '');
+            setDateRange(savedFilters.dateRange || { from: '', to: '' });
+        }
+
         const fetchFollowers = async () => {
             try {
                 const moldtelecomResponse = await axios.get('http://127.0.0.1:5000/get_profile?username=moldtelecom.md');
@@ -35,12 +49,12 @@ export default function Statistics() {
                 const data = statisticsResponse.data.instagram;
 
                 if (data.moldtelecom) {
-                    const moldtelecomData = getLastNDaysData(data.moldtelecom, 4);
+                    const moldtelecomData = getLastNDaysData(data.moldtelecom, 1);
                     setMoldtelecomData(moldtelecomData);
                 }
 
                 if (data.orange) {
-                    const orangeData = getLastNDaysData(data.orange, 4);
+                    const orangeData = getLastNDaysData(data.orange, 1);
                     setOrangeData(orangeData);
                 }
 
@@ -55,23 +69,44 @@ export default function Statistics() {
         fetchFollowers();
     }, []);
 
+// Save filters to local storage whenever they change
     useEffect(() => {
-        if (selectedOperator || selectedSubject || selectedType) {
-            fetchAndFilterData(selectedOperator, selectedSubject, selectedType);
+        const filters = {
+            selectedOperator1,
+            selectedOperator2,
+            selectedSubject,
+            selectedType,
+            dateRange
+        };
+        if (selectedOperator1 || selectedOperator2 || selectedSubject || selectedType || (dateRange.from && dateRange.to)) {
+            localStorage.setItem('statisticsFilters', JSON.stringify(filters));
         }
-    }, [selectedOperator, selectedSubject, selectedType]);
+    }, [selectedOperator1, selectedOperator2, selectedSubject, selectedType, dateRange]);
+
+    useEffect(() => {
+        if (selectedOperator1 || selectedSubject || selectedType) {
+            fetchAndFilterData(selectedOperator1, selectedSubject, selectedType, setDateCounts1);
+        }
+    }, [selectedOperator1, selectedSubject, selectedType]);
+
+    useEffect(() => {
+        if (selectedOperator2 || selectedSubject || selectedType) {
+            fetchAndFilterData(selectedOperator2, selectedSubject, selectedType, setDateCounts2);
+        }
+    }, [selectedOperator2, selectedSubject, selectedType]);
 
     useEffect(() => {
         if (dateRange.from && dateRange.to) {
-            generateTableRows(dateRange.from, dateRange.to);
+            generateTableRows(dateRange.from, dateRange.to, dateCounts1, setTableRows1);
+            generateTableRows(dateRange.from, dateRange.to, dateCounts2, setTableRows2);
         }
-    }, [dateRange, dateCounts]);
+    }, [dateRange, dateCounts1, dateCounts2]);
 
     const getLastNDaysData = (userData: { date: string, followers: number }[], daysInterval: number) => {
         const today = new Date();
         const todayDate = today.toLocaleDateString('en-GB');
         const dates = [];
-        for (let i = 0; i <= 4 * 6; i += daysInterval) {
+        for (let i = 0; i <= 1 * 6; i += daysInterval) {
             const date = new Date();
             date.setDate(today.getDate() - i);
             dates.push(date.toLocaleDateString('en-GB'));
@@ -129,8 +164,12 @@ export default function Statistics() {
         setDateRange(prevState => ({ ...prevState, [name]: value }));
     };
 
-    const handleOperatorChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        setSelectedOperator(e.target.value);
+    const handleOperator1Change = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setSelectedOperator1(e.target.value);
+    };
+
+    const handleOperator2Change = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setSelectedOperator2(e.target.value);
     };
 
     const handleSubjectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -141,7 +180,7 @@ export default function Statistics() {
         setSelectedType(e.target.value);
     };
 
-    const generateTableRows = (from: string, to: string) => {
+    const generateTableRows = (from: string, to: string, dateCounts: { [key: string]: number }, setTableRows: (rows: JSX.Element[]) => void) => {
         const startDate = new Date(from);
         const endDate = new Date(to);
         const rows = [];
@@ -184,15 +223,15 @@ export default function Statistics() {
         setTableRows(rows);
     };
 
-    const fetchAndFilterData = async (operator: string, subject: string, type: string) => {
+    const fetchAndFilterData = async (operator: string, subject: string, type: string, setDateCounts: (counts: { [key: string]: number }) => void) => {
         try {
             const response = await axios.get('http://127.0.0.1:5000/json/smm');
             const data = response.data;
 
             const filteredData = data.filter(item =>
-                (operator ? item.operator === operator : true) &&
-                (subject ? item.subject === subject : true) &&
-                (type ? item.type === type : true) &&
+                (operator === "" || item.operator === operator) &&
+                (subject === "" || item.subject === subject) &&
+                (type === "" || item.type === type) &&
                 item.source === 'instagram'
             );
 
@@ -210,12 +249,6 @@ export default function Statistics() {
             console.error('Error fetching or filtering data:', error);
         }
     };
-
-    useEffect(() => {
-        if (dateRange.from && dateRange.to) {
-            generateTableRows(dateRange.from, dateRange.to);
-        }
-    }, [dateRange, dateCounts]);
 
     return (
         <>
@@ -318,9 +351,9 @@ export default function Statistics() {
                         <div className={"statistics_heatmap_right_block"}>
                             <select
                                 className={"statistics_main_select"}
-                                name="operator"
-                                value={selectedOperator}
-                                onChange={handleOperatorChange}
+                                name="operator1"
+                                value={selectedOperator1}
+                                onChange={handleOperator1Change}
                             >
                                 <option value="">Select Operator</option>
                                 <option value="Moldtelecom">Moldtelecom</option>
@@ -354,13 +387,54 @@ export default function Statistics() {
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    {tableRows}
+                                    {tableRows1}
                                     </tbody>
                                 </table>
                             </div>
                         </div>
                         <div className={"statistics_heatmap_right_block"}>
-                            {/* Additional blocks or content can go here */}
+                            <select
+                                className={"statistics_main_select"}
+                                name="operator2"
+                                value={selectedOperator2}
+                                onChange={handleOperator2Change}
+                            >
+                                <option value="">Select Operator</option>
+                                <option value="Moldtelecom">Moldtelecom</option>
+                                <option value="Orange MD">Orange MD</option>
+                                <option value="Orange RO">Orange RO</option>
+                                <option value="Moldcell">Moldcell</option>
+                                <option value="Starnet">Starnet</option>
+                                <option value="Vodaphone RO">Vodaphone RO</option>
+                                <option value="Vodaphone IT">Vodaphone IT</option>
+                                <option value="Arax">Arax</option>
+                                <option value="MTS">RU | MTS</option>
+                                <option value="Megafon">RU | Megafon</option>
+                                <option value="Beeline">RU | Beeline</option>
+                                <option value="Darwin">Others | Darwin</option>
+                                <option value="Enter">Others | Enter</option>
+                                <option value="MAIB">Others | MAIB</option>
+                                <option value="Moldcell Money">Moldcell Money</option>
+                                <option value="Others">Others</option>
+                            </select>
+                            <div className={"statistics_heatmap_right_block_heatmap"}>
+                                <table>
+                                    <thead>
+                                    <tr>
+                                        <th>Mon</th>
+                                        <th>Tue</th>
+                                        <th>Wed</th>
+                                        <th>Thu</th>
+                                        <th>Fri</th>
+                                        <th>Sat</th>
+                                        <th>Sun</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {tableRows2}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
