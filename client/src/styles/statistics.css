@@ -69,3 +69,105 @@
     letter-spacing: 0.16px;
 margin-left: auto;
 }
+
+#statistics_heatmap{
+    margin-top: 20px;
+    width: 100%;
+    background: #F3F5FF;
+    box-sizing: border-box;
+    padding: 20px;
+    border-radius: 12px;
+    display: flex;
+    gap: 10px;
+}
+
+
+#statistics_heatmap_left{
+    width: calc((100% / 4 ) - 10px);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+}
+#statistics_heatmap_right{
+    width: calc((100% / 4 * 3 ) - 10px);
+    display: flex;
+    justify-content: space-between;
+}
+
+
+.statistics_heatmap_left_date{
+    width: 120px;
+    border-radius: 8px;
+    border: 1px solid #9DAEFF;
+    background: white;
+    height: 35px;
+    padding-left: 5px;
+    color: #9DAEFF;
+    width: calc((100% / 2) - 10px);
+}
+#statistics_heatmap_left_date_block{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: 36px;
+    margin-bottom: 5px;
+
+}
+
+.statistics_main_select_100{
+    width: 255px;
+}
+.statistics_main_select {
+    border-radius: 8px;
+    border: 1px solid #9DAEFF;
+    background: white;
+    height: 38px;
+    padding-left: 5px;
+    padding-right: 10px;
+    color: #9DAEFF;
+    font-family: "Source Sans Pro";
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 16px;
+    letter-spacing: 0.16px;
+}
+
+
+.statistics_heatmap_right_block{
+        width: calc((100% / 2) - 10px);
+}
+
+.statistics_heatmap_right_block_heatmap{
+    margin-top: 10px;
+}
+
+
+.statistics_heatmap_right_block_heatmap table thead tr th{
+    color: #9DAEFF;
+    font-family: "Source Sans Pro";
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 16px;
+    letter-spacing: 0.16px;
+}
+.statistics_heatmap_right_block_heatmap table tbody tr td{
+    height: 15px;
+    width: calc(100% / 7);
+}
+.statistics_heatmap_right_block_heatmap table {
+   width: 100%;
+}
+
+.tooltip {
+    position: absolute;
+    background-color: #333;
+    color: #fff;
+    padding: 5px;
+    border-radius: 5px;
+    font-size: 12px;
+    z-index: 1000;
+    pointer-events: none;
+}
