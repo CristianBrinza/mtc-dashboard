@@ -1,0 +1,9 @@
+{
+  "social": [
+    ["Retele","/settings", "config"],
+    ["Dashboard","/menu" , "config"],
+    ["Introducere","/" , "config"],
+    ["Accounts","/retele-sociale/accounts" , "config"],
+    ["Categories","/retele-sociale/categories" , "config"]
+  ]
+}

@@ -1,0 +1,50 @@
+.accounts{
+    color: #212A55;
+    font-family: "Source Sans Pro";
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 15px; /* 93.75% */
+}
+.accounts_table{
+
+}
+.accounts_table tbody tr td {
+    border: 1px solid #D9DFFF;
+    padding: 5px 15px;
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 5px;
+    height: 50px;
+    width: 220px;
+}
+.accounts_table ul{
+    margin: 0;
+    margin-left: -20px;
+}
+.accounts input, .accounts select {
+    height: 44px;
+    border-radius: 100px;
+    border: 1px solid #D9DFFF;
+    background: #fff;
+    padding: 0px 10px;
+    color: #212A55;
+
+}
+
+.accounts_inputs{
+    display: flex;
+    gap:5px;
+    margin-bottom: 10px;
+}
+
+.accounts_changes{
+    margin-top: 40px;
+    margin-bottom: 40px;
+}
+.accounts_table_title{
+    margin-top: 40px;
+}
+

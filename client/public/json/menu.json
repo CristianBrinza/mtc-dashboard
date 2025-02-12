@@ -1,0 +1,12 @@
+[
+  {
+    "name": "Rețele sociale",
+    "link": "/retele-sociale",
+    "icon": "social"
+  },
+  {
+    "name": "Optiuni",
+    "link": "/settings",
+    "icon": "config"
+  }
+]
