@@ -15,8 +15,13 @@ dotenv.config();
 const app = express();
 
 app.use(cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:3000',
-    credentials: true,
+    origin: (origin, callback) => {
+        // Allow all origins but still support credentials
+        callback(null, true);
+    },
+    credentials: true, // ✅ Allow cookies, headers, and authentication tokens
+    methods: ['GET', 'POST', 'PUT', 'DELETE'], // ✅ Allow required HTTP methods
+    allowedHeaders: ['Content-Type', 'Authorization'], // ✅ Allow required headers
 }));
 app.use(express.json());
 app.use(cookieParser());
