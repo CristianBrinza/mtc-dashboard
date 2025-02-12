@@ -29,15 +29,15 @@ const Login = () => {
         <div className={styles.login_inside}>
 
 
-        <h2>Login</h2>
+        <h2> Marketing Admin</h2>
         {error && <p style={{ color: 'red' }}>{error}</p>}
         <form onSubmit={handleSubmit}>
           <div>
 
             <input
-                type="email"
+                type="mail"
                 value={email}
-                placeholder="email"
+                placeholder="Email"
                 onChange={e => setEmail(e.target.value)}
                 required
             />
