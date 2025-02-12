@@ -2,6 +2,9 @@
 import React, { useState, useContext } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import styles from "./Login.module.css"
+import Button from "../../components/Button.tsx";
+import Icon from "../../components/Icon.tsx";
 
 const Login = () => {
   const { login } = useContext(AuthContext)!;
@@ -14,7 +17,7 @@ const Login = () => {
     e.preventDefault();
     try {
       await login(email, password);
-      navigate('/smm', { replace: true }); // 🔹 Prevents navigating back to login
+      navigate('/retele-sociale', { replace: true }); // 🔹 Prevents navigating back to login
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed');
     }
@@ -22,31 +25,39 @@ const Login = () => {
 
 
   return (
-      <div>
+      <div className={styles.login}>
+        <div className={styles.login_inside}>
+
+
         <h2>Login</h2>
         {error && <p style={{ color: 'red' }}>{error}</p>}
         <form onSubmit={handleSubmit}>
           <div>
-            <label>Email:</label>
+
             <input
                 type="email"
                 value={email}
+                placeholder="email"
                 onChange={e => setEmail(e.target.value)}
                 required
             />
           </div>
           <div>
-            <label>Password:</label>
             <input
                 type="password"
                 value={password}
+                placeholder="Password"
                 onChange={e => setPassword(e.target.value)}
                 autoComplete="current-password"
                 required
             />
           </div>
-          <button type="submit">Login</button>
+          <Button type="submit">Login
+            <Icon type="arrow_right" />
+          </Button>
+
         </form>
+        </div>
       </div>
   );
 };
