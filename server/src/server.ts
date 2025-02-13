@@ -10,6 +10,7 @@ import { setupSwagger } from './swagger';
 import { requestLogger } from './middleware/logger.middleware';
 import categoryRoutes from "./routes/category.routes";
 import socialAccountRoutes from "./routes/socialAccount.routes";
+import path from "path";
 
 dotenv.config();
 const app = express();
@@ -30,9 +31,10 @@ connectDB();
 
 app.use('/api/auth', authRoutes);
 app.use('/api/protected', protectedRoutes);
-app.use('/uploads', express.static('uploads'));
 app.use('/api/categories', categoryRoutes);
 app.use('/api/social-accounts', socialAccountRoutes);
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+//app.use('/uploads', express.static('uploads'));
 
 
 setupSwagger(app);

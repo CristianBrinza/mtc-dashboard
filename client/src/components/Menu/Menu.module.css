@@ -53,3 +53,56 @@
 }
 
 
+.menu_account{
+    position: relative;
+}
+
+.profilePopup{
+    position: absolute;
+    top: 50px;
+    right: 0;
+    background-color: #fff;
+    padding: 5px;
+    border-radius: 25px;
+    z-index: 1000;
+    width: 170px;
+    left: -130px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 5px;
+    border: 1px solid #dcdcdc;
+}
+.profileHeader{
+    display: flex;
+    width: 100%;
+    flex-direction: row;
+    padding: 3px 5px;
+    box-sizing: border-box;
+    gap: 5px;
+    height: 40px;
+    align-items: center;
+    justify-content: space-between;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 1;
+    color: gray;
+}
+
+.initialsCirclePopup, .profileImagePopup{
+    width: 30px;
+    height: 30px;
+    border-radius: 100px;
+    border: 1px solid #b7b7b7;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #1d1d1f;
+}

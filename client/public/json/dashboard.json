@@ -1,8 +1,8 @@
 {
   "social": [
-    ["Retele","/settings", "config"],
-    ["Dashboard","/menu" , "config"],
-    ["Introducere","/" , "config"],
+    ["Dashboard","/retele-sociale" , "config"],
+    ["Statistics","/retele-sociale/statistics" , "config"],
+    ["Add","/retele-sociale/add" , "config"],
     ["Accounts","/retele-sociale/accounts" , "config"],
     ["Categories","/retele-sociale/categories" , "config"]
   ]

@@ -60,7 +60,7 @@ const router = Router();
 //router.post('/register', register);
 // To enforce admin-only registration, yo
 // u might use middleware like:
- router.post('/register', authenticateJWT, authorizeRoles('admin'), register);
+router.post('/register', authenticateJWT, authorizeRoles('admin'), register);
 
 /**
  * @swagger
@@ -137,7 +137,7 @@ router.post('/logout', authenticateJWT, logout);
  *     summary: Update user profile
  *     description: >
  *       Allows authenticated users to update their profile.
- *       A user can update username, email, password, firstName, lastName, and profilePicture.
+ *       A user can update username, email, password, firstName, lastName, and upload a profile picture.
  *       Only an admin can update the roles field.
  *     tags: [Authentication]
  *     security:
@@ -145,36 +145,35 @@ router.post('/logout', authenticateJWT, logout);
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
  *               username:
  *                 type: string
+ *                 example: "newUsername"
  *               email:
  *                 type: string
  *                 format: email
+ *                 example: "newemail@example.com"
  *               password:
  *                 type: string
  *                 format: password
+ *                 example: "newPassword123"
  *               firstName:
  *                 type: string
+ *                 example: "John"
  *               lastName:
  *                 type: string
+ *                 example: "Doe"
  *               profilePicture:
  *                 type: string
+ *                 format: binary
  *               roles:
  *                 type: array
  *                 items:
  *                   type: string
- *             example:
- *               username: "newUsername"
- *               email: "newemail@example.com"
- *               password: "newPassword123"
- *               firstName: "John"
- *               lastName: "Doe"
- *               profilePicture: "http://example.com/pic.jpg"
- *               roles: ["admin"]  # Only effective if the current user is admin
+ *                 example: ["admin"]  # Only effective if the current user is admin
  *     responses:
  *       200:
  *         description: Profile updated successfully

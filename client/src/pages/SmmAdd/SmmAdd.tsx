@@ -1,23 +1,19 @@
 import Menu from "../../components/Menu/Menu.tsx";
 import Dashboard from "../../components/Dashboard/Dashboard.tsx";
-import Icon from "../../components/Icon.tsx";
-import Button from "../../components/Button.tsx";
 
-export default function SMM() {
+export default function SmmAdd() {
 
   const breadcrumbItems = [
     { label: "Admin" },
     { label: "Rețele sociale" },
-    { label: "Dashboard" }
+    { label: "Add" }
 ]
   return (
   <>
     <Menu active="Rețele sociale"/>
-    <Dashboard breadcrumb={breadcrumbItems} menu="social" active="Dashboard">
+    <Dashboard breadcrumb={breadcrumbItems} menu="social" active="Add">
       <div>
-        <Button> Export
-        <Icon type={"arrow_right"}/>
-      </Button>
+
       </div>
     </Dashboard>
   </>

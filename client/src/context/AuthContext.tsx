@@ -3,10 +3,14 @@ import { createContext, useState, useEffect, ReactNode } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 
-interface User {
+export interface User {
     id: string;
     username: string;
     roles: string[];
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    profilePicture?: string;
 }
 
 interface AuthContextType {

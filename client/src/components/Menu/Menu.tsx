@@ -1,15 +1,17 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState, useContext } from "react";
 import styles from "./Menu.module.css";
-import Icon, {icons} from "../Icon"; // Ensure the correct path to your Icon component
+import Icon, { icons } from "../Icon";
+import Button from "../Button.tsx";
+import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../../context/AuthContext";
 
 interface MenuItem {
     name: string;
     link: string;
-    icon?: keyof typeof icons; // Optional, since not every item will have an icon
+    icon?: keyof typeof icons;
 }
 
 interface MenuProps {
-    menu: MenuItem[];
     active?: string;
 }
 
@@ -23,11 +25,44 @@ const Menu: React.FC<MenuProps> = ({ active }) => {
             .catch((error) => console.error("Error loading menu:", error));
     }, []);
 
+    const { user, logout } = useContext(AuthContext)!;
+    const navigate = useNavigate();
+
+    // Popup toggle for profile/account actions
+    const profilePopupRef = useRef<HTMLDivElement>(null);
+    const [showProfilePopup, setShowProfilePopup] = useState(false);
+    const toggleProfilePopup = () => setShowProfilePopup((prev) => !prev);
+
+    // Compute initials from firstName and lastName (fallback to username)
+    const getInitials = () => {
+        if (!user) return "";
+        const firstInitial = user.firstName?.charAt(0).toUpperCase() || "";
+        const lastInitial = user.lastName?.charAt(0).toUpperCase() || "";
+        return firstInitial || lastInitial ? firstInitial + lastInitial : user.username?.substring(0, 2).toUpperCase() || "";
+    };
+
+
+    const handleLogout = () => {
+        logout();
+        navigate("/login");
+    };
+
+    // Close popup if clicked outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (profilePopupRef.current && !profilePopupRef.current.contains(event.target as Node)) {
+                setShowProfilePopup(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
     return (
         <div className={styles.menu}>
             <div className={styles.menu_left}>
-
-                <svg style={{marginRight:'10px'}} width="189" height="44" viewBox="0 0 189 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg style={{marginRight: '10px'}} width="189" height="44" viewBox="0 0 189 44" fill="none"
+                     xmlns="http://www.w3.org/2000/svg">
                     <path
                         d="M24.368 15L21.7428 24.5406L21.5999 25.1956L21.4768 24.5406L18.8319 15H15.2461L14 28.21H16.512L17.172 18.236L17.2262 17.3839L17.438 18.236L20.2849 28.1213H22.9003L25.7127 18.2508L25.9245 17.379L25.9786 18.2508L26.6731 28.21H29.1851L27.9734 15H24.373H24.368Z"
                         fill="#212A55"/>
@@ -112,40 +147,54 @@ const Menu: React.FC<MenuProps> = ({ active }) => {
                     </defs>
                 </svg>
 
-
-                {/* Render Menu Items */}
                 {menu.map((item, index) => (
-                    <a href={item.link} key={index}
-                       className={`${styles.menuItem} ${active===item.name ? styles.menu_active : ""}`}>
-                        {item.icon && <Icon  type={item.icon}
-                                             color={active===item.name ? "#212A55" : "#FFF"}
-                                             className={styles.menuIcon}/>}
-
-
+                    <a
+                        href={item.link}
+                        key={index}
+                        className={`${styles.menuItem} ${active === item.name ? styles.menu_active : ""}`}
+                    >
+                        {item.icon && (
+                            <Icon
+                                type={item.icon}
+                                color={active === item.name ? "#212A55" : "#FFF"}
+                                className={styles.menuIcon}
+                            />
+                        )}
                         {item.name}
-
                     </a>
                 ))}
             </div>
             <div className={styles.menu_right}>
-                <a href=""
-                   className={styles.menu_rightItem}>
-                    <Icon type="more_options"
-                          color="#FFF"
-                    />
+                <a href="#" className={styles.menu_rightItem}>
+                    <Icon type="more_options" color="#FFF"/>
                 </a>
-                <a href=""
-                   className={styles.menu_rightItem}>
-                    <Icon type="ro"
-                          color="#FFF"
-                    />
+                <a href="#" className={styles.menu_rightItem}>
+                    <Icon type="ro" color="#FFF"/>
                 </a>
-                <a href=""
-                   className={styles.menu_rightItem}>
-                    <Icon type="profile"
-                          color="#FFF"
-                    />
-                </a>
+                <div onClick={toggleProfilePopup} className={`${styles.menu_rightItem} ${styles.menu_account}`}>
+                    <Icon type="profile" color="#FFF"/>
+                    {showProfilePopup && (
+                        <div className={styles.profilePopup} ref={profilePopupRef}>
+
+
+                            <div className={styles.profileHeader}>
+                                <div className={styles.profileInfo}>
+                                    <div className={styles.profileName}>
+                                        {user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.username}
+                                    </div>
+                                </div>
+                                {user && user.profilePicture ? (
+                                    <img src={`${import.meta.env.VITE_BACKEND}${user.profilePicture}`} alt="Profile" className={styles.profileImagePopup}/>
+                                ) : (
+                                    <div className={styles.initialsCirclePopup}>{getInitials()}</div>
+                                )}
+
+                            </div>
+                            <Button onClick={() => navigate("/profile/edit")}>Edit Profile</Button>
+                            <Button onClick={handleLogout}>Log Off</Button>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

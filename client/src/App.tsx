@@ -9,6 +9,9 @@ import {AuthProvider} from "./context/AuthContext.tsx";
 import SMM from "./pages/SMM/SMM.tsx";
 import Categories from "./pages/Categories/Categories.tsx";
 import Accounts from "./pages/Accounts/Accounts.tsx";
+import SmmStatistics from "./pages/SmmStatistics/SmmStatistics.tsx";
+import SmmAdd from "./pages/SmmAdd/SmmAdd.tsx";
+import ProfileEdit from "./pages/Profile/ProfileEdit.tsx";
 
 function App() {
     return (
@@ -28,6 +31,14 @@ function App() {
                     }
                 />
                 <Route
+                    path="/profile/edit"
+                    element={
+                        <ProtectedRoute roles={['smm', 'admin', 'manager']}>
+                            <ProfileEdit/>
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
                     path="/retele-sociale/categories"
                     element={
                         <ProtectedRoute roles={['smm', 'admin']}>
@@ -40,6 +51,22 @@ function App() {
                     element={
                         <ProtectedRoute roles={['smm', 'admin']}>
                             <Accounts/>
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/retele-sociale/statistics"
+                    element={
+                        <ProtectedRoute roles={['smm', 'admin']}>
+                            <SmmStatistics/>
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/retele-sociale/add"
+                    element={
+                        <ProtectedRoute roles={['smm', 'admin']}>
+                            <SmmAdd/>
                         </ProtectedRoute>
                     }
                 />

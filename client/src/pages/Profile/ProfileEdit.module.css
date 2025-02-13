@@ -1,0 +1,18 @@
+.edit_profile{
+    box-sizing: border-box;
+    padding: 0 30px 10px 30px;
+}
+
+.edit_profile_passwords{
+    display: flex;
+    gap:5px;
+    margin-bottom: 5px;
+    align-items: center;
+}
+
+.profile_picture{
+    width: 42px;
+    height: 42px;
+    border-radius: 100px;
+    border: 1px solid #D9DFFF;
+}

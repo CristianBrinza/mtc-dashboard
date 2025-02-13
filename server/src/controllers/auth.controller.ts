@@ -32,18 +32,20 @@ export const register = async (req: Request, res: Response) => {
  */
 export const login = async (req: Request, res: Response) => {
     try {
-
         console.log(`🔐 [LOGIN ATTEMPT] Email: ${req.body.email}`);
         const { email, password } = req.body;
         const user = await User.findOne({ email });
 
-        if (!user || !(await user.comparePassword(password)))
-        {
+        if (!user || !(await user.comparePassword(password))) {
             console.log(`❌ [LOGIN FAILED] Invalid credentials for email: ${email}`);
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
-        const token = signToken({ id: user._id, roles: user.roles, username: user.username });
+        const token = signToken({
+            id: user._id,
+            roles: user.roles,
+            username: user.username,
+        });
 
         console.log(`✅ [LOGIN SUCCESS] User: ${user.username} (ID: ${user._id}) | Roles: ${user.roles.join(", ")}`);
 
@@ -55,7 +57,15 @@ export const login = async (req: Request, res: Response) => {
 
         return res.json({
             token,
-            user: { id: user._id, username: user.username, roles: user.roles },
+            user: {
+                id: user._id,
+                username: user.username,
+                email: user.email,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                profilePicture: user.profilePicture,
+                roles: user.roles,
+            },
         });
     } catch (error: any) {
         console.error(`🔥 [LOGIN ERROR] ${error.message}`);
