@@ -17,7 +17,7 @@ const Login = () => {
     e.preventDefault();
     try {
       await login(email, password);
-      navigate('/retele-sociale', { replace: true }); // 🔹 Prevents navigating back to login
+      navigate('/', { replace: true }); // 🔹 Prevents navigating back to login
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed');
     }

@@ -1,4 +1,3 @@
-// frontend/src/context/AuthContext.tsx
 import { createContext, useState, useEffect, ReactNode } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
@@ -26,20 +25,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
     const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
 
-    // 🔹 Restore user from token on page load
     useEffect(() => {
         const storedToken = localStorage.getItem('token');
-        if (storedToken) {
+        const storedUser = localStorage.getItem('user');
+        if (storedToken && storedUser) {
             try {
                 const decoded: any = jwtDecode(storedToken);
+                const parsedUser: User = JSON.parse(storedUser);
                 setUser({
                     id: decoded.id,
                     username: decoded.username,
                     roles: decoded.roles,
+                    ...parsedUser,
                 });
                 setToken(storedToken);
             } catch (error) {
-                console.error('Failed to decode token', error);
+                console.error('Failed to decode token or parse user', error);
                 logout();
             }
         }
@@ -48,7 +49,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const login = async (email: string, password: string) => {
         try {
             const response = await axios.post(
-                import.meta.env.VITE_BACKEND+'/api/auth/login',
+                `${import.meta.env.VITE_BACKEND}/api/auth/login`,
                 { email, password },
                 { withCredentials: true }
             );
@@ -56,7 +57,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
             setToken(token);
             localStorage.setItem('token', token);
-            setUser(user);
+
+            const userData: User = {
+                id: user.id,
+                username: user.username,
+                roles: user.roles,
+            };
+            if (user.firstName) userData.firstName = user.firstName;
+            if (user.lastName) userData.lastName = user.lastName;
+            if (user.email) userData.email = user.email;
+            if (user.profilePicture) userData.profilePicture = user.profilePicture;
+
+            localStorage.setItem('user', JSON.stringify(userData));
+            setUser(userData);
         } catch (error: any) {
             console.error('Login error', error.response?.data || error.message);
             throw error;
@@ -67,7 +80,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(null);
         setToken(null);
         localStorage.removeItem('token');
-        axios.post(import.meta.env.VITE_BACKEND+'/api/auth/logout', {}, { withCredentials: true });
+        localStorage.removeItem('user');
+        axios.post(`${import.meta.env.VITE_BACKEND}/api/auth/logout`, {}, { withCredentials: true });
     };
 
     return (

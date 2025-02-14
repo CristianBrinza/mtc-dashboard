@@ -11,6 +11,8 @@ import { requestLogger } from './middleware/logger.middleware';
 import categoryRoutes from "./routes/category.routes";
 import socialAccountRoutes from "./routes/socialAccount.routes";
 import path from "path";
+import { createServer } from 'http';
+import { Server } from 'socket.io';
 
 dotenv.config();
 const app = express();
@@ -29,6 +31,51 @@ app.use(cookieParser());
 
 connectDB();
 
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+    cors: {
+        origin: "*", // Allow any frontend
+        methods: ["GET", "POST"]
+    }
+});
+
+
+// Track online users
+const onlineUsers = new Map<string, { username: string, profilePicture: string }>();
+
+io.on('connection', (socket) => {
+    console.log(`🟢 New user connected: ${socket.id}`);
+
+    socket.on("userOnline", (userData) => {
+        if (userData?.id) {
+            onlineUsers.set(userData.id, {
+                username: userData.username,
+                profilePicture: userData.profilePicture
+            });
+            io.emit("updateOnlineUsers", Array.from(onlineUsers.values()));
+        }
+    });
+
+    socket.on("userOffline", (userId) => {
+        if (onlineUsers.has(userId)) {
+            onlineUsers.delete(userId);
+            io.emit("updateOnlineUsers", Array.from(onlineUsers.values()));
+        }
+    });
+
+    socket.on('disconnect', () => {
+        console.log(`🔴 User disconnected: ${socket.id}`);
+        for (const [id] of onlineUsers.entries()) {
+            if (id === socket.id) {
+                onlineUsers.delete(id);
+                io.emit("updateOnlineUsers", Array.from(onlineUsers.values()));
+                break;
+            }
+        }
+    });
+});
+
+
 app.use('/api/auth', authRoutes);
 app.use('/api/protected', protectedRoutes);
 app.use('/api/categories', categoryRoutes);
@@ -40,7 +87,7 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 setupSwagger(app);
 
 const PORT = process.env.PORT || 5020;
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
 

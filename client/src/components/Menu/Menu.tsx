@@ -61,6 +61,9 @@ const Menu: React.FC<MenuProps> = ({ active }) => {
     return (
         <div className={styles.menu}>
             <div className={styles.menu_left}>
+                <a href="/" style={{
+    height: "44px"
+                }}>
                 <svg style={{marginRight: '10px'}} width="189" height="44" viewBox="0 0 189 44" fill="none"
                      xmlns="http://www.w3.org/2000/svg">
                     <path
@@ -146,6 +149,7 @@ const Menu: React.FC<MenuProps> = ({ active }) => {
                         </linearGradient>
                     </defs>
                 </svg>
+            </a>
 
                 {menu.map((item, index) => (
                     <a
