@@ -3,7 +3,6 @@ import { io } from "socket.io-client";
 import { AuthContext } from "../../context/AuthContext";
 import styles from "./OnlineUsers.module.css";
 
-// Correct backend socket URL
 const socket = io(`${import.meta.env.VITE_BACKEND}`, { transports: ["websocket", "polling"] });
 
 const OnlineUsers: React.FC = () => {
@@ -38,7 +37,8 @@ const OnlineUsers: React.FC = () => {
     };
 
     return (
-        <div className={styles.online_now}>
+        <div className={styles.online_now} style={{ display: onlineUsers.length === 0 ? "none" : "flex" }}>
+            Online now:
             {onlineUsers.map((onlineUser, index) => (
                 <div key={index} className={styles.userContainer}>
                     {onlineUser.profilePicture ? (
@@ -48,7 +48,7 @@ const OnlineUsers: React.FC = () => {
                             className={styles.online_now_picture}
                         />
                     ) : (
-                        <div className={styles.initialsCirclePopup}>
+                        <div className={styles.online_now_picture}>
                             {getInitials(onlineUser.username)}
                         </div>
                     )}
