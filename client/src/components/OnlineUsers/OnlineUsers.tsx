@@ -4,7 +4,7 @@ import { AuthContext } from "../../context/AuthContext";
 import styles from "./OnlineUsers.module.css";
 
 // Correct backend socket URL
-const socket = io("http://localhost:5020", { transports: ["websocket", "polling"] });
+const socket = io(`${import.meta.env.VITE_BACKEND}`, { transports: ["websocket", "polling"] });
 
 const OnlineUsers: React.FC = () => {
     const { user } = useContext(AuthContext)!;
