@@ -12,6 +12,8 @@ import Accounts from "./pages/Accounts/Accounts.tsx";
 import SmmStatistics from "./pages/SmmStatistics/SmmStatistics.tsx";
 import SmmAdd from "./pages/SmmAdd/SmmAdd.tsx";
 import ProfileEdit from "./pages/Profile/ProfileEdit.tsx";
+import SmmTags from "./pages/SmmTags/SmmTags.tsx";
+import SmmTypes from "./pages/SmmTypes/SmmTypes.tsx";
 
 function App() {
     return (
@@ -67,6 +69,22 @@ function App() {
                     element={
                         <ProtectedRoute roles={['smm', 'admin']}>
                             <SmmAdd/>
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/retele-sociale/tags"
+                    element={
+                        <ProtectedRoute roles={['smm', 'admin']}>
+                            <SmmTags/>
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/retele-sociale/types"
+                    element={
+                        <ProtectedRoute roles={['smm', 'admin']}>
+                            <SmmTypes/>
                         </ProtectedRoute>
                     }
                 />

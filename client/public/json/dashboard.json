@@ -4,6 +4,8 @@
     ["Statistics","/retele-sociale/statistics" , "config"],
     ["Add","/retele-sociale/add" , "config"],
     ["Accounts","/retele-sociale/accounts" , "config"],
-    ["Categories","/retele-sociale/categories" , "config"]
+    ["Categories","/retele-sociale/categories" , "config"],
+    ["Types","/retele-sociale/types" , "config"],
+    ["Tags","/retele-sociale/tags" , "config"]
   ]
 }

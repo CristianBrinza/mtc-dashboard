@@ -1,0 +1,25 @@
+.tag_inputs{
+    display: flex;
+    margin-bottom: 10px;
+    gap:5px;
+}
+
+.tag_inputs select {
+    height: 44px;
+    border-radius: 100px;
+    border: 1px solid #D9DFFF;
+    background: #fff;
+    padding: 0px 10px;
+    color: #212A55;
+
+}
+
+.tag_table tbody tr td{
+    border: 1px solid #D9DFFF;
+    padding: 10px 15px;
+    width: 200px;
+}
+.tag_table ul{
+    margin: 0;
+    margin-left: -20px;
+}

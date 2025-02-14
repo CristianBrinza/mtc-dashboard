@@ -13,6 +13,8 @@ import socialAccountRoutes from "./routes/socialAccount.routes";
 import path from "path";
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+import tagRoutes from "./routes/tag.routes";
+import typeRoutes from "./routes/type.routes";
 
 dotenv.config();
 const app = express();
@@ -80,6 +82,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/protected', protectedRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/social-accounts', socialAccountRoutes);
+app.use('/api/types', typeRoutes);
+app.use('/api/tags', tagRoutes);
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 //app.use('/uploads', express.static('uploads'));
 
