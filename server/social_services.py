@@ -110,7 +110,7 @@ def get_profile():
 @app.route('/get_insta_post', methods=['GET'])
 def get_insta_post():
     post_url = request.args.get('url')
-    img_index = request.args.get('img_index', default=1, type=int)
+    top_comments_count = request.args.get('top_comments_count', default=3, type=int)
 
     if not post_url:
         logging.error('URL parameter is required')
@@ -118,8 +118,7 @@ def get_insta_post():
 
     try:
         def operation(bot):
-            # Extract shortcode from the URL.
-            # Assumes URL format: .../p/<shortcode>/, handles trailing slash.
+            # Extract shortcode from the URL (handles trailing slash)
             parts = post_url.rstrip('/').split('/')
             shortcode = parts[-1] if parts[-1] else parts[-2]
             logging.debug(f'Extracted shortcode: {shortcode}')
@@ -127,31 +126,63 @@ def get_insta_post():
             post = Post.from_shortcode(bot.context, shortcode)
             logging.debug(f'Retrieved post object: {post}')
 
-            # Handle carousel (sidecar) posts.
+            # Build media list for single image, carousel, or video post
+            media_list = []
             if post.typename == 'GraphSidecar':
-                nodes = list(post.get_sidecar_nodes())  # Convert generator to list.
-                logging.debug(f'Found {len(nodes)} sidecar nodes')
-                if img_index <= len(nodes):
-                    node = nodes[img_index - 1]  # 1-based index.
-                    image_url = node.display_url
-                else:
-                    logging.error(f'Image index {img_index} out of range for post')
-                    raise Exception('Image index out of range')
+                for node in post.get_sidecar_nodes():
+                    if node.is_video:
+                        media_list.append({
+                            "type": "video",
+                            "video_url": node.video_url,
+                            "thumbnail": node.display_url
+                        })
+                    else:
+                        media_list.append({
+                            "type": "image",
+                            "image_url": node.display_url
+                        })
             else:
-                image_url = post.url
+                if post.is_video:
+                    media_list.append({
+                        "type": "video",
+                        "video_url": post.video_url,
+                        "thumbnail": post.url
+                    })
+                else:
+                    media_list.append({
+                        "type": "image",
+                        "image_url": post.url
+                    })
 
-            # Build detailed post data.
+            # Retrieve top comments based on user request
+            top_comments = []
+            try:
+                for i, comment in enumerate(post.get_comments()):
+                    if i >= top_comments_count:
+                        break
+                    top_comments.append({
+                        "owner": comment.owner.username if comment.owner else None,
+                        "text": comment.text,
+                        "created_at": comment.created_at_utc.isoformat() if comment.created_at_utc else None,
+                    })
+            except Exception as e:
+                logging.error(f"Error retrieving comments: {e}")
+
             post_data = {
                 "Likes": post.likes,
-                "Comments": post.comments,
+                "Comments Count": post.comments,
                 "Shares": post.video_view_count if post.is_video else None,
-                "Cover_Image_URL": image_url,
+                "Media": media_list,
                 "Date": post.date_utc.strftime('%d.%m.%Y'),
                 "Time": post.date_utc.strftime('%H:%M:%S'),
                 "Datetime": post.date_utc.isoformat(),
-                "Caption": post.caption or "",
+                "Description": post.caption or "",
                 "Post Type": post.typename,
-                "Video URL": post.video_url if post.is_video else None,
+                "Owner": {
+                    "username": post.owner_username,
+                    "id": post.owner_id
+                },
+                "Top Comments": top_comments
             }
             logging.info(f'Successfully retrieved post data for URL: {post_url}')
             return post_data

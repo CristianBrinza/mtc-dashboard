@@ -15,6 +15,7 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import tagRoutes from "./routes/tag.routes";
 import typeRoutes from "./routes/type.routes";
+import instagramRoutes from "./routes/instagram.routes";
 
 dotenv.config();
 const app = express();
@@ -84,6 +85,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/social-accounts', socialAccountRoutes);
 app.use('/api/types', typeRoutes);
 app.use('/api/tags', tagRoutes);
+app.use('/api/instagram', instagramRoutes);
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 //app.use('/uploads', express.static('uploads'));
 
