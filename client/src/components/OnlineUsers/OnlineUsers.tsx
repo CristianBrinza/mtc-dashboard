@@ -8,14 +8,14 @@ const socket = io("http://localhost:5020", { transports: ["websocket", "polling"
 
 const OnlineUsers: React.FC = () => {
     const { user } = useContext(AuthContext)!;
-    const [onlineUsers, setOnlineUsers] = useState<{ username: string; profilePicture: string }[]>([]);
+    const [onlineUsers, setOnlineUsers] = useState<{ username: string; profilePicture?: string }[]>([]);
 
     useEffect(() => {
         if (user) {
             socket.emit("userOnline", {
                 id: user.id,
                 username: user.username,
-                profilePicture: user.profilePicture || ""
+                profilePicture: user.profilePicture || "",
             });
 
             socket.on("updateOnlineUsers", (users) => {
@@ -29,17 +29,30 @@ const OnlineUsers: React.FC = () => {
         }
     }, [user]);
 
+    const getInitials = (username: string) => {
+        if (!username) return "";
+        const nameParts = username.split(" ");
+        return nameParts.length > 1
+            ? nameParts[0].charAt(0).toUpperCase() + nameParts[1].charAt(0).toUpperCase()
+            : username.substring(0, 2).toUpperCase();
+    };
+
     return (
         <div className={styles.online_now}>
             {onlineUsers.map((onlineUser, index) => (
-                <img
-                    key={index}
-                    src={onlineUser.profilePicture
-                        ? `${import.meta.env.VITE_BACKEND}${onlineUser.profilePicture}`
-                        : "/default-avatar.png"}
-                    alt={onlineUser.username}
-                    className={styles.online_now_picture}
-                />
+                <div key={index} className={styles.userContainer}>
+                    {onlineUser.profilePicture ? (
+                        <img
+                            src={`${import.meta.env.VITE_BACKEND}${onlineUser.profilePicture}`}
+                            alt={onlineUser.username}
+                            className={styles.online_now_picture}
+                        />
+                    ) : (
+                        <div className={styles.initialsCirclePopup}>
+                            {getInitials(onlineUser.username)}
+                        </div>
+                    )}
+                </div>
             ))}
         </div>
     );
