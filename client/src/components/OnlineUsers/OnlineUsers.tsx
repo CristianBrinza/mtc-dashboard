@@ -35,7 +35,7 @@ const OnlineUsers: React.FC = () => {
                 <img
                     key={index}
                     src={onlineUser.profilePicture
-                        ? `http://localhost:5020${onlineUser.profilePicture}`
+                        ? `${import.meta.env.VITE_BACKEND}${onlineUser.profilePicture}`
                         : "/default-avatar.png"}
                     alt={onlineUser.username}
                     className={styles.online_now_picture}
