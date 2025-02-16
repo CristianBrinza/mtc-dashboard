@@ -1,0 +1,55 @@
+.accounts_inputs{
+    display: flex;
+    gap:5px;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.formGroup input, .formGroup select {
+    height: 44px;
+    border-radius: 100px;
+    border: 1px solid #D9DFFF;
+    background: #fff;
+    padding: 0px 10px;
+    color: #212A55;
+
+}
+
+
+.formGroup{
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+.selectedTag {
+    padding: 0 5px;
+    box-sizing: border-box;
+    background: #eeeeee;
+    border-radius: 100px;
+    font-family: "Source Sans Pro";
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 1;
+    margin-right: 10px;
+
+}
+.selectedTagX{
+    color: red;
+}
+
+.tagsContainer{
+    display: flex;
+    flex-wrap: wrap;
+    max-width: 130px;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap:1px;
+}
+
+
+
+.smmPostForm hr{
+    width: 95%;
+}
