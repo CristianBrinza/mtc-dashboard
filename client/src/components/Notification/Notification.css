@@ -1,0 +1,105 @@
+.WebsiteWarning_text {
+  font-family: Inter;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+}
+
+.WebsiteWarning_text_gray {
+  font-weight: 400;
+}
+
+.WebsiteWarning {
+  font-family: Inter;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 1;
+  width: 100%;
+  max-width: 330px;
+  box-sizing: border-box;
+  padding: 12px 30px 12px 12px;
+  border-radius: 10px;
+  border: 1px solid #858585;
+  position: fixed;
+  right: 20px;
+  bottom: 30px;
+  animation: slideInRight 0.5s forwards;
+  overflow: hidden;
+  z-index: 99999999999999;
+}
+
+.WebsiteWarning_fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  width: 0;
+  background-color: #1d1d1f;
+  border-radius: 0 0 10px 10px;
+  animation: fillWidth linear forwards; /* No duration specified here */
+}
+
+@keyframes fillWidth {
+  to {
+    width: 100%;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.fadeOut {
+  animation: fadeOut 1s forwards;
+}
+
+@keyframes fadeOut {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(120%);
+  }
+}
+
+.WebsiteWarning_close {
+  position: absolute;
+  top: 5px;
+  right: 10px;
+  cursor: pointer;
+}
+
+.WebsiteWarning_close img {
+  height: auto !important;
+  width: auto !important;
+}
+
+.WebsiteWarning_block {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  gap: 10px;
+}
+.WebsiteWarning_block_icon {
+  height: 100%;
+  width: 40px;
+}
+
+@media (max-width: 380px) {
+  .WebsiteWarning {
+    width: 85vw;
+    min-height: 21vw;
+    padding: 4vw;
+    border-radius: 3vw;
+  }
+  .WebsiteWarning_text {
+    font-size: 4.3vw;
+  }
+}

@@ -2,14 +2,43 @@ import { Request, Response } from "express";
 import SmmPost, { ISmmPost } from "../models/smmPost.model";
 
 /**
+ * Helper function: convert empty strings to null
+ */
+function convertEmptyToNull(data: any) {
+    const newData: any = {};
+    for (const key in data) {
+        if (typeof data[key] === "string" && data[key].trim() === "") {
+            newData[key] = null;
+        } else {
+            newData[key] = data[key];
+        }
+    }
+    return newData;
+}
+
+/**
  * Create a new SmmPost
  */
 export const createSmmPost = async (req: Request, res: Response) => {
     try {
-        // Convert empty fields to null
-        const data = convertEmptyToNull(req.body);
+        let data = convertEmptyToNull(req.body);
+
+        // Ensure topcomments is an array of objects, not a string
+        if (typeof data.topcomments === "string") {
+            try {
+                data.topcomments = JSON.parse(data.topcomments);
+            } catch (error) {
+                return res.status(400).json({ error: "Invalid format for topcomments" });
+            }
+        }
+
+        if (!Array.isArray(data.topcomments)) {
+            data.topcomments = [];
+        }
+
         const newPost = new SmmPost(data);
         await newPost.save();
+
         return res.status(201).json({ message: "SmmPost created", smmPost: newPost });
     } catch (error: any) {
         console.error("Error creating smm post:", error);
@@ -102,7 +131,21 @@ export const getAllSmmPosts = async (req: Request, res: Response) => {
 export const updateSmmPost = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const data = convertEmptyToNull(req.body);
+        let data = convertEmptyToNull(req.body);
+
+        // Ensure topcomments is parsed correctly
+        if (typeof data.topcomments === "string") {
+            try {
+                data.topcomments = JSON.parse(data.topcomments);
+            } catch (error) {
+                return res.status(400).json({ error: "Invalid format for topcomments" });
+            }
+        }
+
+        if (!Array.isArray(data.topcomments)) {
+            data.topcomments = [];
+        }
+
         const updated = await SmmPost.findByIdAndUpdate(id, data, { new: true });
 
         if (!updated) {

@@ -11,6 +11,7 @@ import { requestLogger } from './middleware/logger.middleware';
 import categoryRoutes from "./routes/category.routes";
 import socialAccountRoutes from "./routes/socialAccount.routes";
 import path from "path";
+import fs from "fs";
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import tagRoutes from "./routes/tag.routes";
@@ -21,6 +22,7 @@ import smmPostRoutes from "./routes/smmPost.routes";
 dotenv.config();
 const app = express();
 
+// ---------- 1) Setup CORS & Basic Middleware ----------
 app.use(cors({
     origin: (origin, callback) => {
         // Allow all origins but still support credentials
@@ -33,8 +35,10 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
+// ---------- 2) Connect Database ----------
 connectDB();
 
+// ---------- 3) Create HTTP & Socket.IO Servers ----------
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
     cors: {
@@ -43,8 +47,7 @@ const io = new Server(httpServer, {
     }
 });
 
-
-// Track online users
+// ---------- 4) Track Online Users (Example) ----------
 const onlineUsers = new Map<string, { username: string, profilePicture: string }>();
 
 io.on('connection', (socket) => {
@@ -79,7 +82,7 @@ io.on('connection', (socket) => {
     });
 });
 
-
+// ---------- 5) Routes ----------
 app.use('/api/auth', authRoutes);
 app.use('/api/protected', protectedRoutes);
 app.use('/api/categories', categoryRoutes);
@@ -88,16 +91,26 @@ app.use('/api/types', typeRoutes);
 app.use('/api/tags', tagRoutes);
 app.use('/api/instagram', instagramRoutes);
 app.use('/api/smmpost', smmPostRoutes);
+
+// ---------- 6) Serve 'uploads' / 'insta' Folders Statically ----------
+// (A) 'uploads' for profile pictures or other files
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
-//app.use('/uploads', express.static('uploads'));
 
+// (B) 'insta' for Instagram-downloaded images
+const instaDir = path.join(__dirname, '../insta');
+if (!fs.existsSync(instaDir)) {
+    fs.mkdirSync(instaDir, { recursive: true });
+}
+app.use('/insta', express.static(instaDir));
 
+// ---------- 7) Swagger Setup ----------
 setupSwagger(app);
 
+// ---------- 8) Start Server ----------
 const PORT = process.env.PORT || 5020;
 httpServer.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
 
+// ---------- 9) Request Logger (Optional) ----------
 app.use(requestLogger);
-

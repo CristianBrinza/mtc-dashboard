@@ -6,6 +6,7 @@ import { AuthContext } from "../../context/AuthContext";
 import Button from "../../components/Button.tsx";
 import Input from "../../components/input/Input.tsx";
 import styles from "./SmmAdd.module.css";
+import Notification from '../../components/Notification/Notification';
 
 interface Type {
   _id: string;
@@ -42,6 +43,9 @@ export default function SmmAdd() {
     { label: "Add" }
   ];
 
+  const [maxComments, setMaxComments] = useState("3");
+
+
   const { user } = useContext(AuthContext)!;
   const [description, setDescription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -63,7 +67,7 @@ export default function SmmAdd() {
   const [dayOfTheWeek, setDayOfTheWeek] = useState("");
   const [images, setImages] = useState<string[]>([]);
   const [topComments, setTopComments] = useState<TopComment[]>([]);
-  const [message, setMessage] = useState("");
+  const [messages, setMessages] = useState<{ type: "success" | "error"; text: string }[]>([]);
   const [selectedAccount, setSelectedAccount] = useState("");
   const [selectedTag, setSelectedTag] = useState(""); // Selected tag from dropdown
 
@@ -193,7 +197,37 @@ export default function SmmAdd() {
 
   const handleSavePost = async () => {
     if (!user || !["admin", "smm"].some(role => user.roles.includes(role))) {
-      setMessage("Unauthorized.");
+      setMessages(prev => [...prev, error.response?.data?.error || "Unauthorized"]);
+      return;
+    }
+
+    const normalizedLink = normalizeInstagramUrl(link);
+
+    // Fetch all posts to check for duplicate links
+    try {
+      const existingPostsResponse = await axios.get(`${import.meta.env.VITE_BACKEND}/api/smmpost`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+// Ensure smmPosts exists and is an array
+      const smmPosts = existingPostsResponse.data?.smmPosts ?? [];
+
+      const isDuplicate = smmPosts.some((post: any) => normalizeInstagramUrl(post.link) === normalizedLink);
+
+      if (isDuplicate) {
+        setMessages(prev => [...prev, { type: "error", text: "Duplicate post detected with this link." }]);
+        return;
+      }
+
+      if (isDuplicate) {
+        setMessages(prev => [...prev, { type: "error", text: "Duplicate post detected with this link." }]);
+        return;
+      }
+    } catch (error: any) {
+      console.error("Error fetching existing posts:", error.response?.data || error.message);
+      setMessages(prev => [...prev, { type: "error", text: error.response?.data?.error || "Failed to fetch posts from the database." }]);
       return;
     }
 
@@ -209,7 +243,7 @@ export default function SmmAdd() {
       tags: tagsSelected.length ? tagsSelected : null,
       category: category || null,
       sub_category: subCategory || null,
-      link: link || null,
+      link: normalizedLink || null,
       day_of_the_week: dayOfTheWeek || null,
       platform: platform || null,  // new
       images: images.length ? images : null,  // new
@@ -227,11 +261,11 @@ export default function SmmAdd() {
             },
           }
       );
-      setMessage("SmmPost created successfully.");
+      setMessages(prev => [...prev, { type: "success", text: "SmmPost created successfully." }]);
       console.log("Created smm post:", response.data);
     } catch (error: any) {
       console.error("Error creating smm post:", error.response?.data || error.message);
-      setMessage(error.response?.data?.error || "Error creating smm post");
+      setMessages(prev => [...prev, error.response?.data?.error || "Error creating smm post"]);
     }
   };
 
@@ -256,7 +290,7 @@ export default function SmmAdd() {
     setIsLoading(true);
     try {
       const response = await axios.get(`${import.meta.env.VITE_BACKEND}/api/instagram/get_insta_post`, {
-        params: { url: link, top_comments_count: 3 },
+        params: { url: link, top_comments_count: maxComments },
         timeout: 15000, // Wait up to 15 seconds
       });
       const data = response.data;
@@ -264,8 +298,13 @@ export default function SmmAdd() {
       setLikes(data.Likes);
       setComments(data["Comments Count"]);
       setShares(data.Shares);
-      setDate(data.Date);
+      const [day, month, year] = data.Date.split(".");
+      const formattedDate = `${year}-${month}-${day}`;
+      setDate(formattedDate);
       setHour(data.Time);
+      const dt = new Date(Number(year), Number(month) - 1, Number(day));
+      const weekday = dt.toLocaleString("en-US", { weekday: "long" }).toLowerCase();
+      setDayOfTheWeek(weekday);
       setDescription(data.Description);
       setTopComments(data["Top Comments"]);
       // Extract image URLs from Media array:
@@ -278,10 +317,27 @@ export default function SmmAdd() {
       setIsLoading(false);
     } catch (error: any) {
       console.error("Error loading link:", error.message);
-      setMessage("Error loading link");
+      setMessages(prev => [...prev, error.response?.data?.error || "Error loading link"]);
       setIsLoading(false);
     }
   };
+
+  const normalizeInstagramUrl = (url: string) => {
+    try {
+      const urlObj = new URL(url);
+      if (urlObj.hostname !== "www.instagram.com") return url; // If not Instagram, return as is
+
+      const pathParts = urlObj.pathname.split("/").filter(Boolean);
+      if (pathParts[0] === "p") {
+        return `https://www.instagram.com/p/${pathParts[1]}/`; // Normalize to base post URL
+      }
+      return urlObj.origin + "/" + pathParts.join("/");
+    } catch (e) {
+      console.error("Invalid URL:", url);
+      return url;
+    }
+  };
+
 
 
 
@@ -290,7 +346,9 @@ export default function SmmAdd() {
         <Menu active="Rețele sociale" />
         <Dashboard breadcrumb={breadcrumbItems} menu="social" active="Add">
           <div className={styles.smmPostForm}>
-            {message && <p>{message}</p>}
+            {messages.map((msg, index) => (
+                <Notification key={index} type={msg.type}>{msg.text}</Notification>
+            ))}
 
 
             <div className={styles.accounts_inputs}>
@@ -300,12 +358,19 @@ export default function SmmAdd() {
                   value={link}
                   onChange={e => setLink(e.target.value)}
               />
+              <Input
+                  type="text"
+                  value={maxComments}
+                  onChange={e => setMaxComments(e.target.value)}
+                  maxWidth='40px'
+                  style={{padding: '10px', textAlign: 'center'}}
+              />
               <Button onClick={handleLoadLink}>Load Link</Button>
               {isLoading && <span>Loading...</span>}
             </div>
 
 
-            <div className={styles.accounts_inputs}>
+            <div className={`${styles.accounts_inputs}`}>
               <div className={styles.formGroup}>
                 <label>Platform</label>
                 <Input
@@ -360,10 +425,27 @@ export default function SmmAdd() {
                     onChange={e => setHour(e.target.value)}
                 />
               </div>
+              <div className={styles.formGroup}>
+                <label>Day</label>
+                <select
+                    value={dayOfTheWeek}
+                    onChange={e => setDayOfTheWeek(e.target.value)}
+                >
+                  <option value="">Select day</option>
+                  <option value="monday">Monday</option>
+                  <option value="tuesday">Tuesday</option>
+                  <option value="wednesday">Wednesday</option>
+                  <option value="thursday">Thursday</option>
+                  <option value="friday">Friday</option>
+                  <option value="saturday">Saturday</option>
+                  <option value="sunday">Sunday</option>
+                </select>
+              </div>
+
             </div>
 
-            <hr/>
-            <div className={styles.accounts_inputs}>
+
+            <div className={`${styles.accounts_inputs} ${styles.accounts_inputs_bg}`}>
               <div className={styles.formGroup}>
                 <label>Account</label>
                 <select value={selectedAccount} onChange={e => setSelectedAccount(e.target.value)}>
@@ -404,7 +486,7 @@ export default function SmmAdd() {
                 </select>
               </div>
 
-              <div className={styles.accounts_inputs}>
+              <div className={styles.selectTagContainer_block}>
 
                 <div className={styles.selectTagContainer}>
                   <div className={styles.formGroup}>
@@ -433,7 +515,7 @@ export default function SmmAdd() {
                 </div>
               </div>
 
-              <div className={styles.formGroup}>
+              <div className={styles.tagsContainer}>
                 <label>Sponsored</label>
                 <input
                     type="checkbox"
@@ -443,24 +525,25 @@ export default function SmmAdd() {
               </div>
             </div>
 
-            <hr/>
 
-            <div className={styles.accounts_inputs}>
-              <div className={styles.formGroup}>
-                <label>Images or Videos (links)</label>
-                <div>
-                  {images.map((img, idx) => (
-                      <div key={idx} className={styles.imageItem}>
-                        <span>{img}</span>
-                        <Button onClick={() => handleRemoveImage(img)}>Remove</Button>
-                      </div>
-                  ))}
-                </div>
-                <AddImageForm onAddImage={handleAddImage}/>
+            <div className={`${styles.formGroup} ${styles.formGroup_bg}`}>
+              <label>Images or Videos (links)</label>
+              <div className={styles.imagesItems}>
+                {images.map((img, idx) => (
+                    <div key={idx} className={styles.imageItem}>
+                      <img className={styles.imageItem_img} src={`${import.meta.env.VITE_BACKEND}${img}`}/>
+                      <span className={styles.imageItem_img_btn} onClick={() => handleRemoveImage(img)}>delete</span>
+                    </div>
+                ))}
               </div>
+              <AddImageForm onAddImage={handleAddImage}/>
+            </div>
 
-              <div className={styles.formGroup}>
-                <label>Top Comments</label>
+            <div className={`${styles.formGroup} ${styles.formGroup_bg}`}>
+              <label>Top Comments</label>
+              <div className={styles.topcomments_cards}>
+
+
                 {topComments.map((tc, idx) => (
                     <div key={idx} className={styles.commentItem}>
                       <Input
@@ -484,22 +567,29 @@ export default function SmmAdd() {
                       <Button onClick={() => handleRemoveTopComment(idx)}>Remove</Button>
                     </div>
                 ))}
-                <Button onClick={handleAddTopComment}>+ Add Top Comment</Button>
               </div>
+              <Button onClick={handleAddTopComment}>+ Add Comment</Button>
+            </div>
 
-              <div className={styles.formGroup}>
-                <label>Description</label>
-                <textarea
-                    value={description}
-                    onChange={e => setDescription(e.target.value)}
-                    placeholder="Enter post description"
-                    className={styles.descriptionTextarea}
-                ></textarea>
-              </div>
+            <div className={`${styles.formGroup} ${styles.formGroup_bg}`}>
+              <label>Description</label>
+              <textarea
+                  value={description}
+                  onChange={e => setDescription(e.target.value)}
+                  placeholder="Enter post description"
+                  className={styles.descriptionTextarea}
+              ></textarea>
 
 
             </div>
+
+            <div style={{height: '20px'}}>
+              &nbsp;
+            </div>
             <Button onClick={handleSavePost}>Save Post</Button>
+            <div style={{height: '20px'}}>
+              &nbsp;
+            </div>
           </div>
         </Dashboard>
       </div>
@@ -518,7 +608,7 @@ function AddImageForm({onAddImage}: { onAddImage: (url: string) => void }) {
   };
 
   return (
-      <div>
+      <div style={{ display: 'flex', gap: '5px', alignItems: 'center'}}>
         <Input
             type="text"
             placeholder="https://example.com/image.jpg"

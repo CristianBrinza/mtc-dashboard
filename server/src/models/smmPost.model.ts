@@ -24,6 +24,7 @@ export interface ISmmPost extends Document {
     platform: string | null;
     description: string | null;
     images: string[] | null;
+
 }
 
 const TopCommentSchema = new Schema<ITopComment>({

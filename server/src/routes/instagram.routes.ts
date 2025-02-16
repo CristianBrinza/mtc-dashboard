@@ -1,6 +1,9 @@
 import { Router } from "express";
 import axios from "axios";
 import dotenv from "dotenv";
+import fs from "fs";
+import path from "path";
+import { v4 as uuidv4 } from "uuid";
 
 dotenv.config();
 const SERVICES_URL = process.env.SERVICES_URL as string || "http://127.0.0.1:5030";
@@ -16,52 +19,10 @@ const router = Router();
 
 /**
  * @swagger
- * /api/instagram/get_profile:
- *   get:
- *     summary: Retrieve Instagram profile data
- *     description: Fetches user profile details such as followers, posts, and bio from an Instagram profile.
- *     tags: [Instagram]
- *     parameters:
- *       - in: query
- *         name: username
- *         schema:
- *           type: string
- *         required: true
- *         description: Instagram username
- *     responses:
- *       200:
- *         description: Instagram profile data retrieved successfully.
- *       400:
- *         description: Bad request – Missing username parameter.
- *       404:
- *         description: Profile does not exist.
- *       500:
- *         description: Server error.
- */
-router.get("/get_profile", async (req, res) => {
-    const { username } = req.query;
-    if (!username) {
-        return res.status(400).json({ error: "Username parameter is required" });
-    }
-
-    try {
-        const response = await axios.get(`${SERVICES_URL}/get_profile`, {
-            params: { username },
-            timeout: 15000, // ⏳ Allow up to 15 seconds to get a response
-        });
-        res.json(response.data);
-    } catch (error: any) {
-        console.error("Error fetching profile data:", error.message);
-        res.status(error.response?.status || 500).json({ error: "Error fetching profile data" });
-    }
-});
-
-/**
- * @swagger
  * /api/instagram/get_insta_post:
  *   get:
- *     summary: Retrieve Instagram post details
- *     description: Fetches media, comments, and engagement metrics for a specific Instagram post.
+ *     summary: Retrieve Instagram post details (downloading images to local /insta folder)
+ *     description: "Fetches media, comments, and engagement metrics for a specific Instagram post from the microservice. Then downloads images locally."
  *     tags: [Instagram]
  *     parameters:
  *       - in: query
@@ -69,23 +30,23 @@ router.get("/get_profile", async (req, res) => {
  *         schema:
  *           type: string
  *         required: true
- *         description: Instagram post URL
+ *         description: "Instagram post shortcode or partial URL (ex: DGAagzvKDRD)"
  *       - in: query
  *         name: top_comments_count
  *         schema:
  *           type: integer
  *           default: 3
  *         required: false
- *         description: Number of top comments to fetch
+ *         description: "Number of top comments to fetch"
  *     responses:
  *       200:
- *         description: Instagram post data retrieved successfully.
+ *         description: "Instagram post data retrieved successfully, with local image URLs"
  *       400:
- *         description: Bad request – Missing URL parameter.
+ *         description: "Bad request – Missing URL parameter"
  *       404:
- *         description: Profile does not exist.
+ *         description: "Profile does not exist"
  *       500:
- *         description: Server error.
+ *         description: "Server error"
  */
 router.get("/get_insta_post", async (req, res) => {
     const { url, top_comments_count } = req.query;
@@ -94,63 +55,68 @@ router.get("/get_insta_post", async (req, res) => {
     }
 
     try {
+        // 1) Call your Flask microservice
         const response = await axios.get(`${SERVICES_URL}/get_insta_post`, {
             params: { url, top_comments_count },
-            timeout: 15000, // ⏳ Allow up to 15 seconds to get a response
+            timeout: 15000,
         });
-        res.json(response.data);
+
+        const data = response.data;
+        // If there's no Media array, just return
+        if (!data.Media || !Array.isArray(data.Media)) {
+            return res.json(data);
+        }
+
+        // 2) Prepare local /insta folder
+        const instaDir = path.join(__dirname, "../../insta");
+        if (!fs.existsSync(instaDir)) {
+            fs.mkdirSync(instaDir, { recursive: true });
+        }
+
+        // 3) Download each image using axios (arraybuffer)
+        for (const mediaItem of data.Media) {
+            if (mediaItem.type === "image" && mediaItem.image_url) {
+                try {
+                    // Strip query params from the URL for a clean extension
+                    const noQueryUrl = mediaItem.image_url.split("?")[0];
+                    let extFromUrl = path.extname(noQueryUrl).toLowerCase();
+
+                    // If no valid extension found, default to ".jpg"
+                    const validExts = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
+                    if (!validExts.includes(extFromUrl)) {
+                        extFromUrl = ".jpg";
+                    }
+
+                    // Create unique local filename
+                    const uniqueFilename = uuidv4() + extFromUrl;
+                    const filePath = path.join(instaDir, uniqueFilename);
+
+                    // Download the image as binary data
+                    const imgResponse = await axios.get(mediaItem.image_url, {
+                        responseType: "arraybuffer",
+                        headers: {
+                            // Provide a user-agent in case Instagram is picky
+                            "User-Agent": "Mozilla/5.0 (compatible; InstaScraper/1.0)",
+                        },
+                    });
+                    fs.writeFileSync(filePath, imgResponse.data);
+
+                    // Replace external URL with local path
+                    mediaItem.image_url = `/insta/${uniqueFilename}`;
+                } catch (err) {
+                    console.error("Error downloading image:", err);
+                }
+            } else if (mediaItem.type === "video" && mediaItem.video_url) {
+                // (Optional) download the video similarly, or keep the external link
+            }
+        }
+
+        // 4) Return updated data with local references
+        return res.json(data);
     } catch (error: any) {
         console.error("Error fetching post data:", error.message);
-        res.status(error.response?.status || 500).json({ error: "Error fetching post data" });
-    }
-});
-
-/**
- * @swagger
- * /api/instagram/get_insta_post_links:
- *   get:
- *     summary: Retrieve recent Instagram post links
- *     description: Fetches a list of recent Instagram post links from a specific profile.
- *     tags: [Instagram]
- *     parameters:
- *       - in: query
- *         name: operator
- *         schema:
- *           type: string
- *         required: true
- *         description: Instagram username to fetch recent posts
- *       - in: query
- *         name: nr
- *         schema:
- *           type: integer
- *           default: 5
- *         required: false
- *         description: Number of recent post links to retrieve
- *     responses:
- *       200:
- *         description: Instagram post links retrieved successfully.
- *       400:
- *         description: Bad request – Missing username parameter.
- *       404:
- *         description: Profile does not exist.
- *       500:
- *         description: Server error.
- */
-router.get("/get_insta_post_links", async (req, res) => {
-    const { operator, nr } = req.query;
-    if (!operator) {
-        return res.status(400).json({ error: "Operator parameter is required" });
-    }
-
-    try {
-        const response = await axios.get(`${SERVICES_URL}/get_insta_post_links`, {
-            params: { operator, nr },
-            timeout: 15000, // ⏳ Allow up to 15 seconds to get a response
-        });
-        res.json(response.data);
-    } catch (error: any) {
-        console.error("Error fetching post links:", error.message);
-        res.status(error.response?.status || 500).json({ error: "Error fetching post links" });
+        const statusCode = error.response?.status || 500;
+        return res.status(statusCode).json({ error: "Error fetching post data" });
     }
 });
 

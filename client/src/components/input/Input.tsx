@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import {CSSProperties, FC} from 'react';
 import Icon, { icons } from '../Icon';
 import styles from './Input.module.css';
 
@@ -18,6 +18,7 @@ interface InputProps {
     maxWidth?: string;
     minWidth?: string;
     iconcolor?: string;
+    style?: CSSProperties;
 }
 
 const Input: FC<InputProps> = ({
@@ -35,7 +36,8 @@ const Input: FC<InputProps> = ({
                                    disabled = false,
                                    maxWidth="auto",
                                    minWidth="auto",
-                                   iconcolor="#D9DFFF"
+                                   iconcolor="#D9DFFF",
+                                   style = {}
                                }) => {
   return (
       <div className={`${styles.costume_input_block} ${className}`}>
@@ -51,7 +53,7 @@ const Input: FC<InputProps> = ({
             max={max}
             readOnly={readOnly}
             disabled={disabled}
-            style={{ maxWidth, minWidth }}
+            style={{ maxWidth, minWidth , ...style }}
         />
         {icon && (
             <Icon
