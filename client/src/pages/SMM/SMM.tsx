@@ -299,6 +299,9 @@ export default function SMM() {
                   <Button onClick={() => handleSort("likes")}>Likes</Button>
                   <Button onClick={() => handleSort("shares")}>Shares</Button>
                   <Button onClick={() => handleSort("comments")}>Comments</Button>
+                  <Button onClick={() => {
+                    setSortField("");
+                  }}>Reset Sorting</Button>
                 </div>
             )}
 

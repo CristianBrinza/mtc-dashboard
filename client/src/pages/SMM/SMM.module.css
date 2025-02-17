@@ -9,6 +9,7 @@
     box-sizing: border-box;
     gap: 10px;
     width: 99%;
+    margin-bottom: 5px;
 }
 .smmPostsTable_costume_left{
     display: flex;
@@ -60,7 +61,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 150px;
+    width: 130px;
 }
 .smmPostsTable_costume_date{
     height: 44px;
@@ -89,6 +90,7 @@
 .smmPostsTable_costume_category{
     display: flex;
     height: 42px;
+    width: 135px;
     padding: 13px 20px;
     justify-content: center;
     align-items: center;
@@ -107,6 +109,7 @@
 
 .smmPostsTable_costume_more{
     cursor: pointer;
+    width: 64px;
 }
 .smmPostsTable_costume_type{
     color: #FBAE3C;
@@ -117,7 +120,8 @@
     font-weight: 600;
     line-height: 15px; /* 93.75% */
     display: flex;
-    width: 80px;
+    width: 90px;
+    height: 25px;
     padding: 5px 0px;
     box-sizing: border-box;
     justify-content: center;
