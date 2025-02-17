@@ -31,7 +31,6 @@ export const createSmmPost = async (req: Request, res: Response) => {
                 return res.status(400).json({ error: "Invalid format for topcomments" });
             }
         }
-
         if (!Array.isArray(data.topcomments)) {
             data.topcomments = [];
         }
@@ -51,22 +50,49 @@ export const createSmmPost = async (req: Request, res: Response) => {
  */
 export const getAllSmmPosts = async (req: Request, res: Response) => {
     try {
-        // Filtering
         const queryObj: any = {};
 
-        // For each field you might want to filter by:
-        if (req.query.account) {
-            queryObj.account = req.query.account;
+        // Multi-value filtering using $in operator
+        if (req.query.accounts || req.query.account) {
+            const accounts = req.query.accounts || req.query.account;
+            queryObj.account = { $in: Array.isArray(accounts) ? accounts : [accounts] };
         }
-        if (req.query.category) {
-            queryObj.category = req.query.category;
+
+        if (req.query.categories || req.query.category) {
+            const categories = req.query.categories || req.query.category;
+            queryObj.category = { $in: Array.isArray(categories) ? categories : [categories] };
         }
-        if (req.query.type) {
-            queryObj.type = req.query.type;
+
+        if (req.query.types || req.query.type) {
+            const types = req.query.types || req.query.type;
+            queryObj.type = { $in: Array.isArray(types) ? types : [types] };
         }
-        if (req.query.day_of_the_week) {
-            queryObj.day_of_the_week = req.query.day_of_the_week;
+
+        if (req.query.days || req.query.day_of_the_week) {
+            const days = req.query.days || req.query.day_of_the_week;
+            queryObj.day_of_the_week = { $in: Array.isArray(days) ? days : [days] };
         }
+
+        if (req.query.platforms) {
+            const platforms = Array.isArray(req.query.platforms)
+                ? req.query.platforms
+                : [req.query.platforms];
+            queryObj.platform = { $in: platforms };
+        }
+
+        if (req.query.tags) {
+            const tags = Array.isArray(req.query.tags) ? req.query.tags : [req.query.tags];
+            queryObj.tags = { $in: tags };
+        }
+
+        if (req.query.sub_categories) {
+            const subCategories = Array.isArray(req.query.sub_categories)
+                ? req.query.sub_categories
+                : [req.query.sub_categories];
+            queryObj.sub_category = { $in: subCategories };
+        }
+
+        // Additional filters
         if (req.query.description) {
             queryObj.description = req.query.description;
         }
@@ -75,8 +101,6 @@ export const getAllSmmPosts = async (req: Request, res: Response) => {
         } else if (req.query.sponsored === "false") {
             queryObj.sponsored = false;
         }
-
-        // Range filtering example: likes?min=10&max=100
         if (req.query.min_likes || req.query.max_likes) {
             queryObj.likes = {};
             if (req.query.min_likes) {
@@ -87,10 +111,9 @@ export const getAllSmmPosts = async (req: Request, res: Response) => {
             }
         }
 
-        // Sorting (e.g. ?sort=comments or ?sort=-likes)
+        // Sorting (e.g., ?sort=comments,-likes)
         let sortObj: any = {};
         if (req.query.sort) {
-            // e.g. sort=comments or sort=-likes
             const fields = (req.query.sort as string).split(",");
             fields.forEach((field) => {
                 if (field.startsWith("-")) {
@@ -141,17 +164,14 @@ export const updateSmmPost = async (req: Request, res: Response) => {
                 return res.status(400).json({ error: "Invalid format for topcomments" });
             }
         }
-
         if (!Array.isArray(data.topcomments)) {
             data.topcomments = [];
         }
 
         const updated = await SmmPost.findByIdAndUpdate(id, data, { new: true });
-
         if (!updated) {
             return res.status(404).json({ error: "SmmPost not found" });
         }
-
         return res.json({ message: "SmmPost updated", smmPost: updated });
     } catch (error: any) {
         console.error("Error updating smm post:", error);
@@ -175,18 +195,3 @@ export const deleteSmmPost = async (req: Request, res: Response) => {
         return res.status(500).json({ error: "Server error" });
     }
 };
-
-/**
- * Helper function: convert empty strings to null
- */
-function convertEmptyToNull(data: any) {
-    const newData: any = {};
-    for (const key in data) {
-        if (typeof data[key] === "string" && data[key].trim() === "") {
-            newData[key] = null;
-        } else {
-            newData[key] = data[key];
-        }
-    }
-    return newData;
-}

@@ -564,11 +564,11 @@ export default function SmmAdd() {
                           value={tc.text}
                           onChange={e => handleTopCommentChange(idx, "text", e.target.value)}
                       />
-                      <Button onClick={() => handleRemoveTopComment(idx)}>Remove</Button>
+                      <Button bgcolor="transparent" border="#D9DFFF" onClick={() => handleRemoveTopComment(idx)}>Remove</Button>
                     </div>
                 ))}
               </div>
-              <Button onClick={handleAddTopComment}>+ Add Comment</Button>
+              <Button bgcolor="transparent" border="#D9DFFF" onClick={handleAddTopComment}>+ Add Comment</Button>
             </div>
 
             <div className={`${styles.formGroup} ${styles.formGroup_bg}`}>
@@ -615,7 +615,7 @@ function AddImageForm({onAddImage}: { onAddImage: (url: string) => void }) {
             value={tempImg}
             onChange={e => setTempImg(e.target.value)}
         />
-        <Button onClick={handleAdd}>Add</Button>
+        <Button bgcolor="transparent" border="#D9DFFF" onClick={handleAdd}>Add</Button>
       </div>
   );
 }

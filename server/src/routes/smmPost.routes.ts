@@ -4,7 +4,7 @@ import {
     createSmmPost,
     getAllSmmPosts,
     updateSmmPost,
-    deleteSmmPost
+    deleteSmmPost,
 } from "../controllers/smmPost.controller";
 import { authenticateJWT } from "../middleware/auth.middleware";
 import { authorizeRoles } from "../middleware/role.middleware";
@@ -25,51 +25,85 @@ const upload = multer({ storage: multer.memoryStorage() });
  * @swagger
  * /api/smmpost:
  *   get:
- *     summary: Get all SMM posts with filtering, sorting, and pagination
+ *     summary: Get all SMM posts with advanced filtering, sorting, and pagination
  *     tags: [SmmPost]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: query
- *         name: account
+ *         name: accounts
  *         schema:
- *           type: string
- *         description: Filter by account name
+ *           type: array
+ *           items:
+ *             type: string
+ *         description: Filter by one or more account names
  *       - in: query
- *         name: category
+ *         name: categories
  *         schema:
- *           type: string
- *         description: Filter by category
+ *           type: array
+ *           items:
+ *             type: string
+ *         description: Filter by one or more categories
  *       - in: query
- *         name: type
+ *         name: types
  *         schema:
- *           type: string
- *         description: Filter by type
+ *           type: array
+ *           items:
+ *             type: string
+ *         description: Filter by one or more types
  *       - in: query
- *         name: day_of_the_week
+ *         name: days
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *         description: Filter by one or more days (day_of_the_week)
+ *       - in: query
+ *         name: platforms
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *         description: Filter by one or more platforms
+ *       - in: query
+ *         name: tags
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *         description: Filter by one or more tags
+ *       - in: query
+ *         name: sub_categories
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *         description: Filter by one or more sub-categories
+ *       - in: query
+ *         name: description
  *         schema:
  *           type: string
- *         description: Filter by day_of_the_week
+ *         description: Filter by description text
  *       - in: query
  *         name: sponsored
  *         schema:
  *           type: boolean
- *         description: Filter by sponsored (true/false)
+ *         description: Filter by sponsored posts (true/false)
  *       - in: query
  *         name: min_likes
  *         schema:
  *           type: number
- *         description: Minimum likes
+ *         description: Minimum number of likes
  *       - in: query
  *         name: max_likes
  *         schema:
  *           type: number
- *         description: Maximum likes
+ *         description: Maximum number of likes
  *       - in: query
  *         name: sort
  *         schema:
  *           type: string
- *         description: Sort fields (e.g. "comments" or "-likes")
+ *         description: Sorting fields (e.g. "comments,-likes"; multiple fields comma separated)
  *       - in: query
  *         name: page
  *         schema:
@@ -82,7 +116,7 @@ const upload = multer({ storage: multer.memoryStorage() });
  *         description: Number of items per page
  *     responses:
  *       200:
- *         description: Successful response with data
+ *         description: Successful response with filtered data
  *       500:
  *         description: Server error
  */
@@ -136,13 +170,13 @@ router.get("/", authenticateJWT, authorizeRoles("admin", "smm"), getAllSmmPosts)
  *                 example: ["funny", "promo"]
  *               category:
  *                 type: string
- *                 example: "comercial"
+ *                 example: "commercial"
  *               sub_category:
  *                 type: string
  *                 example: "production"
  *               description:
  *                 type: string
- *                 example: "description of post"
+ *                 example: "Description of post"
  *               link:
  *                 type: string
  *                 example: "https://www.instagram.com/p/ABC123/"
