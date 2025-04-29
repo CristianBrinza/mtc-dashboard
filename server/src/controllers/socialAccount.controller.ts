@@ -18,14 +18,23 @@ export const getAllSocialAccounts = async (req: Request, res: Response) => {
  */
 export const addSocialAccount = async (req: Request, res: Response) => {
     try {
-        const { account_name, platform, link } = req.body;
+        const { account_name, links } = req.body as { account_name: string; links: {platform:string;link:string}[] };
 
-        const newAccount = new SocialAccount({ account_name, platform, link });
-        await newAccount.save();
-        res.status(201).json({ message: 'Social account added successfully', account: newAccount });
-    } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
-    }
+        // If exists, append new links to avoid dupes
+        let acct = await SocialAccount.findOne({ account_name });
+        if (!acct) {
+            acct = new SocialAccount({ account_name, links });
+        } else {
+            // merge unique links
+            links.forEach(linkObj => {
+                if (!acct!.links.some(l => l.platform === linkObj.platform && l.link === linkObj.link)) {
+                    acct!.links.push(linkObj);
+                }
+            });
+        }
+        await acct.save();
+        res.status(201).json({ message: 'Social account saved', account: acct });
+    } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
 };
 
 /**
@@ -34,22 +43,16 @@ export const addSocialAccount = async (req: Request, res: Response) => {
 export const editSocialAccount = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const { account_name, platform, link } = req.body;
+        const { account_name, links } = req.body as { account_name: string; links: {platform:string;link:string}[] };
 
-        const account = await SocialAccount.findById(id);
-        if (!account) {
-            return res.status(404).json({ message: 'Account not found' });
-        }
+        const acct = await SocialAccount.findById(id);
+        if (!acct) return res.status(404).json({ message: 'Account not found' });
 
-        account.account_name = account_name;
-        account.platform = platform;
-        account.link = link;
-        await account.save();
-
-        res.json({ message: 'Social account updated successfully', account });
-    } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
-    }
+        acct.account_name = account_name;
+        acct.links = links;
+        await acct.save();
+        res.json({ message: 'Social account updated', account: acct });
+    } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
 };
 
 /**

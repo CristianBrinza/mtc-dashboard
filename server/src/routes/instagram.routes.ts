@@ -6,7 +6,7 @@ import path from "path";
 import { v4 as uuidv4 } from "uuid";
 
 dotenv.config();
-const SERVICES_URL = process.env.SERVICES_URL as string || "http://127.0.0.1:5030";
+const SERVICES_URL = process.env.SERVICES_URL as string || "http://127.0.0.1:5000";
 
 const router = Router();
 
@@ -58,7 +58,7 @@ router.get("/get_insta_post", async (req, res) => {
         // 1) Call your Flask microservice
         const response = await axios.get(`${SERVICES_URL}/get_insta_post`, {
             params: { url, top_comments_count },
-            timeout: 15000,
+            timeout: 55000,
         });
 
         const data = response.data;

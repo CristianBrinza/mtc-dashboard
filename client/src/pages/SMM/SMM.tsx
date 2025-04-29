@@ -819,7 +819,7 @@ export default function SMM() {
             <div className={styles.see_images} onClick={closeMediaViewer}>
               <div className={styles.mediaContent}>
                 {selectedMedia.map((media, index) => (
-                    <div key={index} style={{ width: "100%" }}>
+                    <div key={index} >
                       <img
                           src={`${import.meta.env.VITE_BACKEND}${media}`}
                           alt="Post media"

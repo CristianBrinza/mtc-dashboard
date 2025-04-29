@@ -47,4 +47,20 @@
 .accounts_table_title{
     margin-top: 40px;
 }
+.accounts_inputs_ul li{
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    flex-direction: row;
+    gap: 10px;
+    margin-bottom: 3px;
+}
+.accounts_inputs_btns{
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    flex-direction: row;
+    gap: 5px;
+}
+
 

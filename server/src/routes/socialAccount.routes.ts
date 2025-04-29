@@ -19,6 +19,41 @@ const router = Router();
 
 /**
  * @swagger
+ * components:
+ *   schemas:
+ *     LinkEntry:
+ *       type: object
+ *       required:
+ *         - platform
+ *         - link
+ *       properties:
+ *         _id:
+ *           type: string
+ *           example: "65dabc1234ef567890abcd12"
+ *         platform:
+ *           type: string
+ *           example: "Twitter"
+ *         link:
+ *           type: string
+ *           example: "https://twitter.com/company"
+ *
+ *     SocialAccount:
+ *       type: object
+ *       properties:
+ *         _id:
+ *           type: string
+ *           example: "65daaa1234bb567890aaab12"
+ *         account_name:
+ *           type: string
+ *           example: "Company Socials"
+ *         links:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/LinkEntry'
+ */
+
+/**
+ * @swagger
  * /api/social-accounts:
  *   get:
  *     summary: Get all social accounts (Public)
@@ -31,20 +66,7 @@ const router = Router();
  *             schema:
  *               type: array
  *               items:
- *                 type: object
- *                 properties:
- *                   _id:
- *                     type: string
- *                     example: "65c1234567abcd890ef12345"
- *                   account_name:
- *                     type: string
- *                     example: "Company Twitter"
- *                   platform:
- *                     type: string
- *                     example: "Twitter"
- *                   link:
- *                     type: string
- *                     example: "https://twitter.com/company"
+ *                 $ref: '#/components/schemas/SocialAccount'
  */
 router.get('/', getAllSocialAccounts);
 
@@ -52,7 +74,7 @@ router.get('/', getAllSocialAccounts);
  * @swagger
  * /api/social-accounts/add:
  *   post:
- *     summary: Add a new social account (Admin & SMM only)
+ *     summary: Add or update social account with multiple links (Admin & SMM only)
  *     tags: [Social Accounts]
  *     security:
  *       - bearerAuth: []
@@ -62,38 +84,30 @@ router.get('/', getAllSocialAccounts);
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - account_name
+ *               - links
  *             properties:
  *               account_name:
  *                 type: string
- *                 example: "Company Twitter"
- *               platform:
- *                 type: string
- *                 example: "Twitter"
- *               link:
- *                 type: string
- *                 example: "https://twitter.com/company"
+ *               links:
+ *                 type: array
+ *                 items:
+ *                   $ref: '#/components/schemas/LinkEntry'
  *     responses:
  *       201:
- *         description: Social account added successfully
+ *         description: Social account saved successfully
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 _id:
- *                   type: string
- *                   example: "65c1234567abcd890ef12345"
- *                 account_name:
- *                   type: string
- *                   example: "Company Twitter"
- *                 platform:
- *                   type: string
- *                   example: "Twitter"
- *                 link:
- *                   type: string
- *                   example: "https://twitter.com/company"
+ *               $ref: '#/components/schemas/SocialAccount'
  */
-router.post('/add', authenticateJWT, authorizeRoles('admin', 'smm'), addSocialAccount);
+router.post(
+    '/add',
+    authenticateJWT,
+    authorizeRoles('admin', 'smm'),
+    addSocialAccount
+);
 
 /**
  * @swagger
@@ -109,45 +123,37 @@ router.post('/add', authenticateJWT, authorizeRoles('admin', 'smm'), addSocialAc
  *         required: true
  *         schema:
  *           type: string
- *         description: The ID of the social account to edit
+ *         description: Account ID to edit
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - account_name
+ *               - links
  *             properties:
  *               account_name:
  *                 type: string
- *                 example: "Updated Twitter"
- *               platform:
- *                 type: string
- *                 example: "Twitter"
- *               link:
- *                 type: string
- *                 example: "https://twitter.com/updated_company"
+ *               links:
+ *                 type: array
+ *                 items:
+ *                   $ref: '#/components/schemas/LinkEntry'
  *     responses:
  *       200:
- *         description: Social account updated successfully
+ *         description: Account updated successfully
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 _id:
- *                   type: string
- *                   example: "65c1234567abcd890ef12345"
- *                 account_name:
- *                   type: string
- *                   example: "Updated Twitter"
- *                 platform:
- *                   type: string
- *                   example: "Twitter"
- *                 link:
- *                   type: string
- *                   example: "https://twitter.com/updated_company"
+ *               $ref: '#/components/schemas/SocialAccount'
  */
-router.put('/edit/:id', authenticateJWT, authorizeRoles('admin', 'smm'), editSocialAccount);
+router.put(
+    '/edit/:id',
+    authenticateJWT,
+    authorizeRoles('admin', 'smm'),
+    editSocialAccount
+);
 
 /**
  * @swagger
@@ -163,15 +169,20 @@ router.put('/edit/:id', authenticateJWT, authorizeRoles('admin', 'smm'), editSoc
  *         required: true
  *         schema:
  *           type: string
- *         description: The ID of the social account to delete
+ *         description: Account ID to delete
  *     responses:
  *       200:
- *         description: Social account deleted successfully
+ *         description: Account deleted successfully
  *       404:
  *         description: Account not found
  *       500:
  *         description: Server error
  */
-router.delete('/delete/:id', authenticateJWT, authorizeRoles('admin', 'smm'), deleteSocialAccount);
+router.delete(
+    '/delete/:id',
+    authenticateJWT,
+    authorizeRoles('admin', 'smm'),
+    deleteSocialAccount
+);
 
 export default router;

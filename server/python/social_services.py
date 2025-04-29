@@ -1,3 +1,5 @@
+# app.py (Flask backend)
+
 from flask import Flask, request, jsonify
 import instaloader
 from instaloader import Post, Profile
@@ -10,225 +12,177 @@ CORS(app, resources={r"/json/*": {"origins": "*"}})
 
 logging.basicConfig(level=logging.DEBUG)
 
-# List of Instagram accounts to use for login.
 ACCOUNTS = [
     {'username': 'testing_mtc', 'password': 'test.'},
     {'username': 'testing_account_secret', 'password': 'MTC12345678'},
 ]
 current_account_index = 0
 
-# A pool of public proxies (replace with real, reliable proxies in production)
 PROXIES = [
     "http://123.456.78.9:8080",
     "http://98.76.54.32:3128",
-    # Add more proxies as needed.
 ]
 
 def get_instaloader_instance():
-    """
-    Return a logged-in Instaloader instance using one of the available accounts.
-    Also, randomly assigns a proxy from the PROXIES list to help avoid IP bans.
-    """
     global current_account_index
     bot = instaloader.Instaloader(
         user_agent="Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) "
                    "AppleWebKit/537.36 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/537.36"
     )
-
-    # Assign a random proxy if available.
     if PROXIES:
         proxy = random.choice(PROXIES)
         bot.context._session.proxies = {"http": proxy, "https": proxy}
         logging.info(f'Using proxy: {proxy}')
 
-    # Try each account until one logs in successfully.
     for _ in range(len(ACCOUNTS)):
-        account = ACCOUNTS[current_account_index]
+        acct = ACCOUNTS[current_account_index]
         try:
-            bot.login(account['username'], account['password'])
-            logging.info(f'Logged into Instagram successfully with {account["username"]}')
+            bot.login(acct['username'], acct['password'])
+            logging.info(f'Logged in with {acct["username"]}')
             return bot
         except Exception as e:
-            logging.error(f'Error logging into Instagram with {account["username"]}: {e}')
+            logging.error(f'Login failed for {acct["username"]}: {e}')
             current_account_index = (current_account_index + 1) % len(ACCOUNTS)
     raise Exception("All accounts failed to log in")
 
 def execute_with_alternative_accounts(operation):
-    """
-    Attempt the given operation (a function that receives a bot instance) using each account.
-    If one account fails (e.g. due to rate limits or IP bans), it will try the next.
-    """
-    last_exception = None
-    attempts = len(ACCOUNTS)
-    for attempt in range(attempts):
+    last_exc = None
+    for attempt in range(len(ACCOUNTS)):
         try:
             bot = get_instaloader_instance()
             return operation(bot)
-        except instaloader.exceptions.ProfileNotExistsException as e:
-            # If the profile doesn't exist, no point in retrying.
-            raise e
+        except instaloader.exceptions.ProfileNotExistsException:
+            raise
         except Exception as e:
-            logging.error(f'Operation failed on attempt {attempt + 1}/{attempts}: {e}')
-            last_exception = e
-    raise last_exception
+            logging.error(f'Attempt {attempt+1} failed: {e}')
+            last_exc = e
+    raise last_exc
 
 @app.route('/get_profile', methods=['GET'])
 def get_profile():
-    insta_username = request.args.get('username')
-    if not insta_username:
-        logging.error('Username parameter is required')
+    username = request.args.get('username')
+    if not username:
         return jsonify({'error': 'Username parameter is required'}), 400
 
     try:
-        def operation(bot):
-            profile = Profile.from_username(bot.context, insta_username)
-            profile_data = {
-                "Username": profile.username,
-                "User ID": profile.userid,
-                "Number of Posts": profile.mediacount,
-                "Followers Count": profile.followers,
-                "Following Count": profile.followees,
-                "Bio": profile.biography,
-                "External URL": profile.external_url,
-                "Profile Picture": profile.profile_pic_url,
-                "Is Private": profile.is_private,
-                "Is Verified": profile.is_verified,
+        def op(bot):
+            profile = Profile.from_username(bot.context, username)
+            return {
+                "username": profile.username,
+                "userid": profile.userid,
+                "posts": profile.mediacount,
+                "followers": profile.followers,
+                "following": profile.followees,
+                "bio": profile.biography,
+                "external_url": profile.external_url,
+                "profile_pic": profile.profile_pic_url,
+                "is_private": profile.is_private,
+                "is_verified": profile.is_verified,
             }
-            logging.info(f'Successfully retrieved profile data for {insta_username}')
-            return profile_data
-
-        result = execute_with_alternative_accounts(operation)
-        return jsonify(result)
-
+        return jsonify(execute_with_alternative_accounts(op))
     except instaloader.exceptions.ProfileNotExistsException:
-        logging.error('Profile does not exist')
         return jsonify({'error': 'Profile does not exist'}), 404
     except Exception as e:
-        logging.error(f'Error retrieving profile data: {e}')
         return jsonify({'error': str(e)}), 500
 
 @app.route('/get_insta_post', methods=['GET'])
 def get_insta_post():
     post_url = request.args.get('url')
-    top_comments_count = request.args.get('top_comments_count', default=3, type=int)
-
+    top_n = request.args.get('top_comments_count', default=3, type=int)
     if not post_url:
-        logging.error('URL parameter is required')
         return jsonify({'error': 'URL parameter is required'}), 400
 
     try:
-        def operation(bot):
-            # Extract shortcode from the URL (handles trailing slash)
-            parts = post_url.rstrip('/').split('/')
-            shortcode = parts[-1] if parts[-1] else parts[-2]
-            logging.debug(f'Extracted shortcode: {shortcode}')
-
+        def op(bot):
+            shortcode = post_url.rstrip('/').split('/')[-1]
             post = Post.from_shortcode(bot.context, shortcode)
-            logging.debug(f'Retrieved post object: {post}')
 
-            # Build media list for single image, carousel, or video post
-            media_list = []
+            # Build media list
+            media = []
             if post.typename == 'GraphSidecar':
                 for node in post.get_sidecar_nodes():
                     if node.is_video:
-                        media_list.append({
+                        media.append({
                             "type": "video",
                             "video_url": node.video_url,
                             "thumbnail": node.display_url
                         })
                     else:
-                        media_list.append({
+                        media.append({
                             "type": "image",
                             "image_url": node.display_url
                         })
             else:
                 if post.is_video:
-                    media_list.append({
+                    media.append({
                         "type": "video",
                         "video_url": post.video_url,
                         "thumbnail": post.url
                     })
                 else:
-                    media_list.append({
+                    media.append({
                         "type": "image",
                         "image_url": post.url
                     })
 
-            # Retrieve top comments based on user request
-            top_comments = []
-            try:
-                for i, comment in enumerate(post.get_comments()):
-                    if i >= top_comments_count:
-                        break
-                    top_comments.append({
-                        "owner": comment.owner.username if comment.owner else None,
-                        "text": comment.text,
-                        "created_at": comment.created_at_utc.isoformat() if comment.created_at_utc else None,
-                    })
-            except Exception as e:
-                logging.error(f"Error retrieving comments: {e}")
+            # Top comments
+            comments = []
+            for i, c in enumerate(post.get_comments()):
+                if i >= top_n: break
+                comments.append({
+                    "owner": c.owner.username if c.owner else None,
+                    "text": c.text,
+                    "created_at": c.created_at_utc.isoformat() if c.created_at_utc else None
+                })
 
-            post_data = {
-                "Likes": post.likes,
-                "Comments Count": post.comments,
-                "Shares": post.video_view_count if post.is_video else None,
-                "Media": media_list,
-                "Date": post.date_utc.strftime('%d.%m.%Y'),
-                "Time": post.date_utc.strftime('%H:%M:%S'),
-                "Datetime": post.date_utc.isoformat(),
-                "Description": post.caption or "",
-                "Post Type": post.typename,
-                "Owner": {
+            return {
+                "likes": post.likes,
+                "comments_count": post.comments,
+                "views": post.video_view_count if post.is_video else None,
+                "media": media,
+                "date": post.date_utc.strftime('%d.%m.%Y'),
+                "time": post.date_utc.strftime('%H:%M:%S'),
+                "datetime": post.date_utc.isoformat(),
+                "description": post.caption or "",
+                "post_type": post.typename,
+                "owner": {
                     "username": post.owner_username,
                     "id": post.owner_id
                 },
-                "Top Comments": top_comments
+                "top_comments": comments
             }
-            logging.info(f'Successfully retrieved post data for URL: {post_url}')
-            return post_data
 
-        result = execute_with_alternative_accounts(operation)
-        return jsonify(result)
-
-    except instaloader.exceptions.ProfileNotExistsException as e:
-        logging.error(f'Profile does not exist: {e}')
-        return jsonify({'error': 'Profile does not exist'}), 404
-    except instaloader.exceptions.InstaloaderException as e:
-        logging.error(f'Error loading post: {e}')
-        return jsonify({'error': 'Error loading post'}), 500
+        return jsonify(execute_with_alternative_accounts(op))
+    except instaloader.exceptions.ProfileNotExistsException:
+        return jsonify({'error': 'Post or profile does not exist'}), 404
     except Exception as e:
-        logging.error(f'Error retrieving post data: {e}')
         return jsonify({'error': str(e)}), 500
 
 @app.route('/get_insta_post_links', methods=['GET'])
 def get_insta_post_links():
     nr = request.args.get('nr', default=5, type=int)
-    operator = request.args.get('operator')
-
-    if not operator:
-        logging.error('Operator parameter is required')
+    usern = request.args.get('operator')
+    if not usern:
         return jsonify({'error': 'Operator parameter is required'}), 400
 
     try:
-        def operation(bot):
-            profile = Profile.from_username(bot.context, operator)
-            posts = list(profile.get_posts())  # Convert generator to list.
+        def op(bot):
+            profile = Profile.from_username(bot.context, usern)
+            posts = list(profile.get_posts())
             if not posts:
-                logging.warning(f'No posts found for {operator}')
                 raise Exception('No posts found')
-            nr_posts = min(nr, len(posts))  # Do not exceed available posts.
-            links = [f"https://www.instagram.com/p/{post.shortcode}/" for post in posts[:nr_posts]]
-            logging.info(f'Successfully retrieved {nr_posts} post links for {operator}')
-            return {'links': links}
+            urls = []
+            for post in posts[:nr]:
+                if post.typename == 'GraphVideo':
+                    urls.append(f"https://www.instagram.com/reel/{post.shortcode}/")
+                else:
+                    urls.append(f"https://www.instagram.com/p/{post.shortcode}/")
+            return {"links": urls}
 
-        result = execute_with_alternative_accounts(operation)
-        return jsonify(result)
-
+        return jsonify(execute_with_alternative_accounts(op))
     except instaloader.exceptions.ProfileNotExistsException:
-        logging.error(f'Profile {operator} does not exist')
         return jsonify({'error': 'Profile does not exist'}), 404
     except Exception as e:
-        logging.error(f'Error retrieving post links: {e}')
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':

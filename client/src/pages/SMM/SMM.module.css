@@ -298,6 +298,7 @@
 
 .mediaContent{
     width: 90%;
+    height: 90%;
     display: flex;
     gap: 10px;
     flex-direction: row;
@@ -305,5 +306,6 @@
     justify-content: stretch;
 }
 .mediaContent img{
-    width: 100%;
+    max-width: 100%;
+    max-height: 100%;
 }
