@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 # List of Instagram accounts to use for login.
 ACCOUNTS = [
-    {'username': 'testing_mtc', 'password': 'UltimatePassword1672002.'},
+    {'username': 'testing_mtc', 'password': 'test.'},
     {'username': 'testing_account_secret', 'password': 'MTC12345678'},
 ]
 current_account_index = 0
