@@ -35,6 +35,32 @@ export default function SmmTags() {
     try {
       const response = await axios.get(`${import.meta.env.VITE_BACKEND}/api/tags`);
       setTags(response.data);
+
+      // ✅ Build notification with _id
+      const now = new Date();
+      const dd = String(now.getDate()).padStart(2, "0");
+      const mm = String(now.getMonth() + 1).padStart(2, "0");
+      const yyyy = now.getFullYear();
+      const hh = String(now.getHours()).padStart(2, "0");
+      const min = String(now.getMinutes()).padStart(2, "0");
+      const date = `${dd}.${mm}.${yyyy}`;
+      const hour = `${hh}:${min}`;
+
+      const notificationPayload = {
+        type: "info",
+        text: `New Tag added - [${newTag}]`,
+        date,
+        hour,
+        link: `/retele-sociale/tags`, // 🟢 link now includes _id
+      };
+
+      try {
+        const notifResp = await createNotification(notificationPayload);
+        console.log("✅ Notification created:", notifResp.data);
+      } catch (err) {
+        console.error("❌ Failed to create notification", err);
+      }
+
     } catch (error) {
       console.error("Error fetching tags:", error);
     }

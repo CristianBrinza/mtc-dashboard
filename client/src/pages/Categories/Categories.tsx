@@ -5,6 +5,7 @@ import axios from 'axios';
 import { AuthContext } from '../../context/AuthContext';
 import styles from  "./Categories.module.css"
 import Button from "../../components/Button.tsx";
+import {createNotification} from "../../services/notificationService.tsx";
 
 
 interface Subcategory {
@@ -55,6 +56,30 @@ export default function Categories() {
       await axios.post(`${import.meta.env.VITE_BACKEND}/api/categories/add`, { name: newCategory }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       setNewCategory('');
       fetchCategories();
+      // ✅ Build notification with _id
+      const now = new Date();
+      const dd = String(now.getDate()).padStart(2, "0");
+      const mm = String(now.getMonth() + 1).padStart(2, "0");
+      const yyyy = now.getFullYear();
+      const hh = String(now.getHours()).padStart(2, "0");
+      const min = String(now.getMinutes()).padStart(2, "0");
+      const date = `${dd}.${mm}.${yyyy}`;
+      const hour = `${hh}:${min}`;
+
+      const notificationPayload = {
+        type: "info",
+        text: `New Category added - [${newCategory}]`,
+        date,
+        hour,
+        link: `/retele-sociale/categories`, // 🟢 link now includes _id
+      };
+
+      try {
+        const notifResp = await createNotification(notificationPayload);
+        console.log("✅ Notification created:", notifResp.data);
+      } catch (err) {
+        console.error("❌ Failed to create notification", err);
+      }
     } catch (error: any) {
       console.error('Error adding category:', error.response?.data?.message || error.message);
     }
@@ -71,6 +96,30 @@ export default function Categories() {
 
       setNewSubcategory({ category: '', name: '' });
       fetchCategories();
+      // ✅ Build notification with _id
+      const now = new Date();
+      const dd = String(now.getDate()).padStart(2, "0");
+      const mm = String(now.getMonth() + 1).padStart(2, "0");
+      const yyyy = now.getFullYear();
+      const hh = String(now.getHours()).padStart(2, "0");
+      const min = String(now.getMinutes()).padStart(2, "0");
+      const date = `${dd}.${mm}.${yyyy}`;
+      const hour = `${hh}:${min}`;
+
+      const notificationPayload = {
+        type: "info",
+        text: `New Sub-Category added - [${newSubcategory}]`,
+        date,
+        hour,
+        link: `/retele-sociale/categories`, // 🟢 link now includes _id
+      };
+
+      try {
+        const notifResp = await createNotification(notificationPayload);
+        console.log("✅ Notification created:", notifResp.data);
+      } catch (err) {
+        console.error("❌ Failed to create notification", err);
+      }
     } catch (error: any) {
       console.error('Error adding subcategory:', error.response?.data?.message || error.message);
     }
@@ -84,6 +133,30 @@ export default function Categories() {
       await axios.put(`${import.meta.env.VITE_BACKEND}/api/categories/rename`, renameCategory, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       setRenameCategory({ oldName: '', newName: '' });
       fetchCategories();
+      // ✅ Build notification with _id
+      const now = new Date();
+      const dd = String(now.getDate()).padStart(2, "0");
+      const mm = String(now.getMonth() + 1).padStart(2, "0");
+      const yyyy = now.getFullYear();
+      const hh = String(now.getHours()).padStart(2, "0");
+      const min = String(now.getMinutes()).padStart(2, "0");
+      const date = `${dd}.${mm}.${yyyy}`;
+      const hour = `${hh}:${min}`;
+
+      const notificationPayload = {
+        type: "info",
+        text: `New Category added - [${renameCategory}]`,
+        date,
+        hour,
+        link: `/retele-sociale/categories`, // 🟢 link now includes _id
+      };
+
+      try {
+        const notifResp = await createNotification(notificationPayload);
+        console.log("✅ Notification created:", notifResp.data);
+      } catch (err) {
+        console.error("❌ Failed to create notification", err);
+      }
     } catch (error: any) {
       console.error('Error renaming category:', error.response?.data?.message || error.message);
     }
@@ -100,6 +173,30 @@ export default function Categories() {
 
       setRenameSubcategory({ category: '', oldName: '', newName: '' });
       fetchCategories();
+      // ✅ Build notification with _id
+      const now = new Date();
+      const dd = String(now.getDate()).padStart(2, "0");
+      const mm = String(now.getMonth() + 1).padStart(2, "0");
+      const yyyy = now.getFullYear();
+      const hh = String(now.getHours()).padStart(2, "0");
+      const min = String(now.getMinutes()).padStart(2, "0");
+      const date = `${dd}.${mm}.${yyyy}`;
+      const hour = `${hh}:${min}`;
+
+      const notificationPayload = {
+        type: "info",
+        text: `New Category added - [${renameSubcategory}]`,
+        date,
+        hour,
+        link: `/retele-sociale/categories`, // 🟢 link now includes _id
+      };
+
+      try {
+        const notifResp = await createNotification(notificationPayload);
+        console.log("✅ Notification created:", notifResp.data);
+      } catch (err) {
+        console.error("❌ Failed to create notification", err);
+      }
     } catch (error: any) {
       console.error('Error renaming subcategory:', error.response?.data?.message || error.message);
     }

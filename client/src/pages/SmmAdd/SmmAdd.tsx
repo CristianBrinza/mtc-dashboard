@@ -7,6 +7,7 @@ import Button from "../../components/Button.tsx";
 import Input from "../../components/input/Input.tsx";
 import styles from "./SmmAdd.module.css";
 import Notification from '../../components/Notification/Notification';
+import {createNotification} from "../../services/notificationService.tsx";
 
 interface Type {
   _id: string;
@@ -195,15 +196,15 @@ export default function SmmAdd() {
     setTopComments(topComments.filter((_, i) => i !== index));
   };
 
+  // inside handleSavePost()
   const handleSavePost = async () => {
     if (!user || !["admin", "smm"].some(role => user.roles.includes(role))) {
-      setMessages(prev => [...prev, error.response?.data?.error || "Unauthorized"]);
+      setMessages(prev => [...prev, { type: "error", text: "Unauthorized" }]);
       return;
     }
 
     const normalizedLink = normalizeInstagramUrl(link);
 
-    // Fetch all posts to check for duplicate links
     try {
       const existingPostsResponse = await axios.get(`${import.meta.env.VITE_BACKEND}/api/smmpost`, {
         headers: {
@@ -211,15 +212,8 @@ export default function SmmAdd() {
         },
       });
 
-// Ensure smmPosts exists and is an array
       const smmPosts = existingPostsResponse.data?.smmPosts ?? [];
-
       const isDuplicate = smmPosts.some((post: any) => normalizeInstagramUrl(post.link) === normalizedLink);
-
-      if (isDuplicate) {
-        setMessages(prev => [...prev, { type: "error", text: "Duplicate post detected with this link." }]);
-        return;
-      }
 
       if (isDuplicate) {
         setMessages(prev => [...prev, { type: "error", text: "Duplicate post detected with this link." }]);
@@ -228,6 +222,7 @@ export default function SmmAdd() {
     } catch (error: any) {
       console.error("Error fetching existing posts:", error.response?.data || error.message);
       setMessages(prev => [...prev, { type: "error", text: error.response?.data?.error || "Failed to fetch posts from the database." }]);
+
       return;
     }
 
@@ -245,8 +240,8 @@ export default function SmmAdd() {
       sub_category: subCategory || null,
       link: normalizedLink || null,
       day_of_the_week: dayOfTheWeek || null,
-      platform: platform || null,  // new
-      images: images.length ? images : null,  // new
+      platform: platform || null,
+      images: images.length ? images : null,
       topcomments: topComments.length ? topComments : null,
       description: description || null,
     };
@@ -261,11 +256,67 @@ export default function SmmAdd() {
             },
           }
       );
+
       setMessages(prev => [...prev, { type: "success", text: "SmmPost created successfully." }]);
       console.log("Created smm post:", response.data);
+
+      // ✅ Build notification with _id
+      const newId = response.data?.smmPost?._id;
+
+      if (newId) {
+        const now = new Date();
+        const dd = String(now.getDate()).padStart(2, "0");
+        const mm = String(now.getMonth() + 1).padStart(2, "0");
+        const yyyy = now.getFullYear();
+        const hh = String(now.getHours()).padStart(2, "0");
+        const min = String(now.getMinutes()).padStart(2, "0");
+        const date = `${dd}.${mm}.${yyyy}`;
+        const hour = `${hh}:${min}`;
+
+        const notificationPayload = {
+          type: "success",
+          text: `New Post added - ${selectedAccount} | ${platform}`,
+          date,
+          hour,
+          link: `/retele-sociale?id=${newId}`, // 🟢 link now includes _id
+        };
+
+        try {
+          const notifResp = await createNotification(notificationPayload);
+          console.log("✅ Notification created:", notifResp.data);
+        } catch (err) {
+          console.error("❌ Failed to create notification", err);
+        }
+      }
+
     } catch (error: any) {
       console.error("Error creating smm post:", error.response?.data || error.message);
-      setMessages(prev => [...prev, error.response?.data?.error || "Error creating smm post"]);
+      setMessages(prev => [...prev, { type: "error", text: error.response?.data?.error || "Error creating smm post" }]);
+
+        const now = new Date();
+        const dd = String(now.getDate()).padStart(2, "0");
+        const mm = String(now.getMonth() + 1).padStart(2, "0");
+        const yyyy = now.getFullYear();
+        const hh = String(now.getHours()).padStart(2, "0");
+        const min = String(now.getMinutes()).padStart(2, "0");
+        const date = `${dd}.${mm}.${yyyy}`;
+        const hour = `${hh}:${min}`;
+
+        const notificationPayload = {
+          type: "error",
+          text: `Error Post ${selectedAccount} | ${platform}`,
+          date,
+          hour,
+          link: `/retele-sociale`, // 🟢 link now includes _id
+        };
+
+        try {
+          const notifResp = await createNotification(notificationPayload);
+          console.log("✅ Notification created:", notifResp.data);
+        } catch (err) {
+          console.error("❌ Failed to create notification", err);
+        }
+
     }
   };
 
@@ -291,7 +342,7 @@ export default function SmmAdd() {
     try {
       const response = await axios.get(`${import.meta.env.VITE_BACKEND}/api/instagram/get_insta_post`, {
         params: { url: link, top_comments_count: maxComments },
-        timeout: 15000, // Wait up to 15 seconds
+        timeout: 35000, // Wait up to 35 seconds
       });
       const data = response.data;
       // Autofill fields from response:
@@ -317,8 +368,33 @@ export default function SmmAdd() {
       setIsLoading(false);
     } catch (error: any) {
       console.error("Error loading link:", error.message);
-      setMessages(prev => [...prev, error.response?.data?.error || "Error loading link"]);
+      setMessages(prev => [...prev, { type: "error", text: "Error loading link" }]);
+      // setMessages(prev => [...prev, error.response?.data?.error || "Error loading link"]);
       setIsLoading(false);
+
+      const now = new Date();
+      const dd = String(now.getDate()).padStart(2, "0");
+      const mm = String(now.getMonth() + 1).padStart(2, "0");
+      const yyyy = now.getFullYear();
+      const hh = String(now.getHours()).padStart(2, "0");
+      const min = String(now.getMinutes()).padStart(2, "0");
+      const date = `${dd}.${mm}.${yyyy}`;
+      const hour = `${hh}:${min}`;
+
+      const notificationPayload = {
+        type: "error",
+        text: `Error Post - Error loading link: ${error.message} - link: ${link}`,
+        date,
+        hour,
+        link: `/retele-sociale`, // 🟢 link now includes _id
+      };
+
+      try {
+        const notifResp = await createNotification(notificationPayload);
+        console.log("✅ Notification created:", notifResp.data);
+      } catch (err) {
+        console.error("❌ Failed to create notification", err);
+      }
     }
   };
 

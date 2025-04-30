@@ -18,6 +18,8 @@ import tagRoutes from "./routes/tag.routes";
 import typeRoutes from "./routes/type.routes";
 import instagramRoutes from "./routes/instagram.routes";
 import smmPostRoutes from "./routes/smmPost.routes";
+import notificationRoutes from "./routes/notification.routes";
+import {startInstagramCron} from "./services/instagramCron";
 
 dotenv.config();
 const app = express();
@@ -91,6 +93,7 @@ app.use('/api/types', typeRoutes);
 app.use('/api/tags', tagRoutes);
 app.use('/api/instagram', instagramRoutes);
 app.use('/api/smmpost', smmPostRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // ---------- 6) Serve 'uploads' / 'insta' Folders Statically ----------
 // (A) 'uploads' for profile pictures or other files
@@ -106,11 +109,14 @@ app.use('/insta', express.static(instaDir));
 // ---------- 7) Swagger Setup ----------
 setupSwagger(app);
 
-// ---------- 8) Start Server ----------
+// ---------- 8) Services ----------
+// startInstagramCron();
+
+// ---------- 9) Start Server ----------
 const PORT = process.env.PORT || 5020;
 httpServer.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
 
-// ---------- 9) Request Logger (Optional) ----------
+// ---------- 10) Request Logger (Optional) ----------
 app.use(requestLogger);

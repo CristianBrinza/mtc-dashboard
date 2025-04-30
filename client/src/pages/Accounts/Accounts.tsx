@@ -5,6 +5,7 @@ import axios from 'axios';
 import { AuthContext } from '../../context/AuthContext';
 import styles from "./Accounts.module.css";
 import Button from "../../components/Button.tsx";
+import {createNotification} from "../../services/notificationService.tsx";
 
 interface LinkEntry {
   _id?: string;       // present for existing links
@@ -102,6 +103,30 @@ export default function Accounts() {
       setName('');
       setNewLinks([]);
       fetchAccounts();
+      // ✅ Build notification with _id
+      const now = new Date();
+      const dd = String(now.getDate()).padStart(2, "0");
+      const mm = String(now.getMonth() + 1).padStart(2, "0");
+      const yyyy = now.getFullYear();
+      const hh = String(now.getHours()).padStart(2, "0");
+      const min = String(now.getMinutes()).padStart(2, "0");
+      const date = `${dd}.${mm}.${yyyy}`;
+      const hour = `${hh}:${min}`;
+
+      const notificationPayload = {
+        type: "info",
+        text: `New Account /Account link/(s) - [${editedName}]`,
+        date,
+        hour,
+        link: `/retele-sociale/categories`, // 🟢 link now includes _id
+      };
+
+      try {
+        const notifResp = await createNotification(notificationPayload);
+        console.log("✅ Notification created:", notifResp.data);
+      } catch (err) {
+        console.error("❌ Failed to create notification", err);
+      }
     } catch (e: any) {
       setError(e.response?.data?.message || 'Save failed.');
     }
@@ -154,6 +179,30 @@ export default function Accounts() {
       );
       cancelEdit();
       fetchAccounts();
+      // ✅ Build notification with _id
+      const now = new Date();
+      const dd = String(now.getDate()).padStart(2, "0");
+      const mm = String(now.getMonth() + 1).padStart(2, "0");
+      const yyyy = now.getFullYear();
+      const hh = String(now.getHours()).padStart(2, "0");
+      const min = String(now.getMinutes()).padStart(2, "0");
+      const date = `${dd}.${mm}.${yyyy}`;
+      const hour = `${hh}:${min}`;
+
+      const notificationPayload = {
+        type: "info",
+        text: `Modified Account /Account link/(s) - [${editedName}]`,
+        date,
+        hour,
+        link: `/retele-sociale/categories`, // 🟢 link now includes _id
+      };
+
+      try {
+        const notifResp = await createNotification(notificationPayload);
+        console.log("✅ Notification created:", notifResp.data);
+      } catch (err) {
+        console.error("❌ Failed to create notification", err);
+      }
     } catch (e: any) {
       setEditError(e.response?.data?.message || 'Update failed.');
     }

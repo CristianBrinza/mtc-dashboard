@@ -1,6 +1,7 @@
 {
   "social": [
     ["Dashboard","/retele-sociale" , "config"],
+    ["Notifications","/retele-sociale/notifications" , "config"],
     ["Statistics","/retele-sociale/statistics" , "config"],
     ["Add","/retele-sociale/add" , "config"],
     ["Accounts","/retele-sociale/accounts" , "config"],

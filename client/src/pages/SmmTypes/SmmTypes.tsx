@@ -6,6 +6,7 @@ import { AuthContext } from "../../context/AuthContext";
 import styles from "./SmmTypes.module.css";
 import Button from "../../components/Button.tsx";
 import Input from "../../components/input/Input.tsx";
+import {createNotification} from "../../services/notificationService.tsx";
 
 interface Type {
   _id: string;
@@ -45,6 +46,32 @@ export default function SmmTypes() {
       await axios.post(`${import.meta.env.VITE_BACKEND}/api/types/add`, { name: newType }, { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
       setNewType("");
       fetchTypes();
+
+      // ✅ Build notification with _id
+        const now = new Date();
+        const dd = String(now.getDate()).padStart(2, "0");
+        const mm = String(now.getMonth() + 1).padStart(2, "0");
+        const yyyy = now.getFullYear();
+        const hh = String(now.getHours()).padStart(2, "0");
+        const min = String(now.getMinutes()).padStart(2, "0");
+        const date = `${dd}.${mm}.${yyyy}`;
+        const hour = `${hh}:${min}`;
+
+        const notificationPayload = {
+          type: "info",
+          text: `New Type added - [${newType}]`,
+          date,
+          hour,
+          link: `/retele-sociale/types`, // 🟢 link now includes _id
+        };
+
+        try {
+          const notifResp = await createNotification(notificationPayload);
+          console.log("✅ Notification created:", notifResp.data);
+        } catch (err) {
+          console.error("❌ Failed to create notification", err);
+        }
+
     } catch (error: any) {
       console.error("Error adding type:", error.response?.data?.message || error.message);
     }

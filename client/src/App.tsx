@@ -14,6 +14,7 @@ import SmmAdd from "./pages/SmmAdd/SmmAdd.tsx";
 import ProfileEdit from "./pages/Profile/ProfileEdit.tsx";
 import SmmTags from "./pages/SmmTags/SmmTags.tsx";
 import SmmTypes from "./pages/SmmTypes/SmmTypes.tsx";
+import NotificationsPage from "./pages/Notifications/Notifications.tsx";
 
 function App() {
     return (
@@ -88,6 +89,15 @@ function App() {
                         </ProtectedRoute>
                     }
                 />
+                <Route
+                    path="/retele-sociale/notifications"
+                    element={
+                        <ProtectedRoute roles={['admin']}>
+                            <NotificationsPage/>
+                        </ProtectedRoute>
+                    }
+                />
+
 
 
 

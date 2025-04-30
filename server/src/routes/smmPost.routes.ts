@@ -217,6 +217,41 @@ router.get("/", authenticateJWT, authorizeRoles("admin", "smm"), getAllSmmPosts)
  */
 router.post("/", authenticateJWT, authorizeRoles("admin", "smm"), upload.array("files"), createSmmPost);
 
+
+/**
+ * @swagger
+ * /api/smmpost/{id}:
+ *   get:
+ *     summary: Get a single SmmPost by ID
+ *     tags: [SmmPost]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the post
+ *     responses:
+ *       200:
+ *         description: Post found
+ *       404:
+ *         description: Post not found
+ */
+router.get("/:id", authenticateJWT, authorizeRoles("admin", "smm"), async (req, res) => {
+    try {
+        const post = await SmmPost.findById(req.params.id);
+        if (!post) return res.status(404).json({ error: "Post not found" });
+        res.json(post);
+    } catch (err) {
+        console.error("Get by ID failed:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+
+
 /**
  * @swagger
  * /api/smmpost/{id}:
