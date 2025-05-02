@@ -110,7 +110,7 @@ app.use('/insta', express.static(instaDir));
 setupSwagger(app);
 
 // ---------- 8) Services ----------
-// startInstagramCron();
+startInstagramCron();
 
 // ---------- 9) Start Server ----------
 const PORT = process.env.PORT || 5020;

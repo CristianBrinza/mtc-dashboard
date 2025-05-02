@@ -8,7 +8,8 @@ from flask_cors import CORS
 import random
 
 app = Flask(__name__)
-CORS(app, resources={r"/json/*": {"origins": "*"}})
+# Apply CORS to all routes (so you don't have to change your frontend calls)
+CORS(app)
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -26,8 +27,10 @@ PROXIES = [
 def get_instaloader_instance():
     global current_account_index
     bot = instaloader.Instaloader(
-        user_agent="Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) "
-                   "AppleWebKit/537.36 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/537.36"
+        user_agent=(
+            "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/537.36"
+        )
     )
     if PROXIES:
         proxy = random.choice(PROXIES)
@@ -128,7 +131,8 @@ def get_insta_post():
             # Top comments
             comments = []
             for i, c in enumerate(post.get_comments()):
-                if i >= top_n: break
+                if i >= top_n:
+                    break
                 comments.append({
                     "owner": c.owner.username if c.owner else None,
                     "text": c.text,
@@ -161,23 +165,24 @@ def get_insta_post():
 @app.route('/get_insta_post_links', methods=['GET'])
 def get_insta_post_links():
     nr = request.args.get('nr', default=5, type=int)
-    usern = request.args.get('operator')
-    if not usern:
+    username = request.args.get('operator')
+    if not username:
         return jsonify({'error': 'Operator parameter is required'}), 400
 
     try:
         def op(bot):
-            profile = Profile.from_username(bot.context, usern)
-            posts = list(profile.get_posts())
-            if not posts:
-                raise Exception('No posts found')
-            urls = []
-            for post in posts[:nr]:
-                if post.typename == 'GraphVideo':
-                    urls.append(f"https://www.instagram.com/reel/{post.shortcode}/")
+            profile = Profile.from_username(bot.context, username)
+            links = []
+            for i, post in enumerate(profile.get_posts()):
+                if i >= nr:
+                    break
+                if post.is_video:
+                    links.append(f"https://www.instagram.com/reel/{post.shortcode}/")
                 else:
-                    urls.append(f"https://www.instagram.com/p/{post.shortcode}/")
-            return {"links": urls}
+                    links.append(f"https://www.instagram.com/p/{post.shortcode}/")
+            if not links:
+                raise Exception('No posts found')
+            return {"links": links}
 
         return jsonify(execute_with_alternative_accounts(op))
     except instaloader.exceptions.ProfileNotExistsException:
