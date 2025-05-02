@@ -6,6 +6,13 @@ interface ITopComment {
     text: string | null;
 }
 
+interface IMetricsHistory {
+    timestamp: Date;
+    likes: number;
+    comments: number;
+    shares: number;
+}
+
 export interface ISmmPost extends Document {
     account: string | null;
     likes: number | null;
@@ -24,6 +31,7 @@ export interface ISmmPost extends Document {
     platform: string | null;
     description: string | null;
     images: string[] | null;
+    metricsHistory: IMetricsHistory[];
 
 }
 
@@ -51,6 +59,17 @@ const SmmPostSchema = new Schema<ISmmPost>({
     platform: { type: String, default: null },
     description: { type: String, default: null },
     images: { type: [String], default: null },
+    metricsHistory: {
+        type: [
+            {
+                timestamp: { type: Date, required: true },
+                likes:     { type: Number, required: true },
+                comments:  { type: Number, required: true },
+                shares:    { type: Number, required: true },
+            }
+        ],
+        default: [],
+    },
 }, { timestamps: true });
 
 export default model<ISmmPost>("SmmPost", SmmPostSchema);

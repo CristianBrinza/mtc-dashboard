@@ -1,5 +1,6 @@
 import { Router } from "express";
 import multer from "multer";
+import SmmPost from "../models/smmPost.model";
 import {
     createSmmPost,
     getAllSmmPosts,
@@ -10,9 +11,63 @@ import { authenticateJWT } from "../middleware/auth.middleware";
 import { authorizeRoles } from "../middleware/role.middleware";
 
 const router = Router();
+const upload = multer(); // we only accept JSON, so no file fields
 
-// Multer setup for file uploads
-const upload = multer({ storage: multer.memoryStorage() });
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     MetricsHistory:
+ *       type: object
+ *       properties:
+ *         timestamp:
+ *           type: string
+ *           format: date-time
+ *         likes:
+ *           type: number
+ *         comments:
+ *           type: number
+ *         shares:
+ *           type: number
+ *     SmmPost:
+ *       type: object
+ *       properties:
+ *         _id:               { type: string }
+ *         account:           { type: string }
+ *         likes:             { type: number }
+ *         shares:            { type: number }
+ *         comments:          { type: number }
+ *         sponsored:         { type: boolean }
+ *         date:              { type: string }
+ *         hour:              { type: string }
+ *         type:              { type: string }
+ *         tags:
+ *           type: array
+ *           items: { type: string }
+ *         category:          { type: string }
+ *         sub_category:      { type: string }
+ *         link:              { type: string }
+ *         day_of_the_week:   { type: string }
+ *         topcomments:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               created_at: { type: string }
+ *               owner:      { type: string }
+ *               text:       { type: string }
+ *         description:       { type: string }
+ *         platform:          { type: string }
+ *         images:
+ *           type: array
+ *           items: { type: string }
+ *         metricsHistory:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/MetricsHistory'
+ *         createdAt:         { type: string, format: date-time }
+ *         updatedAt:         { type: string, format: date-time }
+ */
 
 /**
  * @swagger
@@ -25,204 +80,106 @@ const upload = multer({ storage: multer.memoryStorage() });
  * @swagger
  * /api/smmpost:
  *   get:
- *     summary: Get all SMM posts with advanced filtering, sorting, and pagination
+ *     summary: Get all SMM posts with filtering, sorting, pagination
  *     tags: [SmmPost]
  *     security:
  *       - bearerAuth: []
  *     parameters:
- *       - in: query
- *         name: accounts
- *         schema:
- *           type: array
- *           items:
- *             type: string
- *         description: Filter by one or more account names
- *       - in: query
- *         name: categories
- *         schema:
- *           type: array
- *           items:
- *             type: string
- *         description: Filter by one or more categories
- *       - in: query
- *         name: types
- *         schema:
- *           type: array
- *           items:
- *             type: string
- *         description: Filter by one or more types
- *       - in: query
- *         name: days
- *         schema:
- *           type: array
- *           items:
- *             type: string
- *         description: Filter by one or more days (day_of_the_week)
- *       - in: query
- *         name: platforms
- *         schema:
- *           type: array
- *           items:
- *             type: string
- *         description: Filter by one or more platforms
- *       - in: query
- *         name: tags
- *         schema:
- *           type: array
- *           items:
- *             type: string
- *         description: Filter by one or more tags
- *       - in: query
- *         name: sub_categories
- *         schema:
- *           type: array
- *           items:
- *             type: string
- *         description: Filter by one or more sub-categories
- *       - in: query
- *         name: description
- *         schema:
- *           type: string
- *         description: Filter by description text
- *       - in: query
- *         name: sponsored
- *         schema:
- *           type: boolean
- *         description: Filter by sponsored posts (true/false)
- *       - in: query
- *         name: min_likes
- *         schema:
- *           type: number
- *         description: Minimum number of likes
- *       - in: query
- *         name: max_likes
- *         schema:
- *           type: number
- *         description: Maximum number of likes
- *       - in: query
- *         name: sort
- *         schema:
- *           type: string
- *         description: Sorting fields (e.g. "comments,-likes"; multiple fields comma separated)
- *       - in: query
- *         name: page
- *         schema:
- *           type: number
- *         description: Page number for pagination
- *       - in: query
- *         name: limit
- *         schema:
- *           type: number
- *         description: Number of items per page
+ *       # (list your existing query parameters here…)
  *     responses:
  *       200:
- *         description: Successful response with filtered data
+ *         description: A paginated list of posts
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 total:    { type: number }
+ *                 page:     { type: number }
+ *                 limit:    { type: number }
+ *                 smmPosts:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/SmmPost'
  *       500:
  *         description: Server error
  */
-router.get("/", authenticateJWT, authorizeRoles("admin", "smm"), getAllSmmPosts);
+router.get(
+    "/",
+    authenticateJWT,
+    authorizeRoles("admin", "smm"),
+    getAllSmmPosts
+);
 
 /**
  * @swagger
  * /api/smmpost:
  *   post:
- *     summary: Create a new SmmPost
+ *     summary: Create a new SMM post
  *     tags: [SmmPost]
  *     security:
  *       - bearerAuth: []
- *     consumes:
- *       - multipart/form-data
  *     requestBody:
  *       required: true
  *       content:
- *         multipart/form-data:
+ *         application/json:
  *           schema:
  *             type: object
  *             properties:
- *               account:
- *                 type: string
- *                 example: "Orange"
- *               likes:
- *                 type: number
- *                 example: 150
- *               shares:
- *                 type: number
- *                 example: 10
- *               comments:
- *                 type: number
- *                 example: 25
- *               sponsored:
- *                 type: boolean
- *                 example: true
- *               date:
- *                 type: string
- *                 example: "10.02.2025"
- *               hour:
- *                 type: string
- *                 example: "10:20"
- *               type:
- *                 type: string
- *                 example: "carousel"
+ *               account:         { type: string }
+ *               likes:           { type: number }
+ *               shares:          { type: number }
+ *               comments:        { type: number }
+ *               sponsored:       { type: boolean }
+ *               date:            { type: string }
+ *               hour:            { type: string }
+ *               type:            { type: string }
  *               tags:
  *                 type: array
- *                 items:
- *                   type: string
- *                 example: ["funny", "promo"]
- *               category:
- *                 type: string
- *                 example: "commercial"
- *               sub_category:
- *                 type: string
- *                 example: "production"
- *               description:
- *                 type: string
- *                 example: "Description of post"
- *               link:
- *                 type: string
- *                 example: "https://www.instagram.com/p/ABC123/"
- *               day_of_the_week:
- *                 type: string
- *                 example: "monday"
+ *                 items: { type: string }
+ *               category:        { type: string }
+ *               sub_category:    { type: string }
+ *               link:            { type: string }
+ *               day_of_the_week: { type: string }
+ *               description:     { type: string }
+ *               platform:        { type: string }
+ *               images:
+ *                 type: array
+ *                 items: { type: string }
  *               topcomments:
  *                 type: array
  *                 items:
  *                   type: object
  *                   properties:
- *                     created_at:
- *                       type: string
- *                     owner:
- *                       type: string
- *                     text:
- *                       type: string
- *                 example:
- *                   - created_at: "2025-02-11T21:21:43"
- *                     owner: "satoshifamily_cahul"
- *                     text: "❤️"
- *               images:
- *                 type: array
- *                 items:
- *                   type: string
- *                 example: ["image1.jpg", "image2.jpg"]
- *               files:
- *                 type: array
- *                 items:
- *                   type: string
- *                   format: binary
- *                 description: Upload images/videos
+ *                     created_at: { type: string }
+ *                     owner:      { type: string }
+ *                     text:       { type: string }
  *     responses:
  *       201:
- *         description: SmmPost created
+ *         description: Created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message: { type: string }
+ *                 smmPost: { $ref: '#/components/schemas/SmmPost' }
  *       500:
  *         description: Server error
  */
-router.post("/", authenticateJWT, authorizeRoles("admin", "smm"), upload.array("files"), createSmmPost);
-
+router.post(
+    "/",
+    authenticateJWT,
+    authorizeRoles("admin", "smm"),
+    upload.none(),
+    createSmmPost
+);
 
 /**
  * @swagger
  * /api/smmpost/{id}:
  *   get:
- *     summary: Get a single SmmPost by ID
+ *     summary: Get a single post by ID
  *     tags: [SmmPost]
  *     security:
  *       - bearerAuth: []
@@ -230,99 +187,128 @@ router.post("/", authenticateJWT, authorizeRoles("admin", "smm"), upload.array("
  *       - in: path
  *         name: id
  *         required: true
- *         schema:
- *           type: string
- *         description: ID of the post
+ *         schema: { type: string }
+ *         description: Post ID
  *     responses:
  *       200:
- *         description: Post found
+ *         description: The requested post
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/SmmPost' }
  *       404:
- *         description: Post not found
+ *         description: Not found
+ *       500:
+ *         description: Server error
  */
-router.get("/:id", authenticateJWT, authorizeRoles("admin", "smm"), async (req, res) => {
-    try {
-        const post = await SmmPost.findById(req.params.id);
-        if (!post) return res.status(404).json({ error: "Post not found" });
-        res.json(post);
-    } catch (err) {
-        console.error("Get by ID failed:", err);
-        res.status(500).json({ error: "Server error" });
+router.get(
+    "/:id",
+    authenticateJWT,
+    authorizeRoles("admin", "smm"),
+    async (req, res) => {
+        try {
+            const post = await SmmPost.findById(req.params.id);
+            if (!post) return res.status(404).json({ error: "Post not found" });
+            return res.json(post);
+        } catch (err) {
+            console.error("Get by ID failed:", err);
+            return res.status(500).json({ error: "Server error" });
+        }
     }
-});
-
-
+);
 
 /**
  * @swagger
  * /api/smmpost/{id}:
  *   put:
- *     summary: Update an existing SmmPost
+ *     summary: Update an existing post
  *     tags: [SmmPost]
  *     security:
  *       - bearerAuth: []
- *     consumes:
- *       - multipart/form-data
- *     parameters:
- *       - in: path
- *         name: id
- *         description: ID of the SmmPost to update
- *         required: true
- *         schema:
- *           type: string
  *     requestBody:
  *       required: false
  *       content:
- *         multipart/form-data:
+ *         application/json:
  *           schema:
  *             type: object
  *             properties:
- *               description:
- *                 type: string
- *                 example: "Updated description"
+ *               account:         { type: string }
+ *               likes:           { type: number }
+ *               shares:          { type: number }
+ *               comments:        { type: number }
+ *               sponsored:       { type: boolean }
+ *               date:            { type: string }
+ *               hour:            { type: string }
+ *               type:            { type: string }
+ *               tags:
+ *                 type: array
+ *                 items: { type: string }
+ *               category:        { type: string }
+ *               sub_category:    { type: string }
+ *               link:            { type: string }
+ *               day_of_the_week: { type: string }
+ *               description:     { type: string }
+ *               platform:        { type: string }
  *               images:
  *                 type: array
- *                 items:
- *                   type: string
- *                 example: ["image1.jpg", "image2.jpg"]
- *               files:
+ *                 items: { type: string }
+ *               topcomments:
  *                 type: array
  *                 items:
- *                   type: string
- *                   format: binary
- *                 description: Upload images/videos
+ *                   type: object
+ *                   properties:
+ *                     created_at: { type: string }
+ *                     owner:      { type: string }
+ *                     text:       { type: string }
  *     responses:
  *       200:
- *         description: SmmPost updated
+ *         description: Updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message: { type: string }
+ *                 smmPost: { $ref: '#/components/schemas/SmmPost' }
  *       404:
- *         description: SmmPost not found
+ *         description: Not found
  *       500:
  *         description: Server error
  */
-router.put("/:id", authenticateJWT, authorizeRoles("admin", "smm"), upload.array("files"), updateSmmPost);
+router.put(
+    "/:id",
+    authenticateJWT,
+    authorizeRoles("admin", "smm"),
+    upload.none(),
+    updateSmmPost
+);
 
 /**
  * @swagger
  * /api/smmpost/{id}:
  *   delete:
- *     summary: Delete a SmmPost
+ *     summary: Delete a post
  *     tags: [SmmPost]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
- *         description: ID of the SmmPost to delete
  *         required: true
- *         schema:
- *           type: string
+ *         schema: { type: string }
+ *         description: Post ID
  *     responses:
  *       200:
- *         description: SmmPost deleted
+ *         description: Deleted successfully
  *       404:
- *         description: SmmPost not found
+ *         description: Not found
  *       500:
  *         description: Server error
  */
-router.delete("/:id", authenticateJWT, authorizeRoles("admin", "smm"), deleteSmmPost);
+router.delete(
+    "/:id",
+    authenticateJWT,
+    authorizeRoles("admin", "smm"),
+    deleteSmmPost
+);
 
 export default router;
